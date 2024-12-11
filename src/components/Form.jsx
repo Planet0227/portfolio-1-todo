@@ -9,7 +9,8 @@ const Form = () => {
     const newTodo = {
       id: Math.floor(Math.random() * 1e7),
       content: inputValue,
-      locked: true
+      complete: false
+
     }
 
     dispatch({type:"todo/add", payload: newTodo});
@@ -24,6 +25,7 @@ const Form = () => {
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
+        className="border border-gray-500 rounded"
       />
       <button onClick={addTodo}>追加</button>
     </div>

@@ -9,17 +9,17 @@ const TODOS = [
   {
     id: 1,
     content: "ジャガイモを買う",
-    locked: true
+    complete: false
   },
   {
     id: 2,
     content: "ニンジンを切る",
-    locked: true
+    complete: false
   },
   {
     id: 3,
     content: "玉ねぎを洗う",
-    locked: true
+    complete: false
   },
 ];
 

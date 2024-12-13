@@ -8,7 +8,7 @@ const TODOS = [
   {
     id: 101,
     title: "カレーの準備",
-    date: "2024-12-10T07:00:00.000Z",
+    date: "2024/12/08 09:12:36",
     todos: [
       { id: 1, content: "ジャガイモを買う", complete: false },
       { id: 2, content: "ニンジンを切る", complete: false},
@@ -18,7 +18,7 @@ const TODOS = [
   {
     id: 102,
     title: "家事をする",
-    date: "2024-12-11T08:00:00.000Z",
+    date: "2024/12/10 08:54:32",
     todos: [
       { id: 4, content: "洗濯をする", complete: false },
       { id: 5, content: "掃除機をかける", complete: false},
@@ -28,7 +28,7 @@ const TODOS = [
   {
     id: 103,
     title: "勉強する",
-    date: "2024-12-12T12:00:00.000Z",
+    date: "2024/12/12 13:09:59",
     todos: [
       { id: 7, content: "数学", complete: false },
       { id: 8, content: "国語", complete: false},
@@ -38,8 +38,10 @@ const TODOS = [
 ];
 
 
-const todoReducer = (todos, { type, payload:{listId, todoId, newTodo} }) => {
+const todoReducer = (todos, { type, payload }) => {
   switch (type) {
+    case "todo/addList":
+      return  [...todos, payload];
     case "todo/add":
       return [...todos, payload];
     case "todo/update":
@@ -48,8 +50,8 @@ const todoReducer = (todos, { type, payload:{listId, todoId, newTodo} }) => {
       );
     case "todo/delete":
       return todos.map(todoList => {
-        if(todoList.id === listId){
-          return {...todoList, todos: todoList.todos.filter((_todo) => _todo.id !== todoId)}
+        if(todoList.id === payload.listId){
+          return {...todoList, todos: todoList.todos.filter((_todo) => _todo.id !== payload.todoId)}
         }
         return todoList;
       })

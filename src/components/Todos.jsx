@@ -9,6 +9,7 @@ const Todo = () => {
   return (
     <div className="flex flex-wrap justify-start gap-4">
       {todoLists.map((todoList) => {
+        console.log(todoList);
         return (
           <div key={todoList.id} className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md">
             <div className="flex items-center justify-between">

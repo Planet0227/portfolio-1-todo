@@ -1,14 +1,14 @@
 "use client";
-import { useTodos } from "../context/TodoContext";
+// import { useTodos } from "../context/TodoContext";
 import Item from "./Item";
 
-const List = () => {
-  const todos = useTodos();
+const List = ({todo}) => {
+  // const todos = useTodos();
 
   return (
     <>
-      {todos.map((todo) => {
-        return <Item key={todo.id} todo={todo}/>;
+      {todo.map((_todo) => {
+        return <Item key={_todo.id} todo={_todo}/>;
       })}
     </>
   );

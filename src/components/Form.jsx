@@ -21,13 +21,15 @@ const Form = () => {
 
   return (
     <div>
+      <div className="font-semibold">Todoを追加</div>
+      <span>Todo:</span>
       <input
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        className="border border-gray-500 rounded"
+        className="mx-2 border border-gray-500 rounded"
       />
-      <button onClick={addTodo}>追加</button>
+      <button onClick={addTodo} className="px-4 mx-3 font-semibold bg-blue-200 border ">+</button>
     </div>
   );
 };

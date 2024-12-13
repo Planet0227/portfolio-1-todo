@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTodosDispatch } from "../context/TodoContext";
 
-const Item = ({ todo }) => {
+const Item = ({ todo, listId }) => {
   const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
 
@@ -11,7 +11,7 @@ const Item = ({ todo }) => {
 
   //削除
   const deleteTodo = () => {
-    dispatch({ type: "todo/delete", payload: todo.id });
+    dispatch({ type: "todo/delete", payload: {listId, todoId: todo.id} });
   };
 
   // //編集・更新
@@ -26,7 +26,7 @@ const Item = ({ todo }) => {
 
   return (
     <>
-      <div key={todo.id}>
+      <div>
         <input type="checkbox" checked={todo.complete} onChange={updateTodo} />
         {todo.complete ? (
           <span>{todo.content}</span>

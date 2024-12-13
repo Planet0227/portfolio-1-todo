@@ -38,7 +38,7 @@ const TODOS = [
 ];
 
 
-const todoReducer = (todos, { type, payload }) => {
+const todoReducer = (todos, { type, payload:{listId, todoId, newTodo} }) => {
   switch (type) {
     case "todo/add":
       return [...todos, payload];
@@ -47,7 +47,12 @@ const todoReducer = (todos, { type, payload }) => {
         _todo.id === payload.id ? { ..._todo, ...payload } : _todo
       );
     case "todo/delete":
-      return todos.filter((_todo) => _todo.id !== payload);
+      return todos.map(todoList => {
+        if(todoList.id === listId){
+          return {...todoList, todos: todoList.todos.filter((_todo) => _todo.id !== todoId)}
+        }
+        return todoList;
+      })
     default:
       return todos;
   }

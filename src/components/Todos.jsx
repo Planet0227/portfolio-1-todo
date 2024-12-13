@@ -6,7 +6,6 @@ import { TodoProvider, useTodos } from "../context/TodoContext";
 
 const Todo = () => {
   const todoLists = useTodos();
-  
   return (
     <div className="flex flex-wrap justify-start gap-4">
       {todoLists.map((todoList) => {
@@ -16,7 +15,7 @@ const Todo = () => {
               <h3 className="text-lg font-semibold">{todoList.title}</h3>
               <button>→</button>
             </div>
-            <List todo={todoList.todos} />
+            <List todo={todoList.todos} listId={todoList.id}/>
           </div>
         );
       })}

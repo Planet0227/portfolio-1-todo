@@ -3,21 +3,22 @@
 import List from "./List";
 import Form from "./Form";
 import { TodoProvider, useTodos } from "../context/TodoContext";
+import Link from "next/link";
 
 const Todo = () => {
   const todoLists = useTodos();
   return (
     <div className="flex flex-wrap justify-start gap-4">
       {todoLists.map((todoList) => {
-        console.log(todoList);
+        // console.log(todoList);
         return (
-          <div key={todoList.id} className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md">
+          <Link href={`/todos/${todoList.id}`} key={todoList.id} className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">{todoList.title}</h3>
               <button>→</button>
             </div>
             <List todo={todoList.todos} listId={todoList.id}/>
-          </div>
+          </Link>
         );
       })}
     </div>

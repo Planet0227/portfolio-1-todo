@@ -11,9 +11,9 @@ const TODOS = [
     date: "2024/12/08 09:12:36",
     todos: [
       { id: 1, content: "ジャガイモを買う", complete: false },
-      { id: 2, content: "ニンジンを切る", complete: false},
-      { id: 3, content: "玉ねぎを洗う", complete: false},
-    ]
+      { id: 2, content: "ニンジンを切る", complete: false },
+      { id: 3, content: "玉ねぎを洗う", complete: false },
+    ],
   },
   {
     id: 102,
@@ -21,9 +21,9 @@ const TODOS = [
     date: "2024/12/10 08:54:32",
     todos: [
       { id: 4, content: "洗濯をする", complete: false },
-      { id: 5, content: "掃除機をかける", complete: false},
-      { id: 6, content: "洗剤を詰め替える", complete: false},
-    ]
+      { id: 5, content: "掃除機をかける", complete: false },
+      { id: 6, content: "洗剤を詰め替える", complete: false },
+    ],
   },
   {
     id: 103,
@@ -31,43 +31,48 @@ const TODOS = [
     date: "2024/12/12 13:09:59",
     todos: [
       { id: 7, content: "数学", complete: false },
-      { id: 8, content: "国語", complete: false},
-      { id: 9, content: "保健体育", complete: false},
-    ]
+      { id: 8, content: "国語", complete: false },
+      { id: 9, content: "保健体育", complete: false },
+    ],
   },
 ];
 
-
-const todoReducer = (todos, { type, payload }) => {
+const todoReducer = (state, { type, payload }) => {
   switch (type) {
     case "todo/addList":
-      return  [...todos, payload];
+      return [...state, payload];
     case "todo/add":
-      return [...todos, payload];
+      return [...state, payload];
     case "todo/update":
-      return todos.map((_todo) =>
+      return state.map((_todo) =>
         _todo.id === payload.id ? { ..._todo, ...payload } : _todo
       );
     case "todo/delete":
-      return todos.map(todoList => {
-        if(todoList.id === payload.listId){
-          return {...todoList, todos: todoList.todos.filter((_todo) => _todo.id !== payload.todoId)}
+      return state.map((todoList) => {
+        if (todoList.id === payload.listId) {
+          return {
+            ...todoList,
+            todos: todoList.todos.filter(
+              (_todo) => _todo.id !== payload.todoId
+            ),
+          };
         }
         return todoList;
-      })
+      });
+    case "todo/selected":
+      return;
     default:
-      return todos;
+      return state;
   }
 };
 
 const TodoProvider = ({ children }) => {
-  const [todos, dispatch] = useReducer(todoReducer, TODOS);
+  const [state, dispatch] = useReducer(todoReducer, TODOS);
 
   return (
-    <TodoContext.Provider value={todos}>
+    <TodoContext.Provider value={state}>
       <TodoContextDispatch.Provider value={dispatch}>
         {children}
-
       </TodoContextDispatch.Provider>
     </TodoContext.Provider>
   );

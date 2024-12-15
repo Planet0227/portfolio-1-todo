@@ -8,9 +8,9 @@ export default  function TodoDetail({params}) {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
-  console.log(todos);
+
   //paramsは文字列なのでparseIntで数値に変換
-  const targetList = todos.find((todoList) => todoList.id === id);
+  const targetList = todos.find((todoList) => todoList.id === parseInt(id));
   console.log(targetList);
   return(
     <div>{targetList.id}</div>

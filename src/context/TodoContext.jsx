@@ -1,5 +1,4 @@
 "use client";
-import { TODOS_ENDPOINT } from "@/constants";
 import { createContext, useContext, useEffect, useReducer } from "react";
 
 const TodoContext = createContext();
@@ -73,7 +72,8 @@ const TodoProvider = ({ children }) => {
 //jsonサーバーからTODOSリストの初期値を取得し、stateを更新
   useEffect(() => {
     const getTodos = async () => {
-      const todos = await fetch(TODOS_ENDPOINT).then((res) => res.json());
+      const ENDPOINT = "/api/todos";
+      const todos = await fetch(ENDPOINT).then((res) => res.json());
       dispatch({ type: "todo/init", payload: todos });
     };
     getTodos();

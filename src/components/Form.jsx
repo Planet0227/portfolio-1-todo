@@ -6,7 +6,7 @@ const Form = () => {
   const dispatch = useTodosDispatch();
 
   //　新しいTodoリスト
-  const addTodoList = () => {
+  const addTodoList = async () => {
     const now = new Date();
 
     // 年、月、日を取得
@@ -17,24 +17,36 @@ const Form = () => {
     // 曜日を配列で定義
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const day = days[now.getDay()];
-    
+
     // 時間、分、秒を取得
     const hours = String(now.getHours()).padStart(2, "0");
     const minutes = String(now.getMinutes()).padStart(2, "0");
     const seconds = String(now.getSeconds()).padStart(2, "0");
-    
+
     // フォーマットする
     const formattedDate = `${year}/${month}/${date}(${day}) ${hours}:${minutes}:${seconds}`;
 
-    
     const newTodoList = {
       id: Math.floor(Math.random() * 1e7),
       title: inputValue,
       date: formattedDate,
-      todos: []
+      todos: [],
     };
-    dispatch({type: "todo/addList", payload: newTodoList });
+    dispatch({ type: "todo/addList", payload: newTodoList });
     setInputValue("");
+
+    //POSTリクエスト
+    try {
+      const response = await fetch("/api/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newTodoList),
+      });
+      if (!response.ok)
+        throw new Error("新規Todoリストを保存できませんでした。");
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   //　新しいTodo

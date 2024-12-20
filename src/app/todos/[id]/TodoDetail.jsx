@@ -11,8 +11,13 @@ export default function TodoDetail({ params }) {
   const foundList = todos.find(
     (todoList) => todoList.id === id
   );
+  console.log(todos);
+  if (todos.length === 0) {
+    return <div>Todoリストを読み込んでいます...</div>;
+  }
+
   if (!foundList) {
-    return <div>Loading...</div>; // 見つからない場合の表示
+    return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
 
 

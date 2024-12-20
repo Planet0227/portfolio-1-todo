@@ -2,7 +2,6 @@ import { useState } from "react";
 // import { useTodosDispatch } from "../context/TodoContext";
 
 const TodoDetailItem = ({ todo }) => {
-  console.log(todo);
   const [editContent, setEditContent] = useState(todo.content);
   // const dispatch = useTodosDispatch();
 

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useEffect, useReducer } from "react";
+import { createContext, useContext, useEffect, useReducer, useState } from "react";
 
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
@@ -11,7 +11,10 @@ const todoReducer = (state, { type, payload }) => {
     case "todo/addList":
       return [...state, payload];
     case "todo/add":
-      return [...state, payload];
+      return state.map(todoList => todoList.id === payload.id 
+        ? {...todoList, todos:[...todoList.todos, payload.newTodo ]}
+        : todoList
+      )
     case "todo/update":
       return state.map((_todo) =>
         _todo.id === payload.id ? { ..._todo, ...payload } : _todo
@@ -35,13 +38,19 @@ const todoReducer = (state, { type, payload }) => {
 };
 
 const TodoProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(todoReducer, []);
+  const [state, dispatch] = useReducer(todoReducer, []); 
 //jsonサーバーからTODOSリストの初期値を取得し、stateを更新
   useEffect(() => {
     const getTodos = async () => {
       const ENDPOINT = "/api/todos";
-      const todos = await fetch(ENDPOINT).then((res) => res.json());
-      dispatch({ type: "todo/init", payload: todos });
+      try{
+        const todos = await fetch(ENDPOINT).then((res) => res.json());
+        dispatch({ type: "todo/init", payload: todos });
+
+      }catch(error){
+        console.error("Failed to fetch todos:", error);
+
+      }
     };
     getTodos();
   }, []);

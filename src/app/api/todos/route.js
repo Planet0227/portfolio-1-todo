@@ -22,3 +22,34 @@ export async function POST(request) {
 
   return new Response(JSON.stringify(newTodo), { status: 201 });
 }
+
+export async function PATCH(request) {
+  const { listId, newTodo } = await request.json();
+
+  // 特定のリストを取得
+  const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) => res.json());
+
+  // 新しいTodoをリストのtodos配列に追加
+  const updatedTodos = [...todoList.todos, newTodo];
+  const updatedTodoList = { ...todoList, todos: updatedTodos };
+
+  // 更新されたリストをサーバーへ送信
+  const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatedTodoList),
+  });
+
+  // レスポンスの確認
+  if (!updateResponse.ok) {
+    return new Response(
+      JSON.stringify({ error: "Failed to save Todo" }),
+      { status: 500 }
+    );
+  }
+
+  // 更新後のデータを返す
+  return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+}

@@ -1,16 +1,20 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useTodosDispatch } from "@/context/TodoContext";
+import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 
-export default function TodoDetail({ params, todos }) {
+export default function TodoDetail({ params }) {
   const { id } = use(params); // paramsからidを取得
-
+  const todos = useTodos();
   const foundList = todos.find(
-    (todoList) => String(todoList.id) === String(id)
+    (todoList) => todoList.id === id
   );
+  if (!foundList) {
+    return <div>Loading...</div>; // 見つからない場合の表示
+  }
+
 
   return (
     <div className="p-4">

@@ -3,24 +3,42 @@
 import { useState } from "react";
 import { useTodosDispatch } from "@/context/TodoContext";
 
-const TodoDetailForm = () => {
+
+const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
   const dispatch = useTodosDispatch();
 
-  const addTodo = (e) => {
+  const addTodo = async (e) => {
     const newTodo = {
       id: Math.floor(Math.random() * 1e7),
       content: inputValue,
       complete: false,
     };
 
-    dispatch({ type: "todo/add", payload: newTodo });
+    dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
+
+    try {
+      const response = await fetch("/api/todos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId, newTodo }),
+      });
+      const result = await response.json();
+      console.log(result);
+      
+      if (!response.ok)
+        throw new Error("新規Todoを保存できませんでした。");
+    } catch (error) {
+      console.log(error);
+    }
+
+
 
     setInputValue("");
   };
   return (
     <div>
-      <div className="font-semibold">Todoリストを追加</div>
+      <div className="font-semibold">Todoを追加</div>
       <span>Todo:</span>
       <input
         type="text"

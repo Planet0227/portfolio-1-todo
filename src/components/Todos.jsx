@@ -2,23 +2,30 @@
 
 import List from "./List";
 import Form from "./Form";
+import TodoDetail from "@/features/todo/TodoDetail";
 import { TodoProvider, useTodos } from "../context/TodoContext";
-import Link from "next/link";
+import { useState } from "react";
+import Modal from "./Modal";
 
-const Todo = () => {
-  const todoLists = useTodos();
+const Todo = ({ openModal }) => {
+  const todos = useTodos();
+
   return (
     <div className="flex flex-wrap justify-start gap-4">
-      {todoLists.map((todoList) => {
+      {todos.map((todoList) => {
         // console.log(todoList);
         return (
-          <Link href={`/todos/${todoList.id}`} key={todoList.id} className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md">
+          <div
+            key={todoList.id}
+            onClick={() => openModal(todoList.id)}
+            className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md cursor-pointer"
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">{todoList.title}</h3>
-              <button>→</button>
+              <p>→</p>
             </div>
-            <List todo={todoList.todos} listId={todoList.id}/>
-          </Link>
+            <List todo={todoList.todos} listId={todoList.id} />
+          </div>
         );
       })}
     </div>
@@ -26,16 +33,34 @@ const Todo = () => {
 };
 
 const Todos = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTodoId, setSelectedTodoId] = useState(null);
+
+  const openModal = (id) => {
+    setSelectedTodoId(id); // モーダルを開く
+    
+      setIsModalOpen(true);
+    
+  };
+
+  const closeModal = () => {
+      setSelectedTodoId(null); // モーダルを閉じる
+      setIsModalOpen(false);
+    
+  };
+
   return (
     <TodoProvider>
-      <div className="min-h-screen p-10 bg-gray-100">
-
-        <Todo />
+      <div  className="min-h-screen p-10 bg-gray-100 ">
+        <Todo openModal={openModal} />
 
         <div className="fixed w-full max-w-md p-6 transform -translate-x-1/2 bg-white rounded-lg shadow-md bottom-6 left-1/2 sw-full">
           <Form />
         </div>
-        
+
+        <Modal isOpen={isModalOpen} onClose={closeModal}>
+          <TodoDetail listId={selectedTodoId} />
+        </Modal>
       </div>
     </TodoProvider>
   );

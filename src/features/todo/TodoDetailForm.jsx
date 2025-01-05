@@ -37,16 +37,15 @@ const TodoDetailForm = ({ listId }) => {
     setInputValue("");
   };
   return (
-    <div>
-      <div className="font-semibold">Todoを追加</div>
-      <span>Todo:</span>
+    <div className="flex"> {/*ここで中断　mt-5が反映されない */} 
+      <div>Todo:</div>
       <input
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        className="mx-2 border border-gray-500 rounded"
+        className="block mx-2 border border-gray-500 rounded"
       />
-      <button onClick={addTodo} className="px-4 mx-3 font-semibold bg-blue-200 border rounded">+</button>
+      <button onClick={addTodo} className="px-4 mx-1 font-semibold bg-blue-200 border rounded">+</button>
     </div>
   );
 };

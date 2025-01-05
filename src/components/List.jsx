@@ -1,10 +1,7 @@
 "use client";
-// import { useTodos } from "../context/TodoContext";
 import Item from "./Item";
 
 const List = ({ todo, listId } ) => {
-  // const todos = useTodos();
-
   return (
     <>
       {todo.map((_todo) => {

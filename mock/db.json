@@ -24,6 +24,11 @@
           "id": 4929071,
           "content": "ルーを追加する。",
           "complete": false
+        },
+        {
+          "id": 8277282,
+          "content": "鍋のふたをする。",
+          "complete": false
         }
       ]
     },
@@ -89,6 +94,11 @@
         {
           "id": 4385341,
           "content": "配達物を受け取る",
+          "complete": false
+        },
+        {
+          "id": 5284967,
+          "content": "プレステを買う",
           "complete": false
         }
       ]

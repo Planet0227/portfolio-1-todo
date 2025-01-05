@@ -29,9 +29,9 @@ const TodoDetailItem = ({ todo }) => {
       <div>
         <input type="checkbox" checked={todo.complete} onChange={updateTodo} />
         {todo.complete ? (
-          <span>{todo.content}</span>
+          <span className="ml-2">{todo.content}</span>
         ) : (
-          <input type="text" value={editContent} onChange={changeContent} />
+          <input className="ml-2" type="text" value={editContent} onChange={changeContent} />
         )}
 
         <button className="border border-gray-500 rounded" onClick={deleteTodo}>削除</button>

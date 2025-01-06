@@ -1,4 +1,3 @@
-//サーバー側で行うcrudのメソッド書くとこ
 import { TODOS_ENDPOINT } from "@/constants";
 
 export async function GET() {
@@ -6,6 +5,7 @@ export async function GET() {
   return Response.json(todos);
 }
 
+//新規Todoリスト作成
 export async function POST(request) {
   const newTodo = await request.json()
   const response = await fetch(TODOS_ENDPOINT, {
@@ -23,17 +23,15 @@ export async function POST(request) {
   return new Response(JSON.stringify(newTodo), { status: 201 });
 }
 
+//Todoリストにタスクを追加
 export async function PATCH(request) {
   const { listId, newTodo } = await request.json();
 
-  // 特定のリストを取得
   const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) => res.json());
 
-  // 新しいTodoをリストのtodos配列に追加
   const updatedTodos = [...todoList.todos, newTodo];
   const updatedTodoList = { ...todoList, todos: updatedTodos };
 
-  // 更新されたリストをサーバーへ送信
   const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
     method: "PATCH",
     headers: {
@@ -42,14 +40,11 @@ export async function PATCH(request) {
     body: JSON.stringify(updatedTodoList),
   });
 
-  // レスポンスの確認
   if (!updateResponse.ok) {
     return new Response(
       JSON.stringify({ error: "Failed to save Todo" }),
       { status: 500 }
     );
   }
-
-  // 更新後のデータを返す
   return new Response(JSON.stringify(updatedTodoList), { status: 200 });
 }

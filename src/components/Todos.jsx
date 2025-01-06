@@ -11,18 +11,18 @@ const Todo = ({ openModal }) => {
   const todos = useTodos();
 
   return (
-    <div className="flex flex-wrap justify-start gap-4">
+    <div className="flex flex-wrap gap-4">
       {todos.map((todoList) => {
         // console.log(todoList);
         return (
           <div
             key={todoList.id}
             onClick={() => openModal(todoList.id)}
-            className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md cursor-pointer"
+            className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md cursor-pointer hover:bg-gray-50"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between">
               <h3 className="text-lg font-semibold">{todoList.title}</h3>
-              <p>→</p>
+              <button className="text-blue-400 shrink-0">編集</button>
             </div>
             <List todo={todoList.todos} listId={todoList.id} />
           </div>
@@ -51,7 +51,7 @@ const Todos = () => {
 
   return (
     <TodoProvider>
-      <div  className="min-h-screen p-10 bg-gray-100 ">
+      <div  className="min-h-screen p-10 bg-orange-100">
         <Todo openModal={openModal} />
 
         <div className="fixed w-full max-w-md p-6 transform -translate-x-1/2 bg-white rounded-lg shadow-md bottom-6 left-1/2 sw-full">

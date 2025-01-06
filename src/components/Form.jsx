@@ -24,7 +24,7 @@ const Form = () => {
     const seconds = String(now.getSeconds()).padStart(2, "0");
 
     // フォーマットする
-    const formattedDate = `${year}/${month}/${date}(${day}) ${hours}:${minutes}:${seconds}`;
+    const formattedDate = `${year}/${month}/${date} (${day}) ${hours}:${minutes}:${seconds}`;
 
     const newTodoList = {
       id: Math.floor(Math.random() * 1e7),
@@ -55,12 +55,13 @@ const Form = () => {
   return (
     <div>
       <div className="font-semibold">Todoリストを追加</div>
-      <span>タイトル:</span>
       <input
         type="text"
+        placeholder="例：旅行の準備"
+        maxLength="12"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        className="mx-2 border border-gray-500 rounded"
+        className="mx-2 border border-gray-500 rounded w-60"
       />
       <button
         onClick={addTodoList}

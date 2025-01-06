@@ -1,9 +1,9 @@
 import { useState } from "react";
-// import { useTodosDispatch } from "../context/TodoContext";
+import { useTodosDispatch } from "@/context/TodoContext";
 
-const TodoDetailItem = ({ todo }) => {
+const TodoDetailItem = ({ todo, listId }) => {
   const [editContent, setEditContent] = useState(todo.content);
-  // const dispatch = useTodosDispatch();
+  const dispatch = useTodosDispatch();
 
   const changeContent = (e) => {
     setEditContent(e.target.value);
@@ -27,14 +27,15 @@ const TodoDetailItem = ({ todo }) => {
   return (
     <>
       <div>
-        <input type="checkbox" checked={todo.complete} onChange={updateTodo} />
+        <button className="font-semibold text-red-400" onClick={deleteTodo}>×</button>
+        <input type="checkbox" checked={todo.complete} onChange={updateTodo} className="ml-2"/>
         {todo.complete ? (
           <span className="ml-2">{todo.content}</span>
         ) : (
-          <input className="ml-2" type="text" value={editContent} onChange={changeContent} />
+          <input className="max-w-full ml-2" type="text" value={editContent} onChange={changeContent} />
         )}
 
-        <button className="border border-gray-500 rounded" onClick={deleteTodo}>削除</button>
+        
       </div>
     </>
   );

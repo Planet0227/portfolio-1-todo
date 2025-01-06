@@ -43,7 +43,7 @@ const TodoDetailForm = ({ listId }) => {
         type="text"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        className="block mx-2 border border-gray-500 rounded"
+        className="block mx-2 border border-gray-500 rounded w-60"
       />
       <button onClick={addTodo} className="px-4 mx-1 font-semibold bg-blue-200 border rounded">+</button>
     </div>

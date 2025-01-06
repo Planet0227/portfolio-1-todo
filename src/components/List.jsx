@@ -2,6 +2,9 @@
 import Item from "./Item";
 
 const List = ({ todo, listId } ) => {
+  if (todo.length === 0) {
+    return <div className="text-blue-500">Todoを追加しましょう！</div>;
+  }
   return (
     <>
       {todo.map((_todo) => {

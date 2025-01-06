@@ -17,7 +17,7 @@ const Item = ({ todo, listId }) => {
   return (
     <>
       <div>
-        <input type="checkbox" checked={todo.complete} onChange={updateTodo} />
+        <input type="checkbox" checked={todo.complete} onChange={(e) => e.stopPropagation()} />
         <span className="ml-2">{todo.content}</span>
       </div>
     </>

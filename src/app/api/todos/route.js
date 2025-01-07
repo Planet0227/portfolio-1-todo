@@ -23,7 +23,7 @@ export async function POST(request) {
   return new Response(JSON.stringify(newTodo), { status: 201 });
 }
 
-//Todoリストにタスクを追加
+//Todoリストに新規タスクを追加
 export async function PATCH(request) {
   const { listId, newTodo } = await request.json();
 
@@ -48,3 +48,23 @@ export async function PATCH(request) {
   }
   return new Response(JSON.stringify(updatedTodoList), { status: 200 });
 }
+
+// Todoリストを削除
+export async function DELETE(request) {
+  const { listId } = await request.json();
+
+  const response = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    return new Response(
+      JSON.stringify({ error: "Failed to delete Todo list" }),
+      { status: 500 }
+    );
+  }
+
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
+}
+
+

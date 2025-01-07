@@ -10,7 +10,7 @@ const TodoDetailForm = ({ listId }) => {
 
   const addTodo = async (e) => {
     const newTodo = {
-      id: Math.floor(Math.random() * 1e7),
+      id: Math.floor(Math.random() * 1e7).toString(),
       content: inputValue,
       complete: false,
     };
@@ -37,7 +37,7 @@ const TodoDetailForm = ({ listId }) => {
     setInputValue("");
   };
   return (
-    <div className="flex"> {/*ここで中断　mt-5が反映されない */} 
+    <div className="flex">
       <div>Todo:</div>
       <input
         type="text"

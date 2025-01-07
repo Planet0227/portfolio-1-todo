@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTodos } from "@/context/TodoContext";
+import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 
-export default function TodoDetail({ listId }) {
+export default function TodoDetail({ listId, onClose }) {
   const todos = useTodos();
+  const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
 
   useEffect(() => {
@@ -16,15 +17,34 @@ export default function TodoDetail({ listId }) {
     }
   }, [listId, todos]);
 
+  const deleteTodoList = async () => {
+    dispatch({ type: "todo/deleteList", payload: { listId } });
+    setCachedList(null);
+    onClose();
+    try{
+      const response = await fetch("/api/todos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId })
+      });
+      if (!response.ok) throw new Error("リストの削除に失敗しました。");
+
+    console.log("リストが削除されました。");
+  } catch (error) {
+    console.error(error);
+  }
+    
+  }
+
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
 
   return (
     <div className="w-full h-full px-5 py-2 bg-white shadow-lg">
-      <div className="flex justify-between">
+      <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold">{cachedList.title}</h1>
-        <div className="text-red-500">リストを削除</div>
+        <button onClick={deleteTodoList} className="text-red-500 shrink-0">リストを削除</button>
       </div>
       <p className="pb-1 text-gray-500 border-b-2 border-gray">
         作成した日付： {cachedList.date}

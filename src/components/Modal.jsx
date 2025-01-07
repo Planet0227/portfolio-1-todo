@@ -21,7 +21,7 @@ const Modal = ({ isOpen, onClose, children }) => {
     >
       
       <div
-        className={`w-5/12 h-full bg-gray-100 transform transition-transform duration-200 rounded-l-2xl over ${
+        className={`w-1/2 h-full bg-gray-100 transform transition-transform duration-200 rounded-l-2xl over ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         onClick={(e) => e.stopPropagation()} // モーダル内クリックを無効化

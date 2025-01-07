@@ -27,7 +27,7 @@ const Form = () => {
     const formattedDate = `${year}/${month}/${date} (${day}) ${hours}:${minutes}:${seconds}`;
 
     const newTodoList = {
-      id: Math.floor(Math.random() * 1e7),
+      id: Math.floor(Math.random() * 1e7).toString(),
       title: inputValue,
       date: formattedDate,
       todos: [],
@@ -58,7 +58,6 @@ const Form = () => {
       <input
         type="text"
         placeholder="例：旅行の準備"
-        maxLength="12"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         className="mx-2 border border-gray-500 rounded w-60"

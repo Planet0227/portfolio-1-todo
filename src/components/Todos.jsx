@@ -9,7 +9,7 @@ import Modal from "./Modal";
 
 const Todo = ({ openModal }) => {
   const todos = useTodos();
-
+  
   return (
     <div className="flex flex-wrap gap-4">
       {todos.map((todoList) => {
@@ -59,7 +59,7 @@ const Todos = () => {
         </div>
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
-          <TodoDetail listId={selectedTodoId} />
+          <TodoDetail listId={selectedTodoId} onClose={closeModal}/>
         </Modal>
       </div>
     </TodoProvider>

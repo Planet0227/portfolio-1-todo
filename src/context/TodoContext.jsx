@@ -19,6 +19,8 @@ const todoReducer = (state, { type, payload }) => {
       return state.map((_todo) =>
         _todo.id === payload.id ? { ..._todo, ...payload } : _todo
       );
+    case "todo/deleteList":
+      return state.filter((todoList) => todoList.id !== payload.listId);
     case "todo/delete":
       return state.map((todoList) => {
         if (todoList.id === payload.listId) {
@@ -39,6 +41,7 @@ const todoReducer = (state, { type, payload }) => {
 
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []); 
+  console.log(state);
 //jsonサーバーからTODOSリストの初期値を取得し、stateを更新
   useEffect(() => {
     const getTodos = async () => {

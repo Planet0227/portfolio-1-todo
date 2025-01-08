@@ -7,7 +7,7 @@ export async function GET() {
 
 //　追加
 export async function POST(request) {
-  const { newTodo, listId } = await request.json();
+  const { newTodoList, newTodo, listId } = await request.json();
 
   //Todoリストに新規タスクを追加
   if (listId) {
@@ -35,20 +35,24 @@ export async function POST(request) {
     return new Response(JSON.stringify(updatedTodoList), { status: 200 });
 
     //新規Todoリスト作成
-  } else if (newTodo) {
+  } else if (newTodoList) {
     const response = await fetch(TODOS_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(newTodo),
+      body: JSON.stringify(newTodoList),
     });
 
     if (!response.ok) {
       return new Response(
-        JSON.stringify({ error: "Failed to add TodoList" }, { status: 500 })
+        JSON.stringify({ error: "Failed to add TodoList" }),
+        { status: 500 }
       );
     }
+
+    const createdTodoList = await response.json();
+    return new Response(JSON.stringify(createdTodoList), { status: 201 });
   }
 }
 

@@ -45,7 +45,7 @@ const Form = () => {
       const response = await fetch("/api/todos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newTodoList),
+        body: JSON.stringify({ newTodoList }),
       });
       if (!response.ok)
         throw new Error("新規Todoリストを保存できませんでした。");

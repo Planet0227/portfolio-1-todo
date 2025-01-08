@@ -44,20 +44,20 @@ export default function TodoDetail({ listId, onClose }) {
     <div className="w-full h-full px-5 py-2 bg-white shadow-lg">
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold">{cachedList.title}</h1>
-        <button onClick={deleteTodoList} className="text-red-500 shrink-0">リストを削除</button>
+        <button onClick={deleteTodoList} className="px-5 py-2 mb-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0">リストを削除</button>
       </div>
       <p className="pb-1 text-gray-500 border-b-2 border-gray">
         作成した日付： {cachedList.date}
       </p>
-      
-      <div className="my-5">
-        <TodoDetailForm listId={listId} />
-      </div>
       <div className="my-3">
         {cachedList.todos.map((todo) => (
           <TodoDetailItem key={todo.id} todo={todo} listId={listId} />
         ))}
       </div>
+      <div>
+        <TodoDetailForm listId={listId} />
+      </div>
+      
     </div>
   );
 }

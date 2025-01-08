@@ -6,7 +6,12 @@ const Form = () => {
   const dispatch = useTodosDispatch();
 
   //　新しいTodoリスト
-  const addTodoList = async () => {
+  const addTodoList = async (e) => {
+    e.preventDefault();
+    if (inputValue === "") {
+      return;
+    }
+
     const now = new Date();
 
     // 年、月、日を取得
@@ -49,27 +54,25 @@ const Form = () => {
     }
   };
 
-  
- 
-
   return (
     <div>
       <div className="font-semibold">Todoリストを追加</div>
-      <input
-        type="text"
-        placeholder="例：旅行の準備"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        className="mx-2 border border-gray-500 rounded w-60"
-      />
-      <button
-        onClick={addTodoList}
-        className="px-4 mx-3 font-semibold bg-blue-200 border rounded"
-      >
-        +
-      </button>
-
-      
+      <form onSubmit={addTodoList} className="flex">
+        <button
+          onClick={addTodoList}
+          className="px-3 text-2xl text-zinc-600 bg-white rounded hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]  hover:translate-y-[2px] transition-all duration-200"
+        >
+          +
+        </button>
+        <input
+          type="text"
+          placeholder="タイトルを入力"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          className="text-xl border-b w-96 focus:caret-black focus:outline-none"
+        />
+        
+      </form>
     </div>
   );
 };

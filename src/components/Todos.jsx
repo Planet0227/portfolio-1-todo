@@ -54,13 +54,14 @@ const Todos = () => {
       <div  className="min-h-screen p-10 bg-orange-100">
         <Todo openModal={openModal} />
 
-        <div className="fixed w-full max-w-md p-6 transform -translate-x-1/2 bg-white rounded-lg shadow-md bottom-6 left-1/2 sw-full">
+        <div className="fixed w-full max-w-md p-5 transform -translate-x-1/2 bg-white rounded-lg shadow-md bottom-6 left-1/2 sw-full">
           <Form />
         </div>
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <TodoDetail listId={selectedTodoId} onClose={closeModal}/>
         </Modal>
+        
       </div>
     </TodoProvider>
   );

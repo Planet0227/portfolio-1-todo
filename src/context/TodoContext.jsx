@@ -41,7 +41,6 @@ const todoReducer = (state, { type, payload }) => {
 
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []); 
-  console.log(state);
 //jsonサーバーからTODOSリストの初期値を取得し、stateを更新
   useEffect(() => {
     const getTodos = async () => {

@@ -21,30 +21,39 @@ export default function TodoDetail({ listId, onClose }) {
     dispatch({ type: "todo/deleteList", payload: { listId } });
     setCachedList(null);
     onClose();
-    try{
+    try {
       const response = await fetch("/api/todos", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId })
+        body: JSON.stringify({ listId }),
       });
       if (!response.ok) throw new Error("リストの削除に失敗しました。");
 
-    console.log("リストが削除されました。");
-  } catch (error) {
-    console.error(error);
-  }
-    
-  }
+      console.log("リストが削除されました。");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
 
   return (
-    <div className="w-full h-full px-5 py-2 bg-white shadow-lg">
+    <div className="w-full h-full py-5 bg-white rounded-l-lg shadow-lg px-7">
+      <div>
+        <button className="pb-3 text-gray-300 hover:text-gray-500" onClick={onClose}>
+          ＞＞
+        </button>
+      </div>
       <div className="flex items-start justify-between">
         <h1 className="text-2xl font-bold">{cachedList.title}</h1>
-        <button onClick={deleteTodoList} className="px-5 py-2 mb-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0">リストを削除</button>
+        <button
+          onClick={deleteTodoList}
+          className="px-5 py-2 mb-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
+        >
+          リストを削除
+        </button>
       </div>
       <p className="pb-1 text-gray-500 border-b-2 border-gray">
         作成した日付： {cachedList.date}
@@ -57,7 +66,6 @@ export default function TodoDetail({ listId, onClose }) {
       <div>
         <TodoDetailForm listId={listId} />
       </div>
-      
     </div>
   );
 }

@@ -19,14 +19,13 @@ const Modal = ({ isOpen, onClose, children }) => {
       }`}
       onClick={onClose}
     >
-      
       <div
-        className={`w-1/2 h-full bg-gray-100 transform transition-transform duration-200 rounded-l-2xl over ${
+        className={`w-1/2 h-full transform transition-transform duration-200  ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         onClick={(e) => e.stopPropagation()} // モーダル内クリックを無効化
       >
-        <button className="p-4 text-blue-500" onClick={onClose}>＞＞</button>
+
         {children}
       </div>
     </div>

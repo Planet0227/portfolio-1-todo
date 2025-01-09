@@ -45,7 +45,7 @@ const TodoDetailItem = ({ todo, listId }) => {
         {todo.complete ? (
           <span className="ml-2">{todo.content}</span>
         ) : (
-          <input className="w-10/12 max-w-full ml-2 text-lg focus:caret-black focus:outline-none" type="text" value={editContent} onChange={changeContent} />
+          <input className="w-10/12 max-w-full ml-2 text-lg border-b focus:caret-black focus:outline-none" type="text" value={editContent} onChange={changeContent} />
         )}
       </div>
     </>

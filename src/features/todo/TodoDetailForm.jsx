@@ -20,7 +20,7 @@ const TodoDetailForm = ({ listId }) => {
     };
 
     dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
-
+    setInputValue("");
     try {
       const response = await fetch("/api/todos", {
         method: "POST",
@@ -35,7 +35,7 @@ const TodoDetailForm = ({ listId }) => {
       console.log(error);
     }
 
-    setInputValue("");
+    
   };
   return (
     <div className="flex w-full">

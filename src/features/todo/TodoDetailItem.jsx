@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useTodosDispatch } from "@/context/TodoContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
 
 const TodoDetailItem = ({ todo, listId }) => {
   const [editContent, setEditContent] = useState(todo.content);
@@ -11,8 +13,9 @@ const TodoDetailItem = ({ todo, listId }) => {
 
   //削除
   const deleteTodo = async () => {
-    dispatch({ type: "todo/delete", payload: {listId, todoId: todo.id} });
     const taskId = todo.id;
+    dispatch({ type: "todo/delete", payload: {listId, todoId: taskId} });
+    
     try{
       const response = await fetch("/api/todos", {
         method: "DELETE",
@@ -40,7 +43,9 @@ const TodoDetailItem = ({ todo, listId }) => {
   return (
     <>
       <div className="flex w-full">
-        <button className="font-semibold text-red-400" onClick={deleteTodo}>×</button>
+        <button className="font-semibold text-red-400 hover:text-red-700" onClick={deleteTodo}>
+        <FontAwesomeIcon icon={faTrashCan} />
+        </button>
         <input type="checkbox" checked={todo.complete} onChange={updateTodo} className="ml-2"/>
         {todo.complete ? (
           <span className="ml-2">{todo.content}</span>

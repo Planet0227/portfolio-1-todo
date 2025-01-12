@@ -19,7 +19,6 @@ export async function POST(request) {
     const updatedTodoList = { ...todoList, todos: updatedTodos };
 
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
-
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -45,10 +44,9 @@ export async function POST(request) {
     });
 
     if (!response.ok) {
-      return new Response(
-        JSON.stringify({ error: "Failed to add TodoList" }),
-        { status: 500 }
-      );
+      return new Response(JSON.stringify({ error: "Failed to add TodoList" }), {
+        status: 500,
+      });
     }
 
     const createdTodoList = await response.json();
@@ -100,3 +98,29 @@ export async function DELETE(request) {
 }
 
 // 更新
+export async function PATCH(request) {
+  const { listId, newTitle } = await request.json();
+//リストのタイトルを更新
+  if (newTitle) {
+    const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
+      res.json()
+    );
+
+    const updatedTodoList =  {...todoList, title: newTitle};
+   
+    const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedTodoList),
+    });
+
+    if (!updateResponse.ok) {
+      return new Response(JSON.stringify({ error: "Failed to save title" }), {
+        status: 500,
+      });
+    }
+    return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+  }
+}

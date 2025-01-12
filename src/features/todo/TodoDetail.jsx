@@ -35,6 +35,40 @@ export default function TodoDetail({ listId, onClose }) {
     }
   };
 
+  const updateTitle = async (e) => {
+    const newTitle = e.target.innerText.trim();
+    if (newTitle.length === 0) {
+      alert("タイトルは最低1文字以上入力してください。");
+      // 現在のタイトルを維持するために変更をキャンセル
+      e.target.innerText = cachedList.title;
+      return;
+    }
+    if (newTitle !== cachedList.title) {
+      dispatch({ type: "todo/updateList", payload: { listId, newTitle } });
+
+      try {
+        const response = await fetch("/api/todos", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ listId, newTitle }),
+        });
+        const result = await response.json();
+        console.log(result);
+  
+        if (!response.ok) throw new Error("タイトルを更新できませんでした。");
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
+  const handleKeyDown = (e) => {
+    // Enterキーが押された場合は改行を防ぐ
+    if (e.key === "Enter") {
+      e.preventDefault(); 
+      e.target.blur();
+    }
+  };
+
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
@@ -42,15 +76,26 @@ export default function TodoDetail({ listId, onClose }) {
   return (
     <div className="w-full h-full py-5 bg-white rounded-l-lg shadow-lg px-7">
       <div>
-        <button className="pb-3 text-gray-300 hover:text-gray-500" onClick={onClose}>
+        <button
+          className="pb-3 text-gray-300 hover:text-gray-500"
+          onClick={onClose}
+        >
           ＞＞
         </button>
       </div>
-      <div className="flex items-start justify-between">
-        <h1 className="text-2xl font-bold">{cachedList.title}</h1>
+      <div className="flex items-center justify-between">
+        <h1
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={updateTitle}
+          onKeyDown={handleKeyDown}
+          className="w-full text-2xl font-bold focus:outline-none"
+        >
+          {cachedList.title}
+        </h1>
         <button
           onClick={deleteTodoList}
-          className="px-5 py-2 mb-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
+          className="px-5 py-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
         >
           リストを削除
         </button>

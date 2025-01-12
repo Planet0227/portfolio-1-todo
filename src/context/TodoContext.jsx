@@ -15,6 +15,11 @@ const todoReducer = (state, { type, payload }) => {
         ? {...todoList, todos:[...todoList.todos, payload.newTodo ]}
         : todoList
       )
+    case "todo/updateList":
+      return state.map(todoList => todoList.id === payload.listId
+        ? {...todoList, title: payload.newTitle}
+        : todoList
+      )
     case "todo/update":
       return state.map((_todo) =>
         _todo.id === payload.id ? { ..._todo, ...payload } : _todo

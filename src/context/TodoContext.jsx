@@ -17,12 +17,13 @@ const todoReducer = (state, { type, payload }) => {
       )
     case "todo/updateList":
       return state.map(todoList => todoList.id === payload.listId
-        ? {...todoList, title: payload.newTitle}
+        ? {...todoList, title: payload.updatedTitle}
         : todoList
       )
     case "todo/update":
-      return state.map((_todo) =>
-        _todo.id === payload.id ? { ..._todo, ...payload } : _todo
+      return state.map((todoList) => todoList.id === payload.listId 
+      ? {...todoList, todos: payload.updatedTodos }
+      : todoList
       );
     case "todo/deleteList":
       return state.filter((todoList) => todoList.id !== payload.listId);

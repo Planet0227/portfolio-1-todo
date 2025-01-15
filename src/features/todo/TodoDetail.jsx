@@ -35,22 +35,22 @@ export default function TodoDetail({ listId, onClose }) {
     }
   };
 
+  //　タイトル更新
   const updateTitle = async (e) => {
-    const newTitle = e.target.innerText.trim();
-    if (newTitle.length === 0) {
+    const updatedTitle = e.target.innerText.trim();
+    if (updatedTitle.length === 0) {
       alert("タイトルは最低1文字以上入力してください。");
-      // 現在のタイトルを維持するために変更をキャンセル
       e.target.innerText = cachedList.title;
       return;
     }
-    if (newTitle !== cachedList.title) {
-      dispatch({ type: "todo/updateList", payload: { listId, newTitle } });
+    if (updatedTitle !== cachedList.title) {
+      dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
 
       try {
         const response = await fetch("/api/todos", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listId, newTitle }),
+          body: JSON.stringify({ listId, updatedTitle }),
         });
         const result = await response.json();
         console.log(result);
@@ -60,9 +60,10 @@ export default function TodoDetail({ listId, onClose }) {
         console.log(error);
       }
     }
-  };
+  };    
+  // Enterキーが押された場合は改行を防ぎ、フォーカスを外す。
   const handleKeyDown = (e) => {
-    // Enterキーが押された場合は改行を防ぐ
+
     if (e.key === "Enter") {
       e.preventDefault(); 
       e.target.blur();
@@ -105,7 +106,7 @@ export default function TodoDetail({ listId, onClose }) {
       </p>
       <div className="my-3">
         {cachedList.todos.map((todo) => (
-          <TodoDetailItem key={todo.id} todo={todo} listId={listId} />
+          <TodoDetailItem key={todo.id} todo={todo} todos={cachedList.todos} listId={listId} />
         ))}
       </div>
       <div>

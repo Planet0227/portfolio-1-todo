@@ -27,7 +27,7 @@ export async function POST(request) {
     });
 
     if (!updateResponse.ok) {
-      return new Response(JSON.stringify({ error: "Failed to add Task" }), {
+      return new Response(JSON.stringify({ error: "Failed to add task" }), {
         status: 500,
       });
     }
@@ -44,7 +44,7 @@ export async function POST(request) {
     });
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ error: "Failed to add TodoList" }), {
+      return new Response(JSON.stringify({ error: "Failed to add list" }), {
         status: 500,
       });
     }
@@ -75,7 +75,7 @@ export async function DELETE(request) {
     });
 
     if (!updateResponse.ok) {
-      return new Response(JSON.stringify({ error: "Failed to delete Task" }), {
+      return new Response(JSON.stringify({ error: "Failed to delete task" }), {
         status: 500,
       });
     }
@@ -88,7 +88,7 @@ export async function DELETE(request) {
 
     if (!response.ok) {
       return new Response(
-        JSON.stringify({ error: "Failed to delete Todo list" }),
+        JSON.stringify({ error: "Failed to delete list" }),
         { status: 500 }
       );
     }
@@ -99,15 +99,14 @@ export async function DELETE(request) {
 
 // 更新
 export async function PATCH(request) {
-  const { listId, newTitle } = await request.json();
-//リストのタイトルを更新
-  if (newTitle) {
-    const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
-      res.json()
-    );
+  const { listId, updatedTitle, updatedTodos } = await request.json();
+  const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
+    res.json()
+  );
+  //リストのタイトルを更新
+  if (updatedTitle) {
+    const updatedTodoList = { ...todoList, title: updatedTitle };
 
-    const updatedTodoList =  {...todoList, title: newTitle};
-   
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
       method: "PATCH",
       headers: {
@@ -118,6 +117,23 @@ export async function PATCH(request) {
 
     if (!updateResponse.ok) {
       return new Response(JSON.stringify({ error: "Failed to save title" }), {
+        status: 500,
+      });
+    }
+    return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+  } else if (updatedTodos) {
+    const updatedTodoList = { ...todoList, todos: updatedTodos };
+
+    const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedTodoList),
+    });
+
+    if (!updateResponse.ok) {
+      return new Response(JSON.stringify({ error: "Failed to save task" }), {
         status: 500,
       });
     }

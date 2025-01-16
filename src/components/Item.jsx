@@ -1,26 +1,29 @@
-// import { useTodosDispatch } from "../context/TodoContext";
 
-const Item = ({ todo, listId }) => {
-  // const dispatch = useTodosDispatch();
-
-
-  // // //編集・更新
-  // const updateTodo = () => {
-  //   const newTodo = {
-  //     ...todo,
-  //     complete: !todo.complete,
-  //     content: editContent, // 編集中の値を反映
-  //   };
-  //   dispatch({ type: "todo/update", payload: newTodo });
-  // };
+const Item = ({ todo }) => {
 
   return (
-    <>
-      <div>
-        <input type="checkbox" checked={todo.complete} onChange={(e) => e.stopPropagation()} />
-        <span className={`ml-2 ${todo.complete ? "line-through text-gray-500" : ""}`}>{todo.content}</span>
-      </div>
-    </>
+    <div
+      className="relative flex items-start w-full space-x-2"
+    >
+      <input
+        type="checkbox"
+        checked={todo.complete}
+        onChange={(e) => e.stopPropagation()}
+        className={`w-4 h-4 mt-0.5 appearance-none rounded-full border border-gray-300 ${
+          todo.complete
+            ? "bg-green-500 border-green-500 before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"
+            : ""
+        }`}
+      />
+      <span
+        className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap ${
+          todo.complete ? "line-through text-gray-500" : ""
+        }`}
+      >
+        {todo.content}
+      </span>
+    </div>
   );
 };
+
 export default Item;

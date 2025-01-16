@@ -7,8 +7,6 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
   // const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
 
-
-
   //削除
   const deleteTodo = async () => {
     const taskId = todo.id;
@@ -37,11 +35,8 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
       return;
     }
     if (newContent !== todo.content) {
-      
       const updatedTodos = todos.map((_todo) =>
-        _todo.id === todo.id 
-      ? { ..._todo, content: newContent } 
-      : _todo
+        _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
       );
       dispatch({
         type: "todo/update",
@@ -56,7 +51,7 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
         });
         // const result = await response.json();
         // console.log(result);
-  
+
         if (!response.ok) throw new Error("タスクを更新できませんでした。");
       } catch (error) {
         console.log(error);
@@ -73,9 +68,7 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
   //　チェックボックス更新
   const toggleCheckBox = async () => {
     const updatedTodos = todos.map((_todo) =>
-      _todo.id === todo.id 
-    ? { ..._todo, complete: !todo.complete } 
-    : _todo
+      _todo.id === todo.id ? { ..._todo, complete: !todo.complete } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTodos } });
     try {
@@ -95,18 +88,16 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
 
   return (
     <>
-      <div className="flex w-full">
-        <button
-          className="font-semibold text-red-400 hover:text-red-700"
-          onClick={deleteTodo}
-        >
-          <FontAwesomeIcon icon={faTrashCan} />
-        </button>
+      <div className="flex w-full ">
         <input
           type="checkbox"
           checked={todo.complete}
           onChange={toggleCheckBox}
-          className="ml-2"
+          className={`w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
+            todo.complete
+              ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓']   before:text-white before:text-sm before:flex before:items-center before:justify-center"
+              : ""
+          }`}
         />
 
         <span
@@ -114,11 +105,18 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
           suppressContentEditableWarning
           onBlur={upudateContent}
           onKeyDown={handleKeyDown}
-          className={`w-10/12 ml-2 text-lg border-b focus:outline-none ${todo.complete ? "line-through text-gray-500" : ""}`}
+          className={`w-10/12 text-lg ml-2 flex-1 border-b focus:outline-none ${
+            todo.complete ? "line-through text-gray-500" : ""
+          }`}
         >
           {todo.content}
         </span>
-
+        <button
+          className="self-start text-xl font-semibold text-red-400 ml-7 hover:text-red-700"
+          onClick={deleteTodo}
+        >
+          <FontAwesomeIcon icon={faTrashCan} />
+        </button>
         {/* <input className="w-10/12 max-w-full ml-2 text-lg border-b focus:caret-black focus:outline-none" type="text" value={editContent} onChange={changeContent} /> */}
       </div>
     </>

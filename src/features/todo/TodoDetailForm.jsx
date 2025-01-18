@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTodosDispatch } from "@/context/TodoContext";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
   const dispatch = useTodosDispatch();
+  const textareaRef = useRef(null);
 
   const addTodo = async (e) => {
     e.preventDefault();
@@ -34,8 +35,21 @@ const TodoDetailForm = ({ listId }) => {
     } catch (error) {
       console.log(error);
     }
+  };
+  // textareaの高さの調整
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [inputValue]);
 
-    
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault(); // 改行を防止
+      addTodo(e); // フォーム送信
+    }
   };
   return (
     <div className="flex w-full">
@@ -46,12 +60,15 @@ const TodoDetailForm = ({ listId }) => {
         >
           +
         </button>
-        <input
+        <textarea
+          ref={textareaRef}
           type="text"
           placeholder="タスクを入力"
           value={inputValue}
+          rows={1}
           onChange={(e) => setInputValue(e.target.value)}
-          className="w-10/12 text-lg border-b focus:caret-black focus:outline-none"
+          onKeyDown={handleKeyDown}
+          className="flex-1 w-10/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap border-b resize-none focus:outline-none"
         />
       </form>
     </div>

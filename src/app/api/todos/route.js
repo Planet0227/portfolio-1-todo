@@ -104,7 +104,7 @@ export async function PATCH(request) {
     res.json()
   );
   //リストのタイトルを更新
-  if (updatedTitle) {
+  if (updatedTitle !== undefined) {
     const updatedTodoList = { ...todoList, title: updatedTitle };
 
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {

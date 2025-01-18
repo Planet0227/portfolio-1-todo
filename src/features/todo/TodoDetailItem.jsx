@@ -1,13 +1,14 @@
-import { useState } from "react";
 import { useTodosDispatch } from "@/context/TodoContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { useState, useEffect, useRef } from "react";
 
 const TodoDetailItem = ({ todos, todo, listId }) => {
-  // const [editContent, setEditContent] = useState(todo.content);
+  const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
+  const textareaRef = useRef(null);
 
-  //削除
+  // 削除
   const deleteTodo = async () => {
     const taskId = todo.id;
     dispatch({ type: "todo/delete", payload: { listId, todoId: taskId } });
@@ -27,13 +28,7 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
   };
 
   // タスク更新
-  const upudateContent = async (e) => {
-    const newContent = e.target.innerText.trim();
-    if (newContent.length === 0) {
-      alert("最低1文字以上入力してください。");
-      e.target.innerText = todo.content;
-      return;
-    }
+  const updateContent = async (newContent) => {
     if (newContent !== todo.content) {
       const updatedTodos = todos.map((_todo) =>
         _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
@@ -49,8 +44,6 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ listId, updatedTodos }),
         });
-        // const result = await response.json();
-        // console.log(result);
 
         if (!response.ok) throw new Error("タスクを更新できませんでした。");
       } catch (error) {
@@ -59,13 +52,7 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
     }
   };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      e.target.blur();
-    }
-  };
-  //　チェックボックス更新
+  // チェックボックス更新
   const toggleCheckBox = async () => {
     const updatedTodos = todos.map((_todo) =>
       _todo.id === todo.id ? { ..._todo, complete: !todo.complete } : _todo
@@ -77,8 +64,6 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ listId, updatedTodos }),
       });
-      // const result = await response.json();
-      // console.log(result);
 
       if (!response.ok) throw new Error("チェック状態を更新できませんでした。");
     } catch (error) {
@@ -86,40 +71,61 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
     }
   };
 
-  return (
-    <>
-      <div className="flex w-full ">
-        <input
-          type="checkbox"
-          checked={todo.complete}
-          onChange={toggleCheckBox}
-          className={`w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
-            todo.complete
-              ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓']   before:text-white before:text-sm before:flex before:items-center before:justify-center"
-              : ""
-          }`}
-        />
+  // textareaの高さの調整
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [editContent]);
 
-        <span
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={upudateContent}
-          onKeyDown={handleKeyDown}
-          className={`w-10/12 text-lg ml-2 flex-1 border-b focus:outline-none ${
-            todo.complete ? "line-through text-gray-500" : ""
-          }`}
-        >
-          {todo.content}
-        </span>
-        <button
-          className="self-start text-xl font-semibold text-red-400 ml-7 hover:text-red-700"
-          onClick={deleteTodo}
-        >
-          <FontAwesomeIcon icon={faTrashCan} />
-        </button>
-        {/* <input className="w-10/12 max-w-full ml-2 text-lg border-b focus:caret-black focus:outline-none" type="text" value={editContent} onChange={changeContent} /> */}
-      </div>
-    </>
+  // onChangeイベントでリアルタイム更新
+  const handleContentChange = (e) => {
+    const newContent = e.target.value;
+    setEditContent(newContent);
+    updateContent(newContent);
+  };
+  // 入力が空なら削除
+  const handleBlurDelete = () => {
+    if (editContent.trim().length === 0) {
+      deleteTodo(); 
+    }
+  };
+
+  return (
+    <div className="flex w-full">
+      <input
+        type="checkbox"
+        checked={todo.complete}
+        onChange={toggleCheckBox}
+        className={`w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
+          todo.complete
+            ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"
+            : ""
+        }`}
+      />
+
+      <textarea
+        ref={textareaRef}
+        type="text"
+        value={editContent}
+        onChange={handleContentChange} // 変更を即座に反映
+        onBlur={handleBlurDelete}
+        className={`w-10/12 text-lg ml-2 flex-1 border-b focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
+          todo.complete ? "line-through text-gray-500" : ""
+        }`}
+        rows={1} // 最小高さを1行に設定
+      />
+
+      <button
+        className="self-start text-xl font-semibold text-red-400 ml-7 hover:text-red-700"
+        onClick={deleteTodo}
+      >
+        <FontAwesomeIcon icon={faTrashCan} />
+      </button>
+    </div>
   );
 };
+
 export default TodoDetailItem;

@@ -66,6 +66,7 @@ const Form = () => {
         </button>
         <input
           type="text"
+          maxLength="20"
           placeholder="タイトルを入力"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

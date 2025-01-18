@@ -5,14 +5,14 @@ import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAnglesRight } from "@fortawesome/free-solid-svg-icons";
+import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
 export default function TodoDetail({ listId, onClose }) {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
-
+  const [editTitle, setEditTitle] = useState("");
   useEffect(() => {
     if (listId) {
       const foundList = todos.find((todoList) => todoList.id === listId);
@@ -20,6 +20,13 @@ export default function TodoDetail({ listId, onClose }) {
     }
   }, [listId, todos]);
 
+  useEffect(() => {
+    if (cachedList) {
+      setEditTitle(cachedList.title || "");
+    }
+  }, [cachedList]);
+
+  //モーダルをEscで閉じる
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -33,7 +40,7 @@ export default function TodoDetail({ listId, onClose }) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-  
+
   const deleteTodoList = async () => {
     dispatch({ type: "todo/deleteList", payload: { listId } });
     setCachedList(null);
@@ -51,15 +58,14 @@ export default function TodoDetail({ listId, onClose }) {
       console.error(error);
     }
   };
+  const handleTitleChange = (e) => {
+    const updatedTitle = e.target.value;
+    setEditTitle(updatedTitle);
+    updateTitle(updatedTitle);
+  };
 
   //　タイトル更新
-  const updateTitle = async (e) => {
-    const updatedTitle = e.target.innerText.trim();
-    if (updatedTitle.length === 0) {
-      alert("タイトルは最低1文字以上入力してください。");
-      e.target.innerText = cachedList.title;
-      return;
-    }
+  const updateTitle = async (updatedTitle) => {
     if (updatedTitle !== cachedList.title) {
       dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
 
@@ -69,20 +75,13 @@ export default function TodoDetail({ listId, onClose }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ listId, updatedTitle }),
         });
-        const result = await response.json();
-        console.log(result);
+        // const result = await response.json();
+        // console.log(result);
 
         if (!response.ok) throw new Error("タイトルを更新できませんでした。");
       } catch (error) {
         console.log(error);
       }
-    }
-  };
-  // Enterキーが押された場合は改行を防ぎ、フォーカスを外す。
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      e.target.blur();
     }
   };
 
@@ -92,45 +91,47 @@ export default function TodoDetail({ listId, onClose }) {
 
   return (
     <div className="w-full h-full bg-white rounded-l-lg shadow-lg">
-      <div className="relative">
-        <button
-          className="mt-3 ml-3 text-lg text-gray-300 hover:text-gray-500"
-          onClick={onClose}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          <FontAwesomeIcon icon={faAnglesRight} />
-        </button>
-        {/* ホバーで表示 */}
-        <div
-          className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-0 transition-all duration-300 ${
-            isHovered
-              ? "opacity-100 scale-100 "
-              : "opacity-0 scale-90 pointer-events-none"
-          }`}
-        >
-          <div>閉じる</div>
-          <div>（esc）</div>
+      <div className="flex items-center justify-between">
+        <div className="relative">
+          <button
+            className="mt-3 ml-5 text-xl text-gray-300 hover:text-gray-500"
+            onClick={onClose}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <FontAwesomeIcon icon={faChevronLeft} />
+          </button>
+          {/* ホバーで表示 */}
+          <div
+            className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-0 transition-all duration-300 ${
+              isHovered
+                ? "opacity-100 scale-100 "
+                : "opacity-0 scale-90 pointer-events-none"
+            }`}
+          >
+            <div>閉じる</div>
+            <div>（esc）</div>
+          </div>
         </div>
+
+        <button
+          onClick={deleteTodoList}
+          className="px-5 py-2 mt-5 mr-5 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
+        >
+          リストを削除
+        </button>
       </div>
 
-      <div className="px-6 mt-8 ml-7">
+      <div className="px-6 mt-7 ml-7">
         <div className="flex items-center justify-between">
-          <h1
-            contentEditable
-            suppressContentEditableWarning
-            onBlur={updateTitle}
-            onKeyDown={handleKeyDown}
+          <input
+            type="text"
+            maxLength="20"
+            placeholder="タイトルを入力"
+            value={editTitle}
+            onChange={handleTitleChange}
             className="w-full text-3xl font-bold focus:outline-none"
-          >
-            {cachedList.title}
-          </h1>
-          <button
-            onClick={deleteTodoList}
-            className="px-5 py-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
-          >
-            リストを削除
-          </button>
+          ></input>
         </div>
         <p className="pb-1 text-gray-500 border-b-2 border-gray">
           作成した日付： {cachedList.date}

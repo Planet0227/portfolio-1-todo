@@ -13,14 +13,14 @@ const Todo = ({ openModal }) => {
   const todos = useTodos();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-2 border">
       {todos.map((todoList) => {
         // console.log(todoList);
         return (
           <div
             key={todoList.id}
             onClick={() => openModal(todoList.id)}
-            className="w-full max-w-xs p-4 bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer hover:bg-gray-100"
+            className="p-4 overflow-hidden bg-white border border-gray-300 rounded-lg shadow-md cursor-pointer max-h-48 hover:bg-gray-100"
           >
             <div className="flex items-start justify-between">
               <div
@@ -58,18 +58,20 @@ const Todos = () => {
 
   return (
     <TodoProvider>
-      <div className="min-h-screen p-6 bg-gray-50">
+    <div className="w-full min-h-screen p-4 border-4 bg-gray-50">
+      <div>
         <Todo openModal={openModal} />
-
-        <div className="fixed bottom-0 w-full max-w-md p-5 transform -translate-x-1/2 bg-white rounded-lg shadow-md left-1/2 sw-full">
-          <Form />
-        </div>
-
-        <Modal isOpen={isModalOpen} onClose={closeModal}>
-          <TodoDetail listId={selectedTodoId} onClose={closeModal} />
-        </Modal>
       </div>
-    </TodoProvider>
+
+      <div className="fixed bottom-0 w-full max-w-md p-5 transform -translate-x-1/2 bg-white rounded-lg shadow-2xl left-1/2">
+        <Form />
+      </div>
+
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        <TodoDetail listId={selectedTodoId} onClose={closeModal} />
+      </Modal>
+    </div>
+  </TodoProvider>
   );
 };
 

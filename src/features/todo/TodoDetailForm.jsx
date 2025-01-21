@@ -5,6 +5,7 @@ import { useTodosDispatch } from "@/context/TodoContext";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
+  const [isHovered, setIsHovered] = useState(false);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
 
@@ -54,12 +55,26 @@ const TodoDetailForm = ({ listId }) => {
   return (
     <div className="flex w-full">
       <form onSubmit={addTodo} className="flex w-full">
-        <button
-          onClick={addTodo}
-          className="px-3 text-2xl text-zinc-600 bg-white rounded hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]  hover:translate-y-[2px] transition-all duration-200"
-        >
-          +
-        </button>
+        <div className="relative">
+          <button
+            onClick={addTodo}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="flex items-center mt-0.5 justify-center flex-shrink-0 w-5 h-5 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
+          >
+            +
+          </button>
+          <div
+            className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-[-20px] top-6 transition-all duration-300 ${
+              isHovered
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-90 pointer-events-none"
+            }`}
+          >
+            <div>追加</div>
+            <div>（Enter）</div>
+          </div>
+        </div>
         <textarea
           ref={textareaRef}
           type="text"
@@ -68,9 +83,10 @@ const TodoDetailForm = ({ listId }) => {
           rows={1}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 w-10/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap border-b resize-none focus:outline-none"
+          className="flex-1 w-9/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap border-b resize-none focus:outline-none"
         />
       </form>
+      <div className="ml-11"></div>
     </div>
   );
 };

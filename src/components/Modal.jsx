@@ -6,8 +6,10 @@ const Modal = ({ isOpen, onClose, children }) => {
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true); // アニメーションを開始
+      document.body.style.overflow = "hidden"; // 背景のスクロールを無効化
     } else if (!isOpen && isAnimating) {
       const timer = setTimeout(() => setIsAnimating(false), 200); // アニメーション終了後に非表示
+      document.body.style.overflow = ""; // 背景スクロールを有効化
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -20,13 +22,12 @@ const Modal = ({ isOpen, onClose, children }) => {
       onClick={onClose}
     >
       <div
-        className={`w-1/2 h-full transform transition-transform duration-200  ${
+        className={`w-1/2 h-full transform transition-transform duration-200 bg-white shadow-lg rounded-l-lg overflow-y-auto ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         onClick={(e) => e.stopPropagation()} // モーダル内クリックを無効化
       >
-
-        {children}
+          {children}
       </div>
     </div>
   );

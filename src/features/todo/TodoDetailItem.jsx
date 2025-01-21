@@ -89,7 +89,7 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
   // 入力が空なら削除
   const handleBlurDelete = () => {
     if (editContent.trim().length === 0) {
-      deleteTodo(); 
+      deleteTodo();
     }
   };
 

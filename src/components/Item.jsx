@@ -16,7 +16,7 @@ const Item = ({ todo }) => {
         }`}
       />
       <span
-        className={`flex-1 overflow-hidden text-ellipsis whitespace-nowrap ${
+        className={`flex-1 text-sm overflow-hidden text-ellipsis whitespace-nowrap ${
           todo.complete ? "line-through text-gray-500" : ""
         }`}
       >

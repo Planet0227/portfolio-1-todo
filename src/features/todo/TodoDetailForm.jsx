@@ -54,6 +54,7 @@ const TodoDetailForm = ({ listId }) => {
   };
   return (
     <div className="flex w-full">
+      <div className="ml-[29px]"></div>
       <form onSubmit={addTodo} className="flex w-full">
         <div className="relative">
           <button

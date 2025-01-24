@@ -1,6 +1,6 @@
 import { useTodosDispatch } from "@/context/TodoContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import { faGripLines, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
 
 const TodoDetailItem = ({ todos, todo, listId }) => {
@@ -95,11 +95,15 @@ const TodoDetailItem = ({ todos, todo, listId }) => {
 
   return (
     <div className="flex w-full">
+      <span className="text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600">
+        <FontAwesomeIcon icon={faGripLines} size="xl" />
+      </span>
+
       <input
         type="checkbox"
         checked={todo.complete}
         onChange={toggleCheckBox}
-        className={`w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
+        className={`ml-2 w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
           todo.complete
             ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"
             : ""

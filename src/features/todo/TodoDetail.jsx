@@ -96,7 +96,7 @@ export default function TodoDetail({ listId, onClose }) {
         <div className="relative flex items-center justify-between p-4">
           <div>
             <button
-              className="text-xl text-gray-300 hover:text-gray-500"
+              className="mx-2 text-xl text-gray-300 hover:text-gray-500"
               onClick={onClose}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
@@ -105,7 +105,7 @@ export default function TodoDetail({ listId, onClose }) {
             </button>
             {/* ホバーで表示 */}
             <div
-              className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-0 transition-all duration-300 ${
+              className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-2 transition-all duration-300 ${
                 isHovered
                   ? "opacity-100 scale-100"
                   : "opacity-0 scale-90 pointer-events-none"
@@ -126,30 +126,28 @@ export default function TodoDetail({ listId, onClose }) {
         <div className="ml-7">
           <input
             type="text"
-            maxLength="20"
+            maxLength="18"
             placeholder="タイトルを入力"
             value={editTitle}
             onChange={handleTitleChange}
             className="w-full text-3xl font-bold focus:outline-none"
           />
-        <p className="pb-1 mb-3 text-gray-500 border-b-2 border-gray">
-          作成した日付： {cachedList.date}
-        </p>
+          <p className="pb-1 mb-3 text-gray-500 border-b-2 border-gray">
+            作成した日付： {cachedList.date}
+          </p>
         </div>
       </div>
 
       {/* メイン */}
-      <div className="px-4 mt-5 mb-40 ml-7">
-        <div className="my-1">
-          {cachedList.todos.map((todo) => (
-            <TodoDetailItem
-              key={todo.id}
-              todo={todo}
-              todos={cachedList.todos}
-              listId={listId}
-            />
-          ))}
-        </div>
+      <div className="mx-10 mt-5 mb-40">
+        {cachedList.todos.map((todo) => (
+          <TodoDetailItem
+            key={todo.id}
+            todo={todo}
+            todos={cachedList.todos}
+            listId={listId}
+          />
+        ))}
         <div>
           <TodoDetailForm listId={listId} />
         </div>

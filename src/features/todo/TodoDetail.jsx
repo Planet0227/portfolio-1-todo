@@ -7,7 +7,7 @@ import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
-import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
+import { DndContext, DragOverlay, closestCenter, closestCorners, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
 import {
@@ -22,8 +22,11 @@ export default function TodoDetail({ listId, onClose }) {
   const [isHovered, setIsHovered] = useState(false);
   const [editTitle, setEditTitle] = useState("");
 
-  const [activeId, setActiveId] = useState(null); // ドラッグ中のアイテムIDを保持
+// ドラッグ中のアイテムとIDを保持
+  const [activeId, setActiveId] = useState(null); 
   const activeItem = cachedList?.todos.find((todo) => todo.id === activeId);
+  const [indicatorIndex, setIndicatorIndex] = useState(null); // 挿入位置のインデックスを保持
+
 
   useEffect(() => {
     if (listId) {
@@ -128,12 +131,12 @@ export default function TodoDetail({ listId, onClose }) {
         payload: { listId, updatedTodos },
       });
 
-      // // サーバー同期
-      // fetch("/api/todos", {
-      //   method: "PATCH",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ listId, updatedTodos }),
-      // }).catch((err) => console.error("サーバー同期エラー:", err));
+      // サーバー同期
+      fetch("/api/todos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listId, updatedTodos }),
+      }).catch((err) => console.error("サーバー同期エラー:", err));
     }
   };
 
@@ -184,18 +187,18 @@ export default function TodoDetail({ listId, onClose }) {
             placeholder="タイトルを入力"
             value={editTitle}
             onChange={handleTitleChange}
-            className="w-full text-3xl font-bold focus:outline-none"
+            className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <p className="pb-1 mb-3 text-gray-500 border-b-2 border-gray">
+          <p className="pb-1 text-gray-500 border-b-2 border-gray">
             作成した日付： {cachedList.date}
           </p>
         </div>
       </div>
 
       {/* メイン */}
-      <div className="relative mx-10 mt-5 mb-40">
+      <div className="relative mx-10 mt-2 mb-40">
         <DndContext
-          collisionDetection={closestCenter}
+          collisionDetection={closestCorners}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -212,19 +215,27 @@ export default function TodoDetail({ listId, onClose }) {
             ))}
             <div></div>
           </SortableContext>
-          {/* <DragOverlay>
+          <DragOverlay 
+             dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: {},
+              }),
+            }}
+          >
             {activeId ? (
               <TodoDetailItem
-                id={activeItem?.id} // ドラッグ中のアイテムID
-                todo={activeItem} // ドラッグ中のアイテムデータ
-                listId={listId} // 必要なプロパティを渡す
-                isOverlay={true} // オーバーレイ用のスタイル切り替え用フラグを追加
+                id={activeItem.id}
+                todo={activeItem}
+                listId={listId}
               />
             ) : null}
-          </DragOverlay> */}
+          </DragOverlay>
         </DndContext>
         <TodoDetailForm listId={listId} />
       </div>
     </div>
   );
 }
+
+
+//strategy={verticalListSortingStrategy}を書かないと入れ替えた時にアイテムがずれる。

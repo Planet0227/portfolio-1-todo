@@ -2,33 +2,47 @@ import { useTodosDispatch } from "@/context/TodoContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGripLines, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
-import { useSortable } from "@dnd-kit/sortable";
+
+import { useSortable, defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const TodoDetailItem = ({ todos, todo, id, listId, isOverlay}) => {
+const TodoDetailItem = ({ todos, todo, id, listId }) => {
   const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
-
+  
+  //  dnd
   const {
+    isOver,
+    activeIndex,
+    overIndex,
     isDragging,
-    setActivatorNodeRef,
-    attributes,
-    listeners,
+    isSorting,
     setNodeRef,
     transform,
     transition,
-  } = useSortable({ id });
-
-  // transformのx軸を固定して、上下の移動だけに制限
-  const limitedTransform = transform
-    ? { ...transform, x: 0 } // x方向の移動を0に固定
-    : null;
+    setActivatorNodeRef,
+    attributes,
+    listeners,
+  } = useSortable({ 
+    id, 
+  });
 
   const style = {
-    transform: CSS.Translate.toString(transform), //Translateに変更(歪み防止)
+    transform: isSorting ? undefined : CSS.Translate.toString(transform), //Translateに変更(歪み防止)
     transition,
+    opacity: isDragging ? "0.5" : "",
   };
+
+  const sortDirection =
+    activeIndex > overIndex
+      ? "before"
+      : activeIndex < overIndex
+      ? "after"
+      : null;
+  
+  const isShowIndicator = isOver && sortDirection != null;    
+
   // 削除
   const deleteTodo = async () => {
     const taskId = todo.id;
@@ -133,9 +147,11 @@ const TodoDetailItem = ({ todos, todo, id, listId, isOverlay}) => {
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full mb-2 border-gray-600 border-2 relative  ${
-        isOverlay ? "opacity-80" : ""
-      } ${isDragging ? "z-10" : ""}`}
+        className={`flex w-full mb-2 border-gray-500 border-2 p-2 rounded-lg bg-white relative ${isDragging ? "z-10" : ""}  ${
+        isShowIndicator ? "after:absolute after:w-full after:left-0 after:h-[5px] after:rounded-full after:bg-blue-500" : ""
+      } ${sortDirection === "before" ? "after:top-[-8.5px]" : ""} ${
+        sortDirection === "after" ? "after:bottom-[-8.5px]" : ""
+      }`}
       >
         <div
           ref={setActivatorNodeRef}
@@ -150,7 +166,7 @@ const TodoDetailItem = ({ todos, todo, id, listId, isOverlay}) => {
           type="checkbox"
           checked={todo.complete}
           onChange={toggleCheckBox}
-          className={`ml-2 w-5 h-5 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
+          className={`ml-2 w-5 h-5 mt-1 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
             todo.complete
               ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"
               : ""
@@ -163,7 +179,7 @@ const TodoDetailItem = ({ todos, todo, id, listId, isOverlay}) => {
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
           onBlur={handleBlurDelete}
-          className={`w-10/12 text-lg ml-2 flex-1 border-b focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
+          className={`w-10/12 text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
             todo.complete ? "line-through text-gray-500" : ""
           }`}
           rows={1} // 最小高さを1行に設定

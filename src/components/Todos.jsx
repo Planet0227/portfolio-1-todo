@@ -52,7 +52,7 @@ const Todo = ({ openModal }) => {
           >
             <div className="flex items-start justify-between">
               <div
-                className={`text-md font-semibold ${
+                className={`text-md font-bold ${
                   !todo.title ? "text-gray-400" : ""
                 }`}
               >
@@ -103,7 +103,7 @@ const Todos = () => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
 
-    // スクロール無効化
+    // モーダル展開時のスタイル維持
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";

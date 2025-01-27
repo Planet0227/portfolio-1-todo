@@ -7,12 +7,24 @@ import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 
+import { DndContext, DragOverlay, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+
 export default function TodoDetail({ listId, onClose }) {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
   const [editTitle, setEditTitle] = useState("");
+
+  const [activeId, setActiveId] = useState(null); // ドラッグ中のアイテムIDを保持
+  const activeItem = cachedList?.todos.find((todo) => todo.id === activeId);
+
   useEffect(() => {
     if (listId) {
       const foundList = todos.find((todoList) => todoList.id === listId);
@@ -85,6 +97,48 @@ export default function TodoDetail({ listId, onClose }) {
     }
   };
 
+  const handleDragStart = (event) => {
+    setActiveId(event.active.id); // ドラッグ開始時のIDを保存
+  };
+
+  // ドラッグ終了時の処理
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (over == null || active.id === over.id) {
+      return;
+    }
+
+    if (active.id !== over.id) {
+      const oldIndex = cachedList.todos.findIndex(
+        (item) => item.id === active.id
+      );
+      const newIndex = cachedList.todos.findIndex(
+        (item) => item.id === over.id
+      );
+
+      const updatedTodos = arrayMove(cachedList.todos, oldIndex, newIndex);
+
+      setCachedList({ ...cachedList, todos: updatedTodos });
+
+      // 状態更新
+      dispatch({
+        type: "todo/update",
+        payload: { listId, updatedTodos },
+      });
+
+      // // サーバー同期
+      // fetch("/api/todos", {
+      //   method: "PATCH",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ listId, updatedTodos }),
+      // }).catch((err) => console.error("サーバー同期エラー:", err));
+    }
+  };
+
+  
+
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
@@ -92,7 +146,7 @@ export default function TodoDetail({ listId, onClose }) {
   return (
     <div>
       {/* ヘッダー */}
-      <div className="sticky top-0 z-10 bg-white">
+      <div className="sticky top-0 z-20 bg-white">
         <div className="relative flex items-center justify-between p-4">
           <div>
             <button
@@ -103,7 +157,6 @@ export default function TodoDetail({ listId, onClose }) {
             >
               <FontAwesomeIcon icon={faChevronLeft} />
             </button>
-            {/* ホバーで表示 */}
             <div
               className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-2 transition-all duration-300 ${
                 isHovered
@@ -123,6 +176,7 @@ export default function TodoDetail({ listId, onClose }) {
             リストを削除
           </button>
         </div>
+
         <div className="ml-7">
           <input
             type="text"
@@ -139,18 +193,37 @@ export default function TodoDetail({ listId, onClose }) {
       </div>
 
       {/* メイン */}
-      <div className="mx-10 mt-5 mb-40">
-        {cachedList.todos.map((todo) => (
-          <TodoDetailItem
-            key={todo.id}
-            todo={todo}
-            todos={cachedList.todos}
-            listId={listId}
-          />
-        ))}
-        <div>
-          <TodoDetailForm listId={listId} />
-        </div>
+      <div className="relative mx-10 mt-5 mb-40">
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext strategy={verticalListSortingStrategy} items={cachedList.todos.map((todo) => todo.id)}>
+            {cachedList.todos.map((todo) => (
+              <TodoDetailItem
+                key={todo.id}
+                id={todo.id}
+                todo={todo}
+                todos={cachedList.todos}
+                listId={listId}
+              />
+            ))}
+            <div></div>
+          </SortableContext>
+          {/* <DragOverlay>
+            {activeId ? (
+              <TodoDetailItem
+                id={activeItem?.id} // ドラッグ中のアイテムID
+                todo={activeItem} // ドラッグ中のアイテムデータ
+                listId={listId} // 必要なプロパティを渡す
+                isOverlay={true} // オーバーレイ用のスタイル切り替え用フラグを追加
+              />
+            ) : null}
+          </DragOverlay> */}
+        </DndContext>
+        <TodoDetailForm listId={listId} />
       </div>
     </div>
   );

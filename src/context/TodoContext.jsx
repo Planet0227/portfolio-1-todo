@@ -39,6 +39,8 @@ const todoReducer = (state, { type, payload }) => {
         }
         return todoList;
       });
+    case "todo/sort":
+      return payload.updatedTodos;
 
     default:
       return state;

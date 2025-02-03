@@ -79,6 +79,7 @@ const TodoDetailForm = ({ listId }) => {
         <textarea
           ref={textareaRef}
           type="text"
+          name={"todo-DetailForm"}
           placeholder="タスクを入力"
           value={inputValue}
           rows={1}

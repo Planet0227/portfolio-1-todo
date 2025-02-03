@@ -6,7 +6,7 @@ import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
-
+//  dnd
 import { DndContext, DragOverlay, closestCenter, closestCorners, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -25,7 +25,7 @@ export default function TodoDetail({ listId, onClose }) {
 // ドラッグ中のアイテムとIDを保持
   const [activeId, setActiveId] = useState(null); 
   const activeItem = cachedList?.todos.find((todo) => todo.id === activeId);
-  const [indicatorIndex, setIndicatorIndex] = useState(null); // 挿入位置のインデックスを保持
+
 
 
   useEffect(() => {
@@ -183,6 +183,7 @@ export default function TodoDetail({ listId, onClose }) {
         <div className="ml-7">
           <input
             type="text"
+            name={`todo-${listId}-input`}
             maxLength="18"
             placeholder="タイトルを入力"
             value={editTitle}
@@ -213,7 +214,7 @@ export default function TodoDetail({ listId, onClose }) {
                 listId={listId}
               />
             ))}
-            <div></div>
+            
           </SortableContext>
           <DragOverlay 
              dropAnimation={{

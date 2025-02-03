@@ -35,6 +35,7 @@ const Form = () => {
       id: Math.floor(Math.random() * 1e7).toString(),
       title: inputValue,
       date: formattedDate,
+      category: "notStarted",
       todos: [],
     };
     dispatch({ type: "todo/addList", payload: newTodoList });
@@ -67,6 +68,7 @@ const Form = () => {
         </button>
         <input
           type="text"
+          name={"todo-form"}
           maxLength="20"
           placeholder="タイトルを入力"
           value={inputValue}

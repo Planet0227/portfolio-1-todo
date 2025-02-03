@@ -7,6 +7,7 @@ const Item = ({ todo }) => {
     >
       <input
         type="checkbox"
+        name={`todo-${todo.id}`}
         checked={todo.complete}
         onChange={(e) => e.stopPropagation()}
         className={`w-4 h-4 mt-0.5 appearance-none rounded-full border border-gray-300 ${

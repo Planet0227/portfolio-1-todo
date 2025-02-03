@@ -1,103 +1,132 @@
 "use client";
 
-import List from "./List";
+import Todo from "./Todo";
 import Form from "./Form";
+import TodoColmun from "./TodoColmun";
 import TodoDetail from "@/features/todo/TodoDetail";
-import { TodoProvider, useTodos } from "../context/TodoContext";
-import { useState } from "react";
+import { useTodos, useTodosDispatch } from "../context/TodoContext";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
-const Todo = ({ openModal }) => {
-  const todos = useTodos();
-
-  // 進行状況で分類
-  const categorizedTodos = {
-    notStarted: todos.filter(
-      (todoList) =>
-        todoList.todos.length === 0 ||
-        todoList.todos.every((todo) => !todo.complete)
-    ),
-    inProgress: todos.filter(
-      (todoList) =>
-        todoList.todos.some((todo) => todo.complete) &&
-        todoList.todos.some((todo) => !todo.complete)
-    ),
-    completed: todos.filter(
-      (todoList) =>
-        todoList.todos.length > 0 &&
-        todoList.todos.every((todo) => todo.complete)
-    ),
-  };
-
-  const renderSection = (category, categoryColor, todoList) => (
-    <div className="w-full p-3 ">
-      <div className="z-10 w-full py-1 mb-3 bg-white md:sticky top-11">
-        <span
-          className={` mb-3 text-lg p-1 border-1 border-white rounded-md ${categoryColor}`}
-        >
-          {category}
-        </span>
-        <span className="ml-3 text-gray-500">{todoList.length}</span>
-      </div>
-      <div
-        className="grid grid-cols-2 gap-2 auto-rows-auto md:flex md:flex-col"
-      >
-        {todoList.map((todo) => (
-          <div
-            key={todo.id}
-            onClick={() => openModal(todo.id)}
-            className="p-4 overflow-hidden bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100"
-          >
-            <div className="flex items-start justify-between">
-              <div
-                className={`text-md font-bold ${
-                  !todo.title ? "text-gray-400" : ""
-                }`}
-              >
-                {todo.title || "タイトル未設定"}
-              </div>
-              <div className="flex items-center mx-2">
-                <span className="text-sm text-gray-500">{`${
-                  todo.todos.filter((t) => t.complete).length
-                }/${todo.todos.length}`}</span>
-                <button className="text-xl text-gray-300 hover:text-gray-500">
-                  <FontAwesomeIcon icon={faChevronRight} />
-                </button>
-              </div>
-            </div>
-            <List todo={todo.todos} listId={todo.id} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="grid grid-cols-1 mb-40 md:p-12 md:grid-cols-3">
-      {renderSection(
-        "未着手",
-        "bg-red-200",
-        categorizedTodos.notStarted
-      )}
-      {renderSection(
-        "実行中",
-        "bg-orange-100",
-        categorizedTodos.inProgress
-      )}
-      {renderSection(
-        "完了",
-        "bg-green-200",
-        categorizedTodos.completed
-      )}
-    </div>
-  );
-};
+//  dnd
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  closestCenter,
+  closestCorners,
+  defaultDropAnimationSideEffects,
+  pointerWithin,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  rectSortingStrategy,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { arrayMove } from "@dnd-kit/sortable";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
 
 const Todos = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState(null);
+  const todos = useTodos();
+  const dispatch = useTodosDispatch();
+
+  const [todosList, setTodosList] = useState(todos);
+  const [activeId, setActiveId] = useState(null);
+  console.log(todosList);
+
+  useEffect(() => {
+    setTodosList(todos);
+  }, [todos]);
+
+  const handleDragStart = (event) => {
+    const { active, over } = event;
+    if (!active) return;
+    setActiveId(active.id);
+  };
+
+  // ドラッグ終了時の処理
+  const handleDragEnd = (event) => {
+    setActiveId(null);
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+    // console.log("Drop");
+
+    const overId = String(over.id);
+    const activeId = String(active.id);
+    const overColumn = findColumn(overId);
+    const activeColumn = findColumn(activeId);
+
+    if (activeColumn !== overColumn) {
+      return;
+    }
+    // over先todoのidが異なればデータの入れ替えを行う
+    if (active.id !== over.id) {
+      const oldIndex = todosList.findIndex((t) => t.id === active.id);
+      const newIndex = todosList.findIndex((t) => t.id === over.id);
+      console.log(oldIndex);
+      console.log(newIndex);
+      if (oldIndex === -1 || newIndex === -1) {
+        return; // IDが見つからなければ処理を中断
+      }
+
+      // active.idからtodoを特定しstatusをcolumnのid(status)に変更する
+      const updatedTodos = arrayMove(todosList, oldIndex, newIndex);
+
+      setTodosList(updatedTodos);
+
+      // 状態更新
+      dispatch({
+        type: "todo/sort",
+        payload: { updatedTodos },
+      });
+    }
+  };
+
+  const findColumn = (id) => {
+    if (!id) {
+      return null;
+    }
+    // colmunのidが返ってきた場合はそのまま返す
+    if (id === "notStarted" || id === "inProgress" || id === "completed") {
+      return id;
+    }
+    // itemのidが渡された場合、itemもつカラムのidを返したい
+    return todosList.find((todo) => todo.id === id)?.category;
+  };
+
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return null;
+    }
+    if (over) {
+      const overId = String(over.id)
+      const activeId = String(active.id)
+      const overColumn = findColumn(overId)
+      const activeColumn = findColumn(activeId)
+
+      if (active.id !== over.id) {
+        if (activeColumn !== overColumn) {
+          
+           const updatedTodos = todosList.map((todo) =>
+              todo.id === activeId ? { ...todo, category: overColumn } : todo
+            )
+          
+          setTodosList(updatedTodos);
+        }
+      }
+    }
+  };
 
   const openModal = (id) => {
     setSelectedTodoId(id);
@@ -119,18 +148,57 @@ const Todos = () => {
     document.body.style.paddingRight = "";
   };
 
+  //5px動かすとドラッグと判定する。
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  // 進行状況で分類
+  const categories = ["notStarted", "inProgress", "completed"];
   return (
-    <TodoProvider>
+    <div>
+      <DndContext
+        id={"unique-dnd-context-id"}
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 mb-40 md:p-12 md:grid-cols-3">
+          {categories.map((category) => {
+            const filterdTodoList = todosList.filter(
+              (todoList) => todoList.category === category
+            );
+            return (
+              <div key={category} className="w-full p-3">
+                <TodoColmun
+                  category={category}
+                  todoList={filterdTodoList}
+                  openModal={openModal}
+                />
+              </div>
+            );
+          })}
+
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: null,
+            }}
+          >
+            {activeId ? (
+              <Todo todo={todosList.find((t) => t.id === activeId)} />
+            ) : null}
+          </DragOverlay>
+        </div>
+      </DndContext>
       <div>
-        <Todo openModal={openModal} />
-
         {!selectedTodoId && <Form />}
-
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           <TodoDetail listId={selectedTodoId} onClose={closeModal} />
         </Modal>
       </div>
-    </TodoProvider>
+    </div>
   );
 };
 

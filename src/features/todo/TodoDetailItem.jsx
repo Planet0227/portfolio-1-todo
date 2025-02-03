@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGripLines, faTrashCan } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
 
-import { useSortable, defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 const TodoDetailItem = ({ todos, todo, id, listId }) => {
@@ -164,6 +164,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
         <input
           type="checkbox"
+          name={`todo-${todo.id}-checkBox`}
           checked={todo.complete}
           onChange={toggleCheckBox}
           className={`ml-2 w-5 h-5 mt-1 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
@@ -176,6 +177,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
         <textarea
           ref={textareaRef}
           type="text"
+          name={`todo-${todo.id}-textarea`}
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
           onBlur={handleBlurDelete}

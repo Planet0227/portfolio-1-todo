@@ -1,48 +1,66 @@
-// "use client";
+"use client";
 
-// import List from "./List";
-// import Form from "./Form";
-// import { TodoProvider, useTodos } from "../context/TodoContext";
-// import { useState } from "react";
+import List from "./List";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
+const Todo = ({ openModal, todo }) => {
+  //  dnd
+  const {
+    isDragging,
+    isSorting,
+    setNodeRef,
+    transform,
+    transition,
+    setActivatorNodeRef,
+    attributes,
+    listeners,
+  } = useSortable({
+    id: todo.id,
+  });
+
+  const style = {
+  transform: isSorting? undefined :CSS.Translate.toString(transform) ,
+};
 
 
-// const Todo = () => {
-//   const todoLists = useTodos();
-  
-//   return (
-//     <div className="flex flex-wrap justify-start gap-4">
-//       {todoLists.map((todoList) => {
-//         // console.log(todoList);
-//         return (
-//           <div key={todoList.id} className="w-full max-w-xs p-6 bg-white rounded-lg shadow-md">
-//             <div className="flex items-center justify-between">
-//               <h3 className="text-lg font-semibold">{todoList.title}</h3>
-//               <button>→</button>
-//             </div>
-//             <List todo={todoList.todos} listId={todoList.id}/>
-//           </div>
-//         );
-//       })}
-//     </div>
-//   );
-// };
+  return (
 
-// const Todos = () => {
-//   const todoLists = useTodos();
-//   const [selectedTodoId, setSelectedTodoId] = useState(null);
-//   return (
-//     <TodoProvider>
-//       <div className="min-h-screen p-10 bg-gray-100">
+    <div ref={setNodeRef}
+    style={style}
+    className={`relative ${isDragging ? "z-10" : ""}`}
+  >
+      <div
+        onClick={() => openModal(todo.id)}
+        ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+        className="p-4 overflow-hidden bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100"
+      >
+        <div className="flex items-start justify-between">
+          <div
+            className={`text-md font-bold ${
+              !todo.title ? "text-gray-400" : ""
+            }`}
+          >
+            {todo.title || "タイトル未設定"}
+          </div>
+          <div className="flex items-center mx-2">
+            <span className="text-sm text-gray-500">{`${
+              todo.todos.filter((t) => t.complete).length
+            }/${todo.todos.length}`}</span>
+            <button className="text-xl text-gray-300 hover:text-gray-500">
+              <FontAwesomeIcon icon={faChevronRight} />
+            </button>
+          </div>
+        </div>
+        <List todo={todo.todos} listId={todo.id} />
+      </div>
+    </div>
+  );
+};
 
-//         <Todo />
-
-//         <div className="fixed w-full max-w-md p-6 transform -translate-x-1/2 bg-white rounded-lg shadow-md bottom-6 left-1/2 sw-full">
-//           <Form />
-//         </div>
-        
-//       </div>
-//     </TodoProvider>
-//   );
-// };
-
-// export default Todos;
+export default Todo;

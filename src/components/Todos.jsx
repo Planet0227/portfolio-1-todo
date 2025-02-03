@@ -5,7 +5,7 @@ import Form from "./Form";
 import TodoColmun from "./TodoColmun";
 import TodoDetail from "@/features/todo/TodoDetail";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Modal from "./Modal";
 
 //  dnd
@@ -39,26 +39,61 @@ const Todos = () => {
 
   const [todosList, setTodosList] = useState(todos);
   const [activeId, setActiveId] = useState(null);
-  console.log(todosList);
+  const [activeItem, setActiveItem] = useState(null);
+  const [overColumn, setOverColumn] = useState(null);
 
   useEffect(() => {
     setTodosList(todos);
   }, [todos]);
 
+  const findColumn = (id) => {
+    if (!id) {
+      return null;
+    }
+    // colmunのidが返ってきた場合はそのまま返す
+    if (id === "notStarted" || id === "inProgress" || id === "completed") {
+      return id;
+    }
+    // itemのidが渡された場合、itemもつカラムのidを返したい
+    return todosList.find((todo) => todo.id === id)?.category;
+  };
   const handleDragStart = (event) => {
     const { active, over } = event;
     if (!active) return;
     setActiveId(active.id);
+    setActiveItem(todosList.find((t) => t.id === active.id));
   };
 
-  // ドラッグ終了時の処理
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return null;
+    }
+    if (over) {
+      const overId = String(over.id);
+      const activeId = String(active.id);
+      const overColumn = findColumn(overId);
+      const activeColumn = findColumn(activeId);
+
+      if (active.id !== over.id) {
+        if (activeColumn !== overColumn) {
+          const updatedTodos = todosList.map((todo) =>
+            todo.id === activeId ? { ...todo, category: overColumn } : todo
+          );
+
+          setTodosList(updatedTodos);
+        }
+      }
+    }
+  };
+
   const handleDragEnd = (event) => {
     setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) {
       return;
     }
-    // console.log("Drop");
 
     const overId = String(over.id);
     const activeId = String(active.id);
@@ -72,8 +107,6 @@ const Todos = () => {
     if (active.id !== over.id) {
       const oldIndex = todosList.findIndex((t) => t.id === active.id);
       const newIndex = todosList.findIndex((t) => t.id === over.id);
-      console.log(oldIndex);
-      console.log(newIndex);
       if (oldIndex === -1 || newIndex === -1) {
         return; // IDが見つからなければ処理を中断
       }
@@ -90,44 +123,6 @@ const Todos = () => {
       });
     }
   };
-
-  const findColumn = (id) => {
-    if (!id) {
-      return null;
-    }
-    // colmunのidが返ってきた場合はそのまま返す
-    if (id === "notStarted" || id === "inProgress" || id === "completed") {
-      return id;
-    }
-    // itemのidが渡された場合、itemもつカラムのidを返したい
-    return todosList.find((todo) => todo.id === id)?.category;
-  };
-
-  const handleDragOver = (event) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return null;
-    }
-    if (over) {
-      const overId = String(over.id)
-      const activeId = String(active.id)
-      const overColumn = findColumn(overId)
-      const activeColumn = findColumn(activeId)
-
-      if (active.id !== over.id) {
-        if (activeColumn !== overColumn) {
-          
-           const updatedTodos = todosList.map((todo) =>
-              todo.id === activeId ? { ...todo, category: overColumn } : todo
-            )
-          
-          setTodosList(updatedTodos);
-        }
-      }
-    }
-  };
-
   const openModal = (id) => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
@@ -160,7 +155,7 @@ const Todos = () => {
       <DndContext
         id={"unique-dnd-context-id"}
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={pointerWithin} //これにしないと無限ループが発生する。
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
@@ -187,7 +182,10 @@ const Todos = () => {
             }}
           >
             {activeId ? (
-              <Todo todo={todosList.find((t) => t.id === activeId)} />
+              <Todo
+                todo={todosList.find((t) => t.id === activeId)}
+                isOverlay={true}
+              />
             ) : null}
           </DragOverlay>
         </div>

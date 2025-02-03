@@ -7,7 +7,7 @@ import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
 //  dnd
-import { DndContext, DragOverlay, closestCenter, closestCorners, defaultDropAnimationSideEffects } from "@dnd-kit/core";
+import { DndContext, DragOverlay, closestCorners, defaultDropAnimationSideEffects } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
 import {

@@ -1,5 +1,9 @@
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, rectSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import Todo from "./Todo";
 const TodoColmun = ({ category, todoList, openModal }) => {
   const { setNodeRef } = useDroppable({ id: category });
@@ -33,13 +37,17 @@ const TodoColmun = ({ category, todoList, openModal }) => {
 
   return (
     <>
-      <div className={`z-10 w-full py-1 mb-3 bg-white md:sticky top-11 `}>
-        <span
-          className={`p-1 mb-3 text-lg border-white rounded-md border-1 ${categoryColor}`}
-        >
-          {categoryTitle}
-        </span>
-        <span className="ml-3 text-gray-500">{todoList.length}</span>
+      <div
+        className={`z-10 w-full py-1 border-b-2 border-gray-500 mb-3 bg-white md:sticky top-11 `}
+      >
+        <div>
+          <span
+            className={`p-1 mb-3 text-lg border-white rounded-md border-1 ${categoryColor}`}
+          >
+            {categoryTitle}
+          </span>
+          <span className="ml-3 text-gray-500">{todoList.length}</span>
+        </div>
       </div>
       <SortableContext
         id={category}

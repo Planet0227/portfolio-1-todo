@@ -7,7 +7,7 @@ import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-const Todo = ({ openModal, todo, isOverlay }) => {
+const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
   //  dnd
   const {
     isOver,
@@ -59,8 +59,8 @@ const Todo = ({ openModal, todo, isOverlay }) => {
         ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-        className="p-4 overflow-hidden bg-white border border-gray-300 rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100"
-      >
+        className={`p-4 overflow-hidden bg-white border-2 ${selectedTodoId === todo.id ? "border-blue-500" : "border-gray-300"}  rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100
+      `}>
         <div className="flex items-start justify-between">
           <div
             className={`text-md font-bold ${

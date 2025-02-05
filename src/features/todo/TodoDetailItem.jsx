@@ -65,19 +65,19 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
   // タスク更新
   const updateContent = async (newContent) => {
     if (newContent !== todo.content) {
-      const updatedTodos = todos.map((_todo) =>
+      const updatedTasks = todos.map((_todo) =>
         _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
       );
       dispatch({
         type: "todo/update",
-        payload: { listId, updatedTodos },
+        payload: { listId, updatedTasks },
       });
 
       try {
         const response = await fetch("/api/todos", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ listId, updatedTodos }),
+          body: JSON.stringify({ listId, updatedTasks }),
         });
 
         if (!response.ok) throw new Error("タスクを更新できませんでした。");
@@ -89,15 +89,15 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
   // チェックボックス更新
   const toggleCheckBox = async () => {
-    const updatedTodos = todos.map((_todo) =>
+    const updatedTasks = todos.map((_todo) =>
       _todo.id === todo.id ? { ..._todo, complete: !todo.complete } : _todo
     );
-    dispatch({ type: "todo/update", payload: { listId, updatedTodos } });
+    dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
     try {
       const response = await fetch("/api/todos", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, updatedTodos }),
+        body: JSON.stringify({ listId, updatedTasks }),
       });
 
       if (!response.ok) throw new Error("チェック状態を更新できませんでした。");

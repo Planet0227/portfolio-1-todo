@@ -22,7 +22,7 @@ const todoReducer = (state, { type, payload }) => {
       )
     case "todo/update":
       return state.map((todoList) => todoList.id === payload.listId 
-      ? {...todoList, todos: payload.updatedTodos }
+      ? {...todoList, todos: payload.updatedTasks }
       : todoList
       );
     case "todo/deleteList":

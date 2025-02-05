@@ -56,7 +56,7 @@ const Form = () => {
   };
 
   return (
-    <div className="fixed bottom-0 w-full max-w-md p-5 transform -translate-x-1/2 bg-white rounded-lg shadow-2xl left-1/2">
+    <div className="fixed bottom-0 w-full max-w-md p-5 transform -translate-x-1/2 bg-white border-4 border-green-500 rounded-lg shadow-2xl left-1/2">
       <div className="text-lg">
         <span className="p-1 bg-red-200 rounded-md">未着手</span>にリストを追加</div>
       <form onSubmit={addTodoList} className="flex">

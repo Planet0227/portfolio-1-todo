@@ -5,7 +5,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Todo from "./Todo";
-const TodoColmun = ({ category, todoList, openModal }) => {
+const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
   const { setNodeRef } = useDroppable({ id: category });
 
   let categoryColor = "";
@@ -57,10 +57,10 @@ const TodoColmun = ({ category, todoList, openModal }) => {
         {/* paddingを付けて範囲を確保しないとDragイベント時にColumnIdが返らない */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 gap-4 p-4 bg-gray-100 border rounded-lg auto-rows-auto md:flex md:flex-col"
+          className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50 auto-rows-auto md:flex md:flex-col"
         >
           {todoList.map((todo) => (
-            <Todo key={todo.id} todo={todo} openModal={openModal} />
+            <Todo key={todo.id} todo={todo} selectedTodoId={selectedTodoId} openModal={openModal} />
           ))}
         </div>
       </SortableContext>

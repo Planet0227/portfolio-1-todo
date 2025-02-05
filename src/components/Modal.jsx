@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, magnification, children }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const Modal = ({ isOpen, onClose, children }) => {
       onClick={onClose}
     >
       <div
-        className={`md:w-1/2 absolute right-0 w-full h-full transform transition-transform duration-200 bg-white shadow-lg  overflow-y-auto ${
+        className={` ${magnification ? "md:w-full"  : "md:w-1/2"} absolute right-0 w-full h-full transform transition-transform duration-200 bg-white shadow-lg  overflow-y-auto ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         onClick={(e) => e.stopPropagation()} // モーダル内クリックを無効化

@@ -32,8 +32,11 @@ import {
 } from "@dnd-kit/modifiers";
 
 const Todos = () => {
+  //モーダル
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState(null);
+  const [magnification , setMagnification] = useState(false);
+  
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
@@ -88,7 +91,7 @@ const Todos = () => {
     }
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     setActiveId(null);
     const { active, over } = event;
     if (!over || active.id === over.id) {
@@ -121,8 +124,23 @@ const Todos = () => {
         type: "todo/sort",
         payload: { updatedTodos },
       });
+      // console.log(updatedTodos);
+
+      // // サーバー同期
+      // try {
+      //   const response = await fetch("/api/todos", {
+      //     method: "PATCH",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ updatedTodos }),
+      //   });
+      //   if (!response.ok)
+      //     throw new Error("Todosを保存できませんでした。");
+      // } catch (error) {
+      //   console.log(error);
+      // }
     }
   };
+  
   const openModal = (id) => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
@@ -170,6 +188,7 @@ const Todos = () => {
                 <TodoColmun
                   category={category}
                   todoList={filterdTodoList}
+                  selectedTodoId={selectedTodoId}
                   openModal={openModal}
                 />
               </div>
@@ -192,8 +211,8 @@ const Todos = () => {
       </DndContext>
       <div>
         {!selectedTodoId && <Form />}
-        <Modal isOpen={isModalOpen} onClose={closeModal}>
-          <TodoDetail listId={selectedTodoId} onClose={closeModal} />
+        <Modal isOpen={isModalOpen} onClose={closeModal} magnification={magnification}>
+          <TodoDetail listId={selectedTodoId} onClose={closeModal} magnification={magnification} setMagnification={setMagnification}/>
         </Modal>
       </div>
     </div>

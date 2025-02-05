@@ -15,8 +15,8 @@ export async function POST(request) {
       res.json()
     );
 
-    const updatedTodos = [...todoList.todos, newTodo];
-    const updatedTodoList = { ...todoList, todos: updatedTodos };
+    const updatedTodo = [...todoList.todos, newTodo];
+    const updatedTodoList = { ...todoList, todos: updatedTodo };
 
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
       method: "PATCH",
@@ -99,12 +99,13 @@ export async function DELETE(request) {
 
 // 更新
 export async function PATCH(request) {
-  const { listId, updatedTitle, updatedTodos } = await request.json();
-  const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
-    res.json()
-  );
+  const { listId, updatedTitle, updatedTasks, updatedTodos } = await request.json();
+  
   //リストのタイトルを更新
   if (updatedTitle !== undefined) {
+    const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
+      res.json()
+    );
     const updatedTodoList = { ...todoList, title: updatedTitle };
 
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
@@ -121,8 +122,13 @@ export async function PATCH(request) {
       });
     }
     return new Response(JSON.stringify(updatedTodoList), { status: 200 });
-  } else if (updatedTodos) {
-    const updatedTodoList = { ...todoList, todos: updatedTodos };
+
+  } else if (updatedTasks) {
+    //該当listIdのタスクを更新
+    const todoList = await fetch(`${TODOS_ENDPOINT}/${listId}`).then((res) =>
+      res.json()
+    );
+    const updatedTodoList = { ...todoList, todos: updatedTasks };
 
     const updateResponse = await fetch(`${TODOS_ENDPOINT}/${listId}`, {
       method: "PATCH",
@@ -138,5 +144,69 @@ export async function PATCH(request) {
       });
     }
     return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+  } 
+  else if (updatedTodos) {
+    //todosデータ全体の更新
+    const todos = await fetch(TODOS_ENDPOINT).then((res) =>
+      res.json()
+    );
+    console.log(todos);
+    console.log(updatedTodos);
+
+
+    const updateResponse = await fetch(TODOS_ENDPOINT, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({todos: updatedTodos}),
+    });
+
+    if (!updateResponse.ok) {
+      return new Response(JSON.stringify({ error: "Failed to save allTodos" }), {
+        status: 500,
+      });
+    }
+    return new Response(JSON.stringify(updatedTodos), { status: 200 });
   }
 }
+
+export async function PUT(request) {
+  try {
+    // リクエストボディの確認
+    const { updatedTodos } = await request.json();
+    console.log(Array.isArray(updatedTodos)); // trueなら配列、falseならオブジェクト
+
+    console.log(JSON.stringify(updatedTodos, null, 2));
+
+
+    // サーバーへPUTリクエストを送信
+    const updateResponse = await fetch(TODOS_ENDPOINT, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({updatedTodos}),
+    });
+
+
+    // 失敗時の処理
+    if (!updateResponse.ok) {
+      throw new Error(`Failed to overwrite todos: ${updateResponse.status}`);
+    }
+
+    // 正常時のレスポンス
+    return new Response(JSON.stringify(updatedTodos), { status: 200 });
+
+  } catch (error) {
+    console.error("PUT API エラー:", error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+}
+
+
+
+
+
+
+

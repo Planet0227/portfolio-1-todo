@@ -5,28 +5,45 @@ import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronLeft,
+  faDownLeftAndUpRightToCenter,
+  faUpRightAndDownLeftFromCenter,
+} from "@fortawesome/free-solid-svg-icons";
 //  dnd
-import { DndContext, DragOverlay, closestCorners, defaultDropAnimationSideEffects } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  defaultDropAnimationSideEffects,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
 import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 
-export default function TodoDetail({ listId, onClose }) {
+export default function TodoDetail({
+  listId,
+  onClose,
+  magnification,
+  setMagnification,
+}) {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
-  const [isHovered, setIsHovered] = useState(false);
   const [editTitle, setEditTitle] = useState("");
 
-// ドラッグ中のアイテムとIDを保持
-  const [activeId, setActiveId] = useState(null); 
+  const [isHoveredExit, setIsHoveredExit] = useState(false);
+  const [isHoveredMg, setIsisHoveredMg] = useState(false);
+
+  // ドラッグ中のアイテムとIDを保持
+  const [activeId, setActiveId] = useState(null);
   const activeItem = cachedList?.todos.find((todo) => todo.id === activeId);
-
-
 
   useEffect(() => {
     if (listId) {
@@ -44,8 +61,12 @@ export default function TodoDetail({ listId, onClose }) {
   //モーダルをEscで閉じる
   useEffect(() => {
     const handleKeyDown = (e) => {
+      console.log(e.key);
       if (e.key === "Escape") {
         onClose();
+      }
+      if(e.key === "F2"){
+        setMagnification((prev) => !prev);
       }
     };
 
@@ -121,26 +142,24 @@ export default function TodoDetail({ listId, onClose }) {
         (item) => item.id === over.id
       );
 
-      const updatedTodos = arrayMove(cachedList.todos, oldIndex, newIndex);
+      const updatedTasks = arrayMove(cachedList.todos, oldIndex, newIndex);
 
-      setCachedList({ ...cachedList, todos: updatedTodos });
+      setCachedList({ ...cachedList, todos: updatedTasks });
 
       // 状態更新
       dispatch({
         type: "todo/update",
-        payload: { listId, updatedTodos },
+        payload: { listId, updatedTasks },
       });
 
       // サーバー同期
       fetch("/api/todos", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, updatedTodos }),
-      }).catch((err) => console.error("サーバー同期エラー:", err));
+        body: JSON.stringify({ listId, updatedTasks }),
+      }).catch((error) => console.error("サーバー同期エラー:", error));
     }
   };
-
-  
 
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
@@ -155,20 +174,45 @@ export default function TodoDetail({ listId, onClose }) {
             <button
               className="mx-2 text-xl text-gray-300 hover:text-gray-500"
               onClick={onClose}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
+              onMouseEnter={() => setIsHoveredExit(true)}
+              onMouseLeave={() => setIsHoveredExit(false)}
             >
               <FontAwesomeIcon icon={faChevronLeft} />
             </button>
             <div
               className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-2 transition-all duration-300 ${
-                isHovered
+                isHoveredExit
                   ? "opacity-100 scale-100"
                   : "opacity-0 scale-90 pointer-events-none"
               }`}
             >
               <div>閉じる</div>
               <div>（esc）</div>
+            </div>
+
+            <button
+              className="hidden mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
+              onClick={() => setMagnification((prev) => !prev)}
+              onMouseEnter={() => setIsisHoveredMg(true)}
+              onMouseLeave={() => setIsisHoveredMg(false)}
+            >
+              {magnification ? (
+                <FontAwesomeIcon icon={faDownLeftAndUpRightToCenter} />
+              ) : (
+                <FontAwesomeIcon icon={faUpRightAndDownLeftFromCenter} />
+              )}
+            </button>
+            <div
+              className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-[53px] transition-all duration-300 ${
+                isHoveredMg
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-90 pointer-events-none"
+              }`}
+            >
+              <div className="flex flex-col items-center">
+                <div>{magnification ? "縮小" : "拡大"}</div>
+                <div>（F2）</div>
+              </div>
             </div>
           </div>
 
@@ -180,7 +224,7 @@ export default function TodoDetail({ listId, onClose }) {
           </button>
         </div>
 
-        <div className="ml-7">
+        <div className="mx-14">
           <input
             type="text"
             name={`todo-${listId}-input`}
@@ -197,14 +241,17 @@ export default function TodoDetail({ listId, onClose }) {
       </div>
 
       {/* メイン */}
-      <div className="relative mx-10 mt-2 mb-40">
+      <div className="relative mt-2 mb-40 mx-14">
         <DndContext
           collisionDetection={closestCorners}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext strategy={verticalListSortingStrategy} items={cachedList.todos.map((todo) => todo.id)}>
+          <SortableContext
+            strategy={verticalListSortingStrategy}
+            items={cachedList.todos.map((todo) => todo.id)}
+          >
             {cachedList.todos.map((todo) => (
               <TodoDetailItem
                 key={todo.id}
@@ -214,10 +261,9 @@ export default function TodoDetail({ listId, onClose }) {
                 listId={listId}
               />
             ))}
-            
           </SortableContext>
-          <DragOverlay 
-             dropAnimation={{
+          <DragOverlay
+            dropAnimation={{
               sideEffects: defaultDropAnimationSideEffects({
                 styles: {},
               }),
@@ -237,6 +283,5 @@ export default function TodoDetail({ listId, onClose }) {
     </div>
   );
 }
-
 
 //strategy={verticalListSortingStrategy}を書かないと入れ替えた時にアイテムがずれる。

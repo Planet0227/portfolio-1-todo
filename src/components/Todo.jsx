@@ -55,6 +55,7 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
     
   >
       <div
+      data-todo
         onClick={() => openModal(todo.id)}
         ref={setActivatorNodeRef}
           {...attributes}

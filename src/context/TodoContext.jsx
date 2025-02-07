@@ -79,4 +79,3 @@ const useTodosDispatch = () => useContext(TodoContextDispatch);
 
 export { TodoProvider, useTodos, useTodosDispatch };
 
-//        TODOS[0].todos[0].content

@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "run-p dev:*",
-    "dev:next": "next dev -p 3000",
-    "dev:json-server": "json-server -w ./mock/db.json -p 3001",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -17,6 +15,8 @@
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "firebase": "^11.2.0",
+    "firebase-admin": "^13.0.2",
     "next": "15.0.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

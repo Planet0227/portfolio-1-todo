@@ -145,20 +145,20 @@ const Todos = () => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
 
-    // モーダル展開時のスタイル維持
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    // // モーダル展開時のスタイル維持
+    // const scrollbarWidth =
+    //   window.innerWidth - document.documentElement.clientWidth;
+    // document.body.style.overflow = "hidden";
+    // document.body.style.paddingRight = `${scrollbarWidth}px`;
   };
 
   const closeModal = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
 
-    // スクロール復元
-    document.body.style.overflow = "";
-    document.body.style.paddingRight = "";
+    // // スクロール復元
+    // document.body.style.overflow = "";
+    // document.body.style.paddingRight = "";
   };
 
   //5px動かすとドラッグと判定する。

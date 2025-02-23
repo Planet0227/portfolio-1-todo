@@ -37,6 +37,7 @@ export default function TodoDetail({
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
+  
 
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
@@ -61,7 +62,6 @@ export default function TodoDetail({
   //モーダルをEscで閉じる
   useEffect(() => {
     const handleKeyDown = (e) => {
-      console.log(e.key);
       if (e.key === "Escape") {
         onClose();
       }
@@ -113,13 +113,14 @@ export default function TodoDetail({
         });
         // const result = await response.json();
         // console.log(result);
-
+  
         if (!response.ok) throw new Error("タイトルを更新できませんでした。");
       } catch (error) {
         console.log(error);
       }
     }
   };
+
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id); // ドラッグ開始時のIDを保存
@@ -142,7 +143,10 @@ export default function TodoDetail({
         (item) => item.id === over.id
       );
 
-      const updatedTasks = arrayMove(cachedList.todos, oldIndex, newIndex);
+      const updatedTasks = arrayMove(cachedList.todos, oldIndex, newIndex).map((todo, index) => ({
+        ...todo,
+        order: index + 1,
+      }));
 
       setCachedList({ ...cachedList, todos: updatedTasks });
 
@@ -164,6 +168,8 @@ export default function TodoDetail({
   if (!cachedList) {
     return <div>指定されたTodoリストは見つかりませんでした。</div>;
   }
+
+  const sortedTodos = [...cachedList.todos].sort((a, b) => a.order - b.order);
 
   return (
     <div>
@@ -234,8 +240,8 @@ export default function TodoDetail({
             onChange={handleTitleChange}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <p className="pb-1 text-gray-500 border-b-2 border-gray">
-            作成した日付： {cachedList.date}
+          <p className="pb-1 text-gray-500 border-b-2 border-gray-400">
+            作成日： {cachedList.date}
           </p>
         </div>
       </div>
@@ -250,14 +256,14 @@ export default function TodoDetail({
         >
           <SortableContext
             strategy={verticalListSortingStrategy}
-            items={cachedList.todos.map((todo) => todo.id)}
+            items={sortedTodos.map((todo) => todo.id)}
           >
-            {cachedList.todos.map((todo) => (
+            {sortedTodos.map((todo) => (
               <TodoDetailItem
                 key={todo.id}
                 id={todo.id}
                 todo={todo}
-                todos={cachedList.todos}
+                todos={sortedTodos}
                 listId={listId}
               />
             ))}
@@ -285,3 +291,4 @@ export default function TodoDetail({
 }
 
 //strategy={verticalListSortingStrategy}を書かないと入れ替えた時にアイテムがずれる。
+

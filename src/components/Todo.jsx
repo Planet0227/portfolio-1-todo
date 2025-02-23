@@ -25,43 +25,44 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
     id: todo.id,
   });
 
- const style = {
-     transform: isSorting ? CSS.Translate.toString(transform) : undefined, //Translateに変更(歪み防止)
-     transition,
-     opacity: isDragging ? "0" : "",
-   };
- 
-   const sortDirection =
-     activeIndex > overIndex
-       ? "before"
-       : activeIndex < overIndex
-       ? "after"
-       : null;
-   
-   const isShowIndicator = isOver && sortDirection != null;
+  const transitionDuration = isDragging ? "0s" : "0.5s";
+  const style = {
+    transform: isSorting ? CSS.Translate.toString(transform) : undefined, //Translateに変更(歪み防止)
+    transition: `opacity ${transitionDuration} ease`,
+    opacity: isDragging ? "0" : "1",
+  };
 
+  const sortDirection =
+    activeIndex > overIndex
+      ? "before"
+      : activeIndex < overIndex
+      ? "after"
+      : null;
+
+  const isShowIndicator = isOver && sortDirection != null;
 
   return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative ${isDragging ? "z-10" : ""}`}
 
-    <div ref={setNodeRef}
-    style={style}
-    className={`relative ${isDragging ? "z-10" : ""}`} 
-    
-    // ${isShowIndicator ? "after:absolute after:w-full after:left-0 after:h-[5px] after:rounded-full after:bg-blue-500" : ""
-    // } ${sortDirection === "before" ? "after:top-[-8.5px]" : ""} ${
-    //   sortDirection === "after" ? "after:bottom-[-8.5px]" : ""
-    // }
-     
-    
-  >
+      // ${isShowIndicator ? "after:absolute after:w-full after:left-0 after:h-[5px] after:rounded-full after:bg-blue-500" : ""
+      // } ${sortDirection === "before" ? "after:top-[-8.5px]" : ""} ${
+      //   sortDirection === "after" ? "after:bottom-[-8.5px]" : ""
+      // }
+    >
       <div
-      data-todo
+        data-todo
         onClick={() => openModal(todo.id)}
         ref={setActivatorNodeRef}
-          {...attributes}
-          {...listeners}
-        className={`p-4 overflow-hidden bg-white border-2 ${selectedTodoId === todo.id ? "border-blue-500" : "border-gray-300"}  rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100
-      `}>
+        {...attributes}
+        {...listeners}
+        className={`p-4 overflow-hidden bg-white border-2 ${
+          selectedTodoId === todo.id ? "border-blue-500" : "border-gray-300"
+        }  rounded-lg shadow-sm cursor-pointer max-h-40 hover:bg-gray-100
+      `}
+      >
         <div className="flex items-start justify-between">
           <div
             className={`text-md font-bold ${

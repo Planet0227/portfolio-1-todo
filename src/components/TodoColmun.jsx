@@ -5,6 +5,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Todo from "./Todo";
+import useMediaQuery from "@/hook/useMediaQuery";
+
 const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
   const { setNodeRef } = useDroppable({ id: category });
 
@@ -14,7 +16,7 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
       categoryColor = "bg-green-200";
       break;
     case "inProgress":
-      categoryColor = "bg-orange-100";
+      categoryColor = "bg-orange-200";
       break;
     case "notStarted":
       categoryColor = "bg-red-200";
@@ -34,11 +36,15 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
       categoryTitle = "未着手";
       break;
   }
+  const sortedTodo = [...todoList].sort((a, b) => a.order - b.order);
+
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const strategy = isMobile ? rectSortingStrategy : verticalListSortingStrategy;
 
   return (
     <>
       <div
-        className={`z-10 w-full py-1 border-b-2 border-gray-500 mb-3 bg-white md:sticky top-11 `}
+        className={`z-20 w-full pb-1 pt-7 border-b-2 border-gray-400 mb-3 bg-white md:sticky top-14  `}
       >
         <div>
           <span
@@ -52,14 +58,14 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
       <SortableContext
         id={category}
         items={todoList}
-        strategy={verticalListSortingStrategy}
+        strategy={strategy}
       >
         {/* paddingを付けて範囲を確保しないとDragイベント時にColumnIdが返らない */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50 auto-rows-auto md:flex md:flex-col"
+          className="grid grid-cols-2 gap-4 p-4 border rounded-lg min-h-28 md:min-h-screen md: bg-gray-50 auto-rows-auto md:flex md:flex-col"
         >
-          {todoList.map((todo) => (
+          {sortedTodo.map((todo) => (
             <Todo key={todo.id} todo={todo} selectedTodoId={selectedTodoId} openModal={openModal} />
           ))}
         </div>

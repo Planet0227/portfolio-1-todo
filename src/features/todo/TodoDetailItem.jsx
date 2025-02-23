@@ -136,7 +136,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
     updateContent(newContent);
   };
   // 入力が空なら削除
-  const handleBlurDelete = () => {
+  const handleBlur = () => {
     if (editContent.trim().length === 0) {
       deleteTodo();
     }
@@ -157,7 +157,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          className="text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
+          className="mt-0.5 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
         >
           <FontAwesomeIcon icon={faGripLines} size="xl" />
         </div>
@@ -180,7 +180,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
           name={`todo-${todo.id}-textarea`}
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
-          onBlur={handleBlurDelete}
+          onBlur={handleBlur}
           className={`w-10/12 text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
             todo.complete ? "line-through text-gray-500" : ""
           }`}
@@ -188,7 +188,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
         />
 
         <button
-          className="self-start text-xl font-semibold text-red-400 ml-7 hover:text-red-700"
+          className="self-start px-3 text-xl font-semibold text-red-400 border-l-2 border-gray-300 ml-7 hover:text-red-700"
           onClick={deleteTodo}
         >
           <FontAwesomeIcon icon={faTrashCan} />

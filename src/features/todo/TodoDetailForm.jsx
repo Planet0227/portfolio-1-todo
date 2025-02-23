@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTodosDispatch } from "@/context/TodoContext";
+import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const dispatch = useTodosDispatch();
+  const todos = useTodos();
   const textareaRef = useRef(null);
 
   const addTodo = async (e) => {
@@ -14,11 +15,16 @@ const TodoDetailForm = ({ listId }) => {
     if (inputValue === "") {
       return;
     }
+    const targetListTasks =
+      todos.filter((todo) => todo.id === listId).map((todo) => todo.todos)[0] ||
+      [];
+    const order = targetListTasks?.length + 1;
 
     const newTodo = {
       id: Math.floor(Math.random() * 1e7).toString(),
       content: inputValue,
       complete: false,
+      order: order,
     };
 
     dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
@@ -53,7 +59,7 @@ const TodoDetailForm = ({ listId }) => {
     }
   };
   return (
-    <div className="flex w-full">
+    <div className="flex w-full p-2 border-2 border-green-500 rounded-lg">
       <div className="ml-[29px]"></div>
       <form onSubmit={addTodo} className="flex w-full">
         <div className="relative">
@@ -85,7 +91,7 @@ const TodoDetailForm = ({ listId }) => {
           rows={1}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 w-9/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap border-b resize-none focus:outline-none"
+          className="flex-1 w-9/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap resize-none focus:outline-none"
         />
       </form>
       <div className="ml-11"></div>

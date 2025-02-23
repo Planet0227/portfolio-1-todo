@@ -1,0 +1,74 @@
+import {
+  getAuth,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  linkWithCredential,
+  EmailAuthProvider,
+} from "firebase/auth";
+import { app } from "./firebaseConfig";
+
+const auth = getAuth(app);
+
+// 🔹 匿名ログイン
+export const signInAsGuest = async () => {
+  try {
+    const userCredential = await signInAnonymously(auth);
+    return userCredential.user;
+  } catch (error) {
+    console.error("匿名ログインエラー:", error);
+    return null;
+  }
+};
+
+// 🔹 メールアドレス＆パスワードでサインアップ
+export const registerWithEmail = async (email, password, displayName) => {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    await updateProfile(userCredential.user, { displayName });
+    return userCredential.user;
+  } catch (error) {
+    console.error("サインアップエラー:", error);
+    return null;
+  }
+};
+
+// 🔹 メールアドレス＆パスワードでログイン
+export const loginWithEmail = async (email, password) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    return userCredential.user;
+  } catch (error) {
+    console.error("ログインエラー:", error);
+    return null;
+  }
+};
+
+// 🔹 匿名アカウントをメール認証と紐付ける
+export const linkAnonymousAccount = async (email, password) => {
+  try {
+    if (!auth.currentUser || !auth.currentUser.isAnonymous) return null;
+
+    const credential = EmailAuthProvider.credential(email, password);
+    const linkedUser = await linkWithCredential(auth.currentUser, credential);
+    return linkedUser;
+  } catch (error) {
+    console.error("アカウント紐付けエラー:", error);
+    return null;
+  }
+};
+
+// 🔹 ログアウト
+export const logout = async () => {
+  await signOut(auth);
+};

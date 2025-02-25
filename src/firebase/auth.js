@@ -19,7 +19,7 @@ export const signInAsGuest = async () => {
     return userCredential.user;
   } catch (error) {
     console.error("匿名ログインエラー:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -35,7 +35,7 @@ export const registerWithEmail = async (email, password, displayName) => {
     return userCredential.user;
   } catch (error) {
     console.error("サインアップエラー:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -50,7 +50,7 @@ export const loginWithEmail = async (email, password) => {
     return userCredential.user;
   } catch (error) {
     console.error("ログインエラー:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -61,10 +61,10 @@ export const linkAnonymousAccount = async (email, password) => {
 
     const credential = EmailAuthProvider.credential(email, password);
     const linkedUser = await linkWithCredential(auth.currentUser, credential);
-    return linkedUser;
+    return linkedUser.user;
   } catch (error) {
     console.error("アカウント紐付けエラー:", error);
-    return null;
+    throw error;
   }
 };
 

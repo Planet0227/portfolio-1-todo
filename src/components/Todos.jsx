@@ -30,6 +30,7 @@ import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
+import { getAuth } from "firebase/auth";
 
 const Todos = () => {
   //モーダル
@@ -144,19 +145,34 @@ const Todos = () => {
         payload: { updatedTodos },
       });
 
-      // サーバー同期
+      //auth
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        console.error("ユーザーが認証されていません");
+        return;
+      }
+
       try {
+        const token = await user.getIdToken();
         const response = await fetch("/api/todos", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
+          },
           body: JSON.stringify({ updatedTodos }),
         });
 
         if (!response.ok) {
-          throw new Error("タスクの並び順を保存できませんでした。");
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "チェック状態を更新できませんでした。"
+          );
         }
       } catch (error) {
-        console.error(error);
+        console.error("エラー:", error);
       }
     }
   };

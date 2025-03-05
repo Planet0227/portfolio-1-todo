@@ -1,4 +1,3 @@
-// import { TODOS_ENDPOINT } from "@/constants";
 import admin from "firebase-admin";
 import serviceAccount from "../../../../firebase-adminsdk.json";
 
@@ -11,12 +10,41 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
+// リクエストヘッダーから Authorization: Bearer <TOKEN> で送信された Firebase ID トークンを検証し uid を取得
+async function getUserUid(request) {
+  const authHeader = request.headers.get("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Unauthorized");
+  }
+  const token = authHeader.split("Bearer ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    return decodedToken.uid;
+  } catch (error) {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+  return decodedToken.uid;
+  }
+}
+
+// GET: ログイン中のユーザーの todos を取得（各 todo のサブコレクション tasks も取得）
 export async function GET(request) {
   try {
-    const todosSnapshot = await db.collection("todos").get();
+    // 認証トークンがない場合は空のリストを返す
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    
+    const uid = await getUserUid(request);
+    // 以下、ユーザーごとの todos を取得する処理
+    const todosSnapshot = await db
+      .collection("users")
+      .doc(uid)
+      .collection("todos")
+      .get();
+
     const todos = await Promise.all(
       todosSnapshot.docs.map(async (doc) => {
-        // 各 Todo リストのサブコレクション「tasks」からタスクを取得
         const tasksSnapshot = await doc.ref.collection("tasks").get();
         const tasks = tasksSnapshot.docs.map((taskDoc) => ({
           id: taskDoc.id,
@@ -27,19 +55,26 @@ export async function GET(request) {
     );
     return new Response(JSON.stringify(todos), { status: 200 });
   } catch (error) {
-    return new Response(JSON.stringify({ error: "Failed to get todos" }), {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message || "Failed to get todos" }),
+      { status: 500 }
+    );
   }
 }
 
-//　追加
+
+// POST: 新規 todo リスト作成 または既存リストへのタスク追加
 export async function POST(request) {
   try {
+    const uid = await getUserUid(request);
     const { newTodoList, newTodo, listId } = await request.json();
+    
+    // パスを /users/{uid}/todos/ に変更
+    const todosCollection = db.collection("users").doc(uid).collection("todos");
+
     if (listId) {
       // 既存リストにタスクを追加
-      const todoRef = db.collection("todos").doc(listId);
+      const todoRef = todosCollection.doc(listId);
       const docSnapshot = await todoRef.get();
       if (!docSnapshot.exists) {
         return new Response(
@@ -49,7 +84,6 @@ export async function POST(request) {
       }
       // サブコレクション「tasks」に新規タスクを追加
       const { id: taskId, ...newTodoData } = newTodo;
-
       await todoRef.collection("tasks").doc(taskId).set(newTodoData);
       // 追加後のタスク一覧を取得
       const tasksSnapshot = await todoRef.collection("tasks").get();
@@ -64,11 +98,11 @@ export async function POST(request) {
       };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     } else if (newTodoList) {
-      // 新規Todoリスト作成
-      // newTodoList から todos フィールドを除外して todoData を作成
+      // 新規 Todo リスト作成
+      // newTodoList から tasks フィールドを除外して todoData を作成
       const { todos, id, ...todoData } = newTodoList;
       // クライアント側で生成された id をドキュメントIDとして利用
-      const docRef = db.collection("todos").doc(id);
+      const docRef = todosCollection.doc(id);
       await docRef.set(todoData);
       // サブコレクション tasks はまだ存在しないため、todos は空の配列として返す
       const createdTodoList = { id: id, ...todoData, todos: [] };
@@ -81,55 +115,30 @@ export async function POST(request) {
   }
 }
 
-//　削除
+// DELETE: Todo リストまたはリスト内タスクの削除
 export async function DELETE(request) {
   try {
+    const uid = await getUserUid(request);
     const { listId, taskId } = await request.json();
+    const todosCollection = db.collection("users").doc(uid).collection("todos");
+
+    const todoRef = todosCollection.doc(listId);
+    const listSnapshot = await todoRef.get();
+    if (!listSnapshot.exists) {
+      return new Response(
+        JSON.stringify({ error: "Todoリストが見つかりません" }),
+        { status: 404 }
+      );
+    }
 
     if (taskId) {
-      // タスク削除処理：Todo リスト内のサブコレクション "tasks" から対象タスクを削除
-      const taskRef = db
-        .collection("todos")
-        .doc(listId)
-        .collection("tasks")
-        .doc(taskId);
+      // タスク削除処理：サブコレクション "tasks" から対象タスクを削除
+      const taskRef = todoRef.collection("tasks").doc(taskId);
       await taskRef.delete();
-
-      // // 削除後、最新のタスク一覧を取得（必要に応じてクライアントに返す）
-      // const tasksSnapshot = await db.collection("todos").doc(listId)
-      //                               .collection("tasks").get();
-      // const tasks = tasksSnapshot.docs.map((doc) => ({
-      //   id: doc.id,
-      //   ...doc.data()
-      // }));
-
-      // // Todoリスト本体の情報を取得（リスト自体の情報が必要な場合）
-      // const listSnapshot = await db.collection("todos").doc(listId).get();
-      // if (!listSnapshot.exists) {
-      //   return new Response(JSON.stringify({ error: "Todoリストが見つかりません" }), { status: 404 });
-      // }
-      // const updatedTodoList = {
-      //   id: listId,
-      //   ...listSnapshot.data(),
-      //   todos: tasks
-      // };
-
-      // return new Response(JSON.stringify(updatedTodoList), { status: 200 });
-
-      //一旦リターンはこれ
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     } else if (listId) {
-      // Todoリスト全体の削除処理
-      const listRef = db.collection("todos").doc(listId);
-
-      // // サブコレクション "tasks" のタスクをすべて削除する
-      // const tasksSnapshot = await listRef.collection("tasks").get();
-      // const deleteTasksPromises = tasksSnapshot.docs.map((doc) => doc.ref.delete());
-      // await Promise.all(deleteTasksPromises);
-
-      // Todoリストのドキュメントとサブコレクションを削除する recursiveDelete
-      await db.recursiveDelete(listRef);
-
+      // Todoリスト全体の削除処理（ドキュメントとサブコレクションを削除）
+      await db.recursiveDelete(todoRef);
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
   } catch (error) {
@@ -139,108 +148,82 @@ export async function DELETE(request) {
   }
 }
 
-// 更新
+// PATCH: Todo リストまたはタスクの更新
 export async function PATCH(request) {
   try {
-    const { listId, updatedTitle, updatedTasks, updatedTodos } =
-      await request.json();
+    const uid = await getUserUid(request);
+    const { listId, updatedTitle, updatedTasks, updatedTodos } = await request.json();
+    const todosCollection = db.collection("users").doc(uid).collection("todos");
+
+    // リストの並び替えの場合（updatedTodos が存在する場合）は、listId のチェックや単体ドキュメントの取得は不要
+    if (updatedTodos) {
+      const updatePromises = updatedTodos.map((todo) => {
+        const { id, order, category } = todo;
+        if (!id) return Promise.resolve(); // id がない場合はスキップ
+        return todosCollection.doc(id).update({ order, category });
+      });
+      await Promise.all(updatePromises);
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
+    }
+
+    // それ以外の場合は listId が必須
+    if (!listId) {
+      return new Response(JSON.stringify({ error: "listIdが必要です" }), { status: 400 });
+    }
+
+    const todoRef = todosCollection.doc(listId);
+    const listSnapshot = await todoRef.get();
+    if (!listSnapshot.exists) {
+      return new Response(
+        JSON.stringify({ error: "Todoリストが見つかりません" }),
+        { status: 404 }
+      );
+    }
 
     if (updatedTitle !== undefined) {
       // --- リストのタイトル更新 ---
-      const listRef = db.collection("todos").doc(listId);
-
-      await listRef.update({ title: updatedTitle });
-
-      // 更新後のドキュメントを取得
-      const updatedListSnapshot = await listRef.get();
-      const tasksSnapshot = await listRef.collection("tasks").get();
+      await todoRef.update({ title: updatedTitle });
+      // 更新後のドキュメント取得などの処理…
+      const updatedListSnapshot = await todoRef.get();
+      const tasksSnapshot = await todoRef.collection("tasks").get();
       const tasks = tasksSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
       const updatedTodoList = {
         id: listId,
         ...updatedListSnapshot.data(),
         todos: tasks,
       };
-
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     } else if (updatedTasks !== undefined) {
       // --- リストのタスク更新 ---
-      // updatedTasks は、各タスクに id フィールドを含むタスクオブジェクトの配列とする
-      const listRef = db.collection("todos").doc(listId);
-
-      const tasksCollectionRef = listRef.collection("tasks");
-
-      // updatedTasks の各タスクを更新（存在しないタスクに関する処理は行わない）
+      const tasksCollectionRef = todoRef.collection("tasks");
       const updatePromises = updatedTasks.map((task) => {
         const { id, ...taskData } = task;
         return tasksCollectionRef.doc(id).set(taskData, { merge: true });
       });
       await Promise.all(updatePromises);
-
-      // 更新後のタスク一覧を取得
       const tasksSnapshot = await tasksCollectionRef.get();
       const tasks = tasksSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
-      // Todoリスト本体の最新情報を取得
-      const updatedListSnapshot = await listRef.get();
+      const updatedListSnapshot = await todoRef.get();
       const updatedTodoList = {
         id: listId,
         ...updatedListSnapshot.data(),
         todos: tasks,
       };
-
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
-    } else if (updatedTodos) {
-      const updatePromises = updatedTodos.map((todo) => {
-        const { id, order, category } = todo;
-        if (!id) return Promise.resolve(); // id がない場合はスキップ
-        return db.collection("todos").doc(id).update({ order, category });
-      });
-
-      await Promise.all(updatePromises);
-
-      return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
   } catch (error) {
-    return new Response(JSON.stringify({ error: "更新に必要なデータがありません" }), {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message || "更新に必要なデータがありません" }),
+      { status: 500 }
+    );
   }
 }
 
-// export async function PUT(request) {
-//   try {
-//     // リクエストボディの確認
-//     const { updatedTodos } = await request.json();
-//     console.log(Array.isArray(updatedTodos)); // trueなら配列、falseならオブジェクト
 
-//     console.log(JSON.stringify(updatedTodos, null, 2));
 
-//     // サーバーへPUTリクエストを送信
-//     const updateResponse = await fetch(TODOS_ENDPOINT, {
-//       method: "PUT",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify({updatedTodos}),
-//     });
-
-//     // 失敗時の処理
-//     if (!updateResponse.ok) {
-//       throw new Error(`Failed to overwrite todos: ${updateResponse.status}`);
-//     }
-
-//     // 正常時のレスポンス
-//     return new Response(JSON.stringify(updatedTodos), { status: 200 });
-
-//   } catch (error) {
-//     console.error("PUT API エラー:", error);
-//     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
-//   }
-// }

@@ -26,6 +26,7 @@ import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
+import { getAuth } from "firebase/auth";
 
 export default function TodoDetail({
   listId,
@@ -37,7 +38,6 @@ export default function TodoDetail({
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
-  
 
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
@@ -65,7 +65,7 @@ export default function TodoDetail({
       if (e.key === "Escape") {
         onClose();
       }
-      if(e.key === "F2"){
+      if (e.key === "F2") {
         setMagnification((prev) => !prev);
       }
     };
@@ -81,18 +81,35 @@ export default function TodoDetail({
     dispatch({ type: "todo/deleteList", payload: { listId } });
     setCachedList(null);
     onClose();
+
+    //auth
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.error("ユーザーが認証されていません");
+      return;
+    }
+
     try {
+      const token = await user.getIdToken();
       const response = await fetch("/api/todos", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
+        },
         body: JSON.stringify({ listId }),
       });
-      if (!response.ok) throw new Error("リストの削除に失敗しました。");
-
-      console.log("リストが削除されました。");
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "リストの削除に失敗しました。");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("リストが削除されました。:", error);
     }
+
   };
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
@@ -105,63 +122,96 @@ export default function TodoDetail({
     if (updatedTitle !== cachedList.title) {
       dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
 
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        console.error("ユーザーが認証されていません");
+        return;
+      }
+
       try {
+        const token = await user.getIdToken();
         const response = await fetch("/api/todos", {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({ listId, updatedTitle }),
         });
-        // const result = await response.json();
-        // console.log(result);
-  
-        if (!response.ok) throw new Error("タイトルを更新できませんでした。");
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "タイトルを更新できませんでした。"
+          );
+        }
       } catch (error) {
-        console.log(error);
+        console.error("エラー:", error);
       }
     }
   };
-
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id); // ドラッグ開始時のIDを保存
   };
 
-  // ドラッグ終了時の処理
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     const { active, over } = event;
     setActiveId(null);
 
-    if (over == null || active.id === over.id) {
+    if (!over || active.id === over.id) {
       return;
     }
 
-    if (active.id !== over.id) {
-      const oldIndex = cachedList.todos.findIndex(
-        (item) => item.id === active.id
-      );
-      const newIndex = cachedList.todos.findIndex(
-        (item) => item.id === over.id
-      );
+    // ソート済みのタスク配列を利用する
+    const sortedTasks = [...cachedList.todos].sort((a, b) => a.order - b.order);
+    const oldIndex = sortedTasks.findIndex((item) => item.id === active.id);
+    const newIndex = sortedTasks.findIndex((item) => item.id === over.id);
 
-      const updatedTasks = arrayMove(cachedList.todos, oldIndex, newIndex).map((todo, index) => ({
+    const updatedTasks = arrayMove(sortedTasks, oldIndex, newIndex).map(
+      (todo, index) => ({
         ...todo,
         order: index + 1,
-      }));
+      })
+    );
 
-      setCachedList({ ...cachedList, todos: updatedTasks });
+    setCachedList({ ...cachedList, todos: updatedTasks });
 
-      // 状態更新
-      dispatch({
-        type: "todo/update",
-        payload: { listId, updatedTasks },
+    dispatch({
+      type: "todo/update",
+      payload: { listId, updatedTasks },
+    });
+
+    // 認証ユーザーの確認と更新処理
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("ユーザーが認証されていません");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch("/api/todos", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listId, updatedTasks }),
       });
 
-      // サーバー同期
-      fetch("/api/todos", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, updatedTasks }),
-      }).catch((error) => console.error("サーバー同期エラー:", error));
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "タスクを並び替えられませんでした。"
+        );
+      }
+    } catch (error) {
+      console.error("エラー:", error);
     }
   };
 
@@ -291,4 +341,3 @@ export default function TodoDetail({
 }
 
 //strategy={verticalListSortingStrategy}を書かないと入れ替えた時にアイテムがずれる。
-

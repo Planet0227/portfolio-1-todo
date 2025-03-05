@@ -5,11 +5,13 @@ import {
   registerWithEmail,
   loginWithEmail,
   linkAnonymousAccount,
+  signInAsGuest,
 } from "@/firebase/auth";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { getAuth, updateProfile } from "firebase/auth";
+import { useAuth } from "@/context/AuthContext";
 
 const AuthForm = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -19,6 +21,22 @@ const AuthForm = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const {user} = useAuth();
+
+  const isGuest = user && user.isAnonymous;
+
+  
+
+  // ゲストログイン
+  const handleGuestLogin = async () => {
+    try {
+      await signInAsGuest();
+      router.push("/");
+    } catch (error) {
+      console.error("ゲストログイン失敗:", error);
+      setErrorMessage("ゲストログインに失敗しました。");
+    }
+  };
 
   // メールでログイン
   const handleLogin = async () => {
@@ -170,6 +188,21 @@ const AuthForm = () => {
               {isRegister ? "新規登録して利用" : "ログイン"}
             </button>
           </form>
+          {isRegister && (
+            <button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={isRegister && (username || email || password) || isGuest}
+              className={`w-full p-3 mb-4 text-white bg-gray-500 rounded-lg hover:bg-gray-600  ${
+                isRegister && (username || email || password) || isGuest
+                  ? "opacity-60 cursor-not-allowed"
+                  : ""
+              }`}
+              
+            >
+              ゲストとして機能を試す
+            </button>
+          )}
           <div className="text-center">
             <button
               onClick={() => {
@@ -178,7 +211,9 @@ const AuthForm = () => {
               }}
               className="text-sm text-blue-500 hover:underline"
             >
-              {isRegister ? "既存のアカウントでログイン" : "新規登録はこちら"}
+              {isRegister
+                ? "既存のアカウントでログイン"
+                : "新規登録/ゲストログインはこちら"}
             </button>
           </div>
         </div>

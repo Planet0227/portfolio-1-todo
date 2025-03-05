@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
+import { getAuth } from "firebase/auth";
 const Form = ({ categories }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
@@ -71,17 +72,32 @@ const Form = ({ categories }) => {
     setInputValue("");
 
     //POSTリクエスト
-    try {
-      const response = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newTodoList }),
-      });
-      if (!response.ok)
-        throw new Error("新規Todoリストを保存できませんでした。");
-    } catch (error) {
-      console.log(error);
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    console.error("ユーザーが認証されていません");
+    return;
+  }
+
+  try {
+    const token = await user.getIdToken();
+    const response = await fetch("/api/todos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
+      },
+      body: JSON.stringify({ newTodoList }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "サーバーエラー");
     }
+  } catch (error) {
+    console.error("エラー:", error);
+  }
   };
 
   return (

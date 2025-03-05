@@ -1,5 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useReducer } from "react";
+import { getAuth } from "firebase/auth";
 
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
@@ -11,19 +12,22 @@ const todoReducer = (state, { type, payload }) => {
     case "todo/addList":
       return [...state, payload];
     case "todo/add":
-      return state.map(todoList => todoList.id === payload.id 
-        ? {...todoList, todos:[...todoList.todos, payload.newTodo ]}
-        : todoList
-      )
+      return state.map((todoList) =>
+        todoList.id === payload.id
+          ? { ...todoList, todos: [...todoList.todos, payload.newTodo] }
+          : todoList
+      );
     case "todo/updateList":
-      return state.map(todoList => todoList.id === payload.listId
-        ? {...todoList, title: payload.updatedTitle}
-        : todoList
-      )
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? { ...todoList, title: payload.updatedTitle }
+          : todoList
+      );
     case "todo/update":
-      return state.map((todoList) => todoList.id === payload.listId 
-      ? {...todoList, todos: payload.updatedTasks }
-      : todoList
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? { ...todoList, todos: payload.updatedTasks }
+          : todoList
       );
     case "todo/deleteList":
       return state.filter((todoList) => todoList.id !== payload.listId);
@@ -48,23 +52,36 @@ const todoReducer = (state, { type, payload }) => {
 };
 
 const TodoProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(todoReducer, []); 
-//jsonサーバーからTODOSリストの初期値を取得し、stateを更新
+  const [state, dispatch] = useReducer(todoReducer, []);
+
   useEffect(() => {
     const getTodos = async () => {
       const ENDPOINT = "/api/todos";
-      try{
-        const todos = await fetch(ENDPOINT).then((res) => res.json());
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        console.error("ユーザーが認証されていません");
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+        const todos = await fetch(ENDPOINT, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }).then((res) => res.json());
         dispatch({ type: "todo/init", payload: todos });
-
-      }catch(error){
+      } catch (error) {
         console.error("Failed to fetch todos:", error);
-
       }
     };
     getTodos();
   }, []);
-  
+
   return (
     <TodoContext.Provider value={state}>
       <TodoContextDispatch.Provider value={dispatch}>
@@ -78,4 +95,3 @@ const useTodos = () => useContext(TodoContext);
 const useTodosDispatch = () => useContext(TodoContextDispatch);
 
 export { TodoProvider, useTodos, useTodosDispatch };
-

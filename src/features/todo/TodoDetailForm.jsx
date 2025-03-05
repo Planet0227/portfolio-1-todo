@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "@/context/TodoContext";
+import { getAuth } from "firebase/auth";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
@@ -29,19 +30,34 @@ const TodoDetailForm = ({ listId }) => {
 
     dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
     setInputValue("");
-    try {
-      const response = await fetch("/api/todos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listId, newTodo }),
-      });
-      const result = await response.json();
-      console.log(result);
 
-      if (!response.ok) throw new Error("新規Todoを保存できませんでした。");
-    } catch (error) {
-      console.log(error);
-    }
+     const auth = getAuth();
+      const user = auth.currentUser;
+    
+      if (!user) {
+        console.error("ユーザーが認証されていません");
+        return;
+      }
+    
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch("/api/todos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
+          },
+          body: JSON.stringify({ listId, newTodo }),
+        });
+    
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "新規タスクを保存できませんでした。");
+        }
+      } catch (error) {
+        console.error("エラー:", error);
+      }
+    
   };
   // textareaの高さの調整
   useEffect(() => {

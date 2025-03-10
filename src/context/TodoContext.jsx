@@ -61,7 +61,7 @@ const TodoProvider = ({ children }) => {
       const user = auth.currentUser;
 
       if (!user) {
-        console.error("ユーザーが認証されていません");
+        console.log("ユーザーが認証されていません");
         return;
       }
 

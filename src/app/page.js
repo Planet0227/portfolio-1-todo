@@ -15,7 +15,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/Modal";
-import { updateProfile } from "firebase/auth";
+import { deleteUser, updateProfile } from "firebase/auth";
+import { deleteUserData } from "@/firebase/firebase";
 
 export default function Home() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function Home() {
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   // ゲストログインかどうかの判定
   const isGuest = user && user.isAnonymous;
+  
   
   const dropDownRef = useRef();
 
@@ -77,6 +79,7 @@ export default function Home() {
   const handleLogoutClick = async () => {
     try {
       if(isGuest){
+        await deleteUserData(user.uid);
         await deleteUser(user);
       }
       await logout();
@@ -238,7 +241,7 @@ export default function Home() {
               <h2 className="mb-4 text-xl font-bold">アカウント設定</h2>
               <form
                 onSubmit={handleAccountSave}
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-3 p-8"
               >
                 <label className="flex flex-col">
                   ユーザー名

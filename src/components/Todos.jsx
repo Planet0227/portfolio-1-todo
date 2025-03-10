@@ -221,7 +221,7 @@ const Todos = () => {
       <DndContext
         id={"unique-dnd-context-id"}
         sensors={sensors}
-        collisionDetection={closestCenter} //これにしないと無限ループが発生する。
+        collisionDetection={pointerWithin} //これにしないと無限ループが発生する。
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}

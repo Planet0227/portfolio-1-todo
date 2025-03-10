@@ -27,6 +27,7 @@ import {
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 import { getAuth } from "firebase/auth";
+import WeekToggleButtons from "./WeekToggleButtons";
 
 export default function TodoDetail({
   listId,
@@ -49,6 +50,19 @@ export default function TodoDetail({
   useEffect(() => {
     if (listId) {
       const foundList = todos.find((todoList) => todoList.id === listId);
+      if (foundList) {
+        if (!foundList.resetDays) {
+          foundList.resetDays = {
+            sun: false,
+            mon: false,
+            tue: false,
+            wed: false,
+            thu: false,
+            fri: false,
+            sat: false,
+          };
+        }
+      }
       setCachedList(foundList || null);
     }
   }, [listId, todos]);
@@ -101,7 +115,7 @@ export default function TodoDetail({
         },
         body: JSON.stringify({ listId }),
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "リストの削除に失敗しました。");
@@ -109,7 +123,6 @@ export default function TodoDetail({
     } catch (error) {
       console.error("リストが削除されました。:", error);
     }
-
   };
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
@@ -152,6 +165,51 @@ export default function TodoDetail({
       }
     }
   };
+// リセットボタン
+  const resetCompleted = async () => {
+    const updatedTasks = cachedList.todos.map((task)=> ({
+      ...task,
+      complete: false,
+    }))
+    console.log(updatedTasks);
+
+    setCachedList({ ...cachedList, todos: updatedTasks });
+
+    dispatch({
+      type: "todo/update",
+      payload: { listId, updatedTasks },
+    });
+
+    // 認証ユーザーの確認と更新処理
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("ユーザーが認証されていません");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch("/api/todos", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listId, updatedTasks }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "タスクを並び替えられませんでした。"
+        );
+      }
+    } catch (error) {
+      console.error("エラー:", error);
+    }
+  }
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id); // ドラッグ開始時のIDを保存
@@ -290,14 +348,27 @@ export default function TodoDetail({
             onChange={handleTitleChange}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <p className="pb-1 text-gray-500 border-b-2 border-gray-400">
-            作成日： {cachedList.date}
-          </p>
+          <p className="text-gray-500 ">作成日： {cachedList.date}</p>
+        </div>
+
+        <div className="mx-14">
+          {/* WeekToggleButtonsに初期値と更新後のコールバックを渡す */}
+          <WeekToggleButtons
+            listId={listId}
+            initialResetDays={cachedList?.resetDays}
+            onResetDaysUpdated={(newResetDays) =>
+              setCachedList({ ...cachedList, resetDays: newResetDays })
+            }
+          />
+          <div className="flex justify-end hover:cursor-pointer" onClick={resetCompleted}>
+            <p className="w-4 h-4 mt-0.5 rounded-full border bg-green-500 border-green-500 before:content-['✓']  before:text-white before:text-sm before:flex before:items-center before:justify-center"></p>
+            <span className="text-gray-500">をリセット</span>
+          </div>
         </div>
       </div>
 
       {/* メイン */}
-      <div className="relative mt-2 mb-40 mx-14">
+      <div className="relative pt-2 mt-2 mb-40 border-t-2 border-gray-400 mx-14 ">
         <DndContext
           collisionDetection={closestCorners}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
@@ -339,5 +410,3 @@ export default function TodoDetail({
     </div>
   );
 }
-
-//strategy={verticalListSortingStrategy}を書かないと入れ替えた時にアイテムがずれる。

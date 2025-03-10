@@ -63,7 +63,7 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
         {/* paddingを付けて範囲を確保しないとDragイベント時にColumnIdが返らない */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 gap-2 p-2 rounded-lg min-h-28 md:min-h-screen md: bg-gray-50 auto-rows-auto md:flex md:flex-col"
+          className="grid grid-cols-2 gap-5 p-5 bg-opacity-50 rounded-lg min-h-28 md:min-h-screen md: bg-gray-50 auto-rows-auto md:flex md:flex-col"
         >
           {sortedTodo.map((todo) => (
             <Todo key={todo.id} todo={todo} selectedTodoId={selectedTodoId} openModal={openModal} />

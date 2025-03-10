@@ -90,6 +90,11 @@ const AuthForm = () => {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    isRegister ? handleRegister() : handleLogin();
+  };
+
   return (
     <div>
       <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-green-500">
@@ -112,7 +117,7 @@ const AuthForm = () => {
               {isRegister ? "新規登録" : "ログイン"}
             </p>
           </header>
-          <form>
+          <form onSubmit={handleSubmit}>
             {isRegister && (
               <div className="mb-4">
                 <p>ユーザー名</p>
@@ -172,7 +177,7 @@ const AuthForm = () => {
 
             {/* 新規登録 */}
             <button
-              type="button"
+              type="submit"
               onClick={isRegister ? handleRegister : handleLogin}
               disabled={isRegister && (!username || !email || !password)}
               className={`w-full p-3 mb-4 text-white rounded-lg transition duration-300 ${

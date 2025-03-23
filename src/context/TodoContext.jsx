@@ -29,6 +29,23 @@ const todoReducer = (state, { type, payload }) => {
           ? { ...todoList, todos: payload.updatedTasks }
           : todoList
       );
+    case "todo/updateResetDays":
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? { ...todoList, resetDays: payload.updatedResetDays }
+          : todoList
+      );
+    case "todo/resetComplete":
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? {
+              ...todoList,
+              todos: todoList.todos.map((task) => {
+                return { ...task, complete: false };
+              }),
+            }
+          : todoList
+      );
     case "todo/deleteList":
       return state.filter((todoList) => todoList.id !== payload.listId);
     case "todo/delete":

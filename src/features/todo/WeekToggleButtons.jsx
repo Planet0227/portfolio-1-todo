@@ -2,39 +2,44 @@
 
 import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
+import { useTodosDispatch } from "@/context/TodoContext";
 
-// 曜日トグルのデフォルト状態
-const defaultResetDays = {
-  sun: false,
-  mon: false,
-  tue: false,
-  wed: false,
-  thu: false,
-  fri: false,
-  sat: false,
-};
 
-const WeekToggleButtons = ({ listId, initialResetDays, onResetDaysUpdated }) => {
+
+const WeekToggleButtons = ({
+  listId,
+  initialResetDays,
+  onResetDaysUpdated,
+}) => {
   // 親から渡された初期状態を元にローカルstateを設定
-  const [resetDays, setResetDays] = useState(initialResetDays || defaultResetDays);
+  const [resetDays, setResetDays] = useState(
+    initialResetDays
+  );
+  const dispatch = useTodosDispatch();
 
   // 親から初期状態が変更された場合、ローカルstateを更新
   useEffect(() => {
-    if (initialResetDays) {
       setResetDays(initialResetDays);
-    }
   }, [initialResetDays]);
 
   // 曜日トグルの更新処理
   const updateResetDays = async (dayKey) => {
     // ローカルstateを更新
-    const newResetDays = { ...resetDays, [dayKey]: !resetDays[dayKey] };
-    setResetDays(newResetDays);
+    const updatedResetDays = { ...resetDays, [dayKey]: !resetDays[dayKey] };
+    setResetDays(updatedResetDays);
 
     // 親コンポーネントへも更新通知（状態を保持するため）
     if (onResetDaysUpdated) {
-      onResetDaysUpdated(newResetDays);
+      onResetDaysUpdated(updatedResetDays);
     }
+
+    dispatch({
+      type: "todo/updateResetDays",
+      payload: {
+        listId,
+        updatedResetDays,
+      },
+    });
 
     // 認証ユーザーを確認してサーバーへPATCHリクエスト
     const auth = getAuth();
@@ -51,7 +56,7 @@ const WeekToggleButtons = ({ listId, initialResetDays, onResetDaysUpdated }) => 
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ listId, updatedResetDays: newResetDays }),
+        body: JSON.stringify({ listId, updatedResetDays: updatedResetDays }),
       });
       if (!response.ok) {
         const errorData = await response.json();
@@ -80,8 +85,10 @@ const WeekToggleButtons = ({ listId, initialResetDays, onResetDaysUpdated }) => 
         <button
           key={day.key}
           onClick={() => updateResetDays(day.key)}
-          className={`px-3 py-1 text-sm font-medium rounded ${
-            resetDays[day.key] ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"
+          className={`px-3 py-1 text-md rounded-md ${
+            resetDays[day.key]
+              ? "bg-sky-500 text-white hover:bg-sky-600"
+              : "bg-gray-100 text-gray-400 hover:bg-gray-200"
           }`}
         >
           {day.label}

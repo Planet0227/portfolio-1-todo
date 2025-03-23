@@ -212,7 +212,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
-          className="mt-0.5 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600"
+          className="text-lg text-gray-400 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"
         >
           <FontAwesomeIcon icon={faGripLines} size="xl" />
         </div>
@@ -222,9 +222,9 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
           name={`todo-${todo.id}-checkBox`}
           checked={todo.complete}
           onChange={toggleCheckBox}
-          className={`ml-2 w-5 h-5 mt-1 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 border-gray-300 ${
+          className={`ml-2 w-6 h-6 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             todo.complete
-              ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"
+              ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-0.5 before:flex before:items-center before:justify-center"
               : ""
           }`}
         />
@@ -236,7 +236,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
           onBlur={handleBlur}
-          className={`w-10/12 text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
+          className={`w-10/12 self-center text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
             todo.complete ? "line-through text-gray-500" : ""
           }`}
           rows={1} // 最小高さを1行に設定

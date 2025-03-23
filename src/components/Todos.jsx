@@ -7,6 +7,7 @@ import TodoDetail from "@/features/todo/TodoDetail";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
 import { useCallback, useEffect, useState } from "react";
 import Modal from "./Modal";
+import { checkAndResetTasks } from '@/utils/resetTasks';
 
 //  dnd
 import {
@@ -46,8 +47,31 @@ const Todos = () => {
   const [activeItem, setActiveItem] = useState(null);
   const [overColumn, setOverColumn] = useState(null);
 
+  const [nextMidnight, setNextMidnight] = useState(null);
+
+  // 初回マウント時のリセットチェック用フラグ
+  const [initialCheckDone, setInitialCheckDone] = useState(false);
+
+  // 初回マウント時に1回だけ実行
   useEffect(() => {
-    setTodosList(todos);
+    if (!initialCheckDone && todos && todos.length > 0) {
+      console.log('Initial reset check...');
+      checkAndResetTasks(todos, dispatch);
+      setInitialCheckDone(true);
+    }
+  }, [todos, initialCheckDone, dispatch]);
+
+  // todosの更新時のリセットチェック
+  useEffect(() => {
+    if (initialCheckDone && todos && todos.length > 0) {
+      console.log('Update triggered reset check...');
+      checkAndResetTasks(todos, dispatch);
+    }
+  }, [todos, initialCheckDone, dispatch]);
+
+  useEffect(() => {
+    const sortedTodosList = [...todos].sort((a, b) => a.order - b.order);
+    setTodosList(sortedTodosList);
   }, [todos]);
 
   const findColumn = (id) => {
@@ -61,6 +85,7 @@ const Todos = () => {
     // itemのidが渡された場合、itemもつカラムのidを返したい
     return todosList.find((todo) => todo.id === id)?.category;
   };
+
   const handleDragStart = (event) => {
     const { active, over } = event;
     if (!active) return;
@@ -70,31 +95,63 @@ const Todos = () => {
 
   const handleDragOver = (event) => {
     const { active, over } = event;
-
     if (!over || active.id === over.id) {
-      return null;
+      return;
     }
-    if (over) {
-      const overId = String(over.id);
-      const activeId = String(active.id);
-      const overColumn = findColumn(overId);
-      const activeColumn = findColumn(activeId);
+    const overId = String(over.id);
+    const activeId = String(active.id);
+    const overColumn = findColumn(overId);
+    const activeColumn = findColumn(activeId);
+    let updatedTodos = [...todosList];
 
-      let updatedTodos = [...todosList];
+    // ドラッグ元とターゲットが異なるカラムの場合
+    if (activeColumn !== overColumn) {
+      // まずはカテゴリー変更
+      updatedTodos = updatedTodos.map((todo) =>
+        todo.id === activeId ? { ...todo, category: overColumn } : todo
+      );
 
-      if (active.id !== over.id) {
-        if (activeColumn !== overColumn) {
-          updatedTodos = todosList.map((todo) =>
-            todo.id === activeId ? { ...todo, category: overColumn } : todo
-          );
-          updatedTodos = updatedTodos.map((todo, index) => ({
+      // もし over.id がカラム自体を示している場合（＝個々のアイテムと衝突していない場合）
+      if (
+        overId === "notStarted" ||
+        overId === "inProgress" ||
+        overId === "completed"
+      ) {
+        // ターゲットカラム内のアイテム（ドラッグ中のものを除く）を取得
+        const targetItems = updatedTodos
+          .filter(
+            (todo) => todo.category === overColumn && todo.id !== activeId
+          )
+          .sort((a, b) => a.order - b.order);
+        // 新規追加先は末尾とする（空なら先頭）
+        const newOrder = targetItems.length + 1;
+        updatedTodos = updatedTodos.map((todo) =>
+          todo.id === activeId ? { ...todo, order: newOrder } : todo
+        );
+      } else {
+        // もし個々の item と衝突している場合は通常通り再配置（ここでは必要に応じて arrayMove を利用）
+
+        const oldIndex = todosList.findIndex((t) => t.id === active.id);
+        const newIndex = todosList.findIndex((t) => t.id === over.id);
+        updatedTodos = arrayMove(todosList, oldIndex, newIndex).map(
+          (todo, index) => ({
             ...todo,
-            order: index + 1, // 1から順に振り直す
-          }));
-
-          setTodosList(updatedTodos);
-        }
+            order: index + 1,
+          })
+        );
       }
+      setTodosList(updatedTodos);
+    } else {
+      // 同一カラム内での並べ替えは従来通り
+      const oldIndex = todosList.findIndex((t) => t.id === active.id);
+      const newIndex = todosList.findIndex((t) => t.id === over.id);
+      updatedTodos = arrayMove(todosList, oldIndex, newIndex).map(
+        (todo, index) => ({
+          ...todo,
+          order: index + 1,
+        })
+      );
+      setTodosList(updatedTodos);
     }
   };
 
@@ -102,7 +159,7 @@ const Todos = () => {
     setActiveId(null);
     const { active, over } = event;
 
-    const overId = String(over.id);
+    const overId = String(over?.id);
     const activeId = String(active.id);
     const overColumn = findColumn(overId);
     const activeColumn = findColumn(activeId);
@@ -124,7 +181,6 @@ const Todos = () => {
         order: index + 1, // 1から順に振り直す
       }));
 
-      const categories = ["notStarted", "inProgress", "completed"];
       categories.forEach((cat) => {
         // 現在の updatedTodos から該当カラムのアイテムを抽出（表示順は updatedTodos 内の順序通り）
         const itemsInCat = updatedTodos.filter((todo) => todo.category === cat);
@@ -232,7 +288,7 @@ const Todos = () => {
               (todoList) => todoList.category === category
             );
             return (
-              <div key={category} className="w-full p-3">
+              <div key={category} className="w-full p-2">
                 <TodoColmun
                   category={category}
                   todoList={filterdTodoList}

@@ -152,10 +152,10 @@ export async function DELETE(request) {
 export async function PATCH(request) {
   try {
     const uid = await getUserUid(request);
-    const { listId, updatedTitle, updatedTasks, updatedTodos } = await request.json();
+    const { listId, updatedTitle, updatedTasks, updatedTodos, updatedResetDays } = await request.json();
     const todosCollection = db.collection("users").doc(uid).collection("todos");
 
-    // リストの並び替えの場合（updatedTodos が存在する場合）は、listId のチェックや単体ドキュメントの取得は不要
+    // リストの並び替え
     if (updatedTodos) {
       const updatePromises = updatedTodos.map((todo) => {
         const { id, order, category } = todo;
@@ -166,7 +166,6 @@ export async function PATCH(request) {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-    // それ以外の場合は listId が必須
     if (!listId) {
       return new Response(JSON.stringify({ error: "listIdが必要です" }), { status: 400 });
     }
@@ -215,6 +214,17 @@ export async function PATCH(request) {
         ...updatedListSnapshot.data(),
         todos: tasks,
       };
+      return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+    } else if (updatedResetDays !== undefined) {
+      // resetDays 更新処理を追加
+      await todoRef.update({ resetDays: updatedResetDays });
+      const updatedListSnapshot = await todoRef.get();
+      const tasksSnapshot = await todoRef.collection("tasks").get();
+      const tasks = tasksSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const updatedTodoList = { id: listId, ...updatedListSnapshot.data(), todos: tasks };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     }
   } catch (error) {

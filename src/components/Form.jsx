@@ -44,7 +44,7 @@ const Form = ({ categories }) => {
     const date = String(now.getDate()).padStart(2, "0");
 
     // 曜日を配列で定義
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
     const day = days[now.getDay()];
 
     // 時間、分、秒を取得
@@ -58,6 +58,15 @@ const Form = ({ categories }) => {
     const filteredTodos = todos.filter(
       (todo) => todo.category === selectedCategory
     );
+    const resetDays = {
+      sun: false,
+      mon: false,
+      tue: false,
+      wed: false,
+      thu: false,
+      fri: false,
+      sat: false,
+    };
     const order = filteredTodos?.length + 1;
 
     const newTodoList = {
@@ -65,6 +74,7 @@ const Form = ({ categories }) => {
       title: inputValue,
       date: formattedDate,
       category: selectedCategory,
+      resetDays: resetDays,
       order: order,
       todos: [],
     };
@@ -101,7 +111,7 @@ const Form = ({ categories }) => {
   };
 
   return (
-    <div className="fixed p-5 transform -translate-x-1/2 bg-white border-2 border-gray-300 rounded-lg shadow-xl bottom-5 left-1/2 ">
+    <div className="fixed p-5 transform -translate-x-1/2 bg-white border-2 border-gray-300 rounded-lg shadow-xl select-none bottom-5 left-1/2">
       <div className="mb-2">
         {/* relative コンテナ内にポップアップ表示用の span を配置 */}
         <div ref={toggleButtonRef} className="relative inline">

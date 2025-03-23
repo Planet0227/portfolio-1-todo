@@ -31,33 +31,34 @@ const TodoDetailForm = ({ listId }) => {
     dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
     setInputValue("");
 
-     const auth = getAuth();
-      const user = auth.currentUser;
-    
-      if (!user) {
-        console.error("ユーザーが認証されていません");
-        return;
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      console.error("ユーザーが認証されていません");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch("/api/todos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
+        },
+        body: JSON.stringify({ listId, newTodo }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || "新規タスクを保存できませんでした。"
+        );
       }
-    
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/todos", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-          },
-          body: JSON.stringify({ listId, newTodo }),
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "新規タスクを保存できませんでした。");
-        }
-      } catch (error) {
-        console.error("エラー:", error);
-      }
-    
+    } catch (error) {
+      console.error("エラー:", error);
+    }
   };
   // textareaの高さの調整
   useEffect(() => {
@@ -76,14 +77,14 @@ const TodoDetailForm = ({ listId }) => {
   };
   return (
     <div className="flex w-full p-2 border-2 border-green-500 rounded-lg">
-      <div className="ml-[29px]"></div>
+      <div className="ml-[32px]"></div>
       <form onSubmit={addTodo} className="flex w-full">
         <div className="relative">
           <button
             onClick={addTodo}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex items-center mt-0.5 justify-center flex-shrink-0 w-5 h-5 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
+            className="flex items-center mt-0.5 justify-center flex-shrink-0 w-6 h-6 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
           >
             +
           </button>

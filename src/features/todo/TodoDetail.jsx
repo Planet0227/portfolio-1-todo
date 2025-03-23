@@ -40,6 +40,8 @@ export default function TodoDetail({
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
 
+
+// ホバー表示用
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
 
@@ -50,19 +52,6 @@ export default function TodoDetail({
   useEffect(() => {
     if (listId) {
       const foundList = todos.find((todoList) => todoList.id === listId);
-      if (foundList) {
-        if (!foundList.resetDays) {
-          foundList.resetDays = {
-            sun: false,
-            mon: false,
-            tue: false,
-            wed: false,
-            thu: false,
-            fri: false,
-            sat: false,
-          };
-        }
-      }
       setCachedList(foundList || null);
     }
   }, [listId, todos]);
@@ -72,6 +61,7 @@ export default function TodoDetail({
       setEditTitle(cachedList.title || "");
     }
   }, [cachedList]);
+
 
   //モーダルをEscで閉じる
   useEffect(() => {
@@ -93,8 +83,6 @@ export default function TodoDetail({
 
   const deleteTodoList = async () => {
     dispatch({ type: "todo/deleteList", payload: { listId } });
-    setCachedList(null);
-    onClose();
 
     //auth
     const auth = getAuth();
@@ -123,6 +111,8 @@ export default function TodoDetail({
     } catch (error) {
       console.error("リストが削除されました。:", error);
     }
+    setCachedList(null);
+    onClose();
   };
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
@@ -165,12 +155,17 @@ export default function TodoDetail({
       }
     }
   };
-// リセットボタン
-  const resetCompleted = async () => {
-    const updatedTasks = cachedList.todos.map((task)=> ({
+
+  const onResetDaysUpdated = (updatedResetDays) => {
+    setCachedList({ ...cachedList, resetDays: updatedResetDays });
+  };
+
+  // リセットボタン
+  const resetComplete = async () => {
+    const updatedTasks = cachedList.todos.map((task) => ({
       ...task,
       complete: false,
-    }))
+    }));
     console.log(updatedTasks);
 
     setCachedList({ ...cachedList, todos: updatedTasks });
@@ -194,7 +189,6 @@ export default function TodoDetail({
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ listId, updatedTasks }),
@@ -209,7 +203,7 @@ export default function TodoDetail({
     } catch (error) {
       console.error("エラー:", error);
     }
-  }
+  };
 
   const handleDragStart = (event) => {
     setActiveId(event.active.id); // ドラッグ開始時のIDを保存
@@ -278,9 +272,10 @@ export default function TodoDetail({
   }
 
   const sortedTodos = [...cachedList.todos].sort((a, b) => a.order - b.order);
+  
 
   return (
-    <div>
+    <div className="select-none">
       {/* ヘッダー */}
       <div className="sticky top-0 z-20 bg-white">
         <div className="relative flex items-center justify-between p-4">
@@ -348,21 +343,26 @@ export default function TodoDetail({
             onChange={handleTitleChange}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <p className="text-gray-500 ">作成日： {cachedList.date}</p>
-        </div>
+          <p className="text-gray-500 border-b-2 border-gray-400">
+            作成日： {cachedList.date}
+          </p>
 
-        <div className="mx-14">
+
           {/* WeekToggleButtonsに初期値と更新後のコールバックを渡す */}
           <WeekToggleButtons
             listId={listId}
             initialResetDays={cachedList?.resetDays}
-            onResetDaysUpdated={(newResetDays) =>
-              setCachedList({ ...cachedList, resetDays: newResetDays })
-            }
+            onResetDaysUpdated={onResetDaysUpdated}
           />
-          <div className="flex justify-end hover:cursor-pointer" onClick={resetCompleted}>
-            <p className="w-4 h-4 mt-0.5 rounded-full border bg-green-500 border-green-500 before:content-['✓']  before:text-white before:text-sm before:flex before:items-center before:justify-center"></p>
-            <span className="text-gray-500">をリセット</span>
+          <div className="flex items-center">
+            <p>リセット：</p>
+            <button
+              className="inline-flex px-2 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"
+              onClick={resetComplete}
+            >
+              <p className="w-5 h-5 mt-0.5 rounded-full border-2 bg-green-500 border-white before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"></p>
+              <span className="text-gray-500 group-hover:text-white">をすべて外す</span>
+            </button>
           </div>
         </div>
       </div>

@@ -36,7 +36,7 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
       categoryTitle = "未着手";
       break;
   }
-  const sortedTodo = [...todoList].sort((a, b) => a.order - b.order);
+  // const sortedTodo = [...todoList].sort((a, b) => a.order - b.order);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
   const strategy = isMobile ? rectSortingStrategy : verticalListSortingStrategy;
@@ -60,12 +60,12 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
         items={todoList}
         strategy={strategy}
       >
-        {/* paddingを付けて範囲を確保しないとDragイベント時にColumnIdが返らない */}
+        {/* gapがあるとちらつく&無限ループエラー */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 gap-5 p-5 bg-opacity-50 rounded-lg min-h-28 md:min-h-screen md: bg-gray-50 auto-rows-auto md:flex md:flex-col"
+          className="grid grid-cols-2 p-3 bg-gray-100 bg-opacity-50 rounded-lg min-h-28 md:min-h-screen auto-rows-auto md:flex md:flex-col"
         >
-          {sortedTodo.map((todo) => (
+          {todoList.map((todo) => (
             <Todo key={todo.id} todo={todo} selectedTodoId={selectedTodoId} openModal={openModal} />
           ))}
         </div>

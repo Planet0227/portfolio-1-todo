@@ -7,7 +7,7 @@ import TodoDetail from "@/features/todo/TodoDetail";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
 import { useCallback, useEffect, useState } from "react";
 import Modal from "./Modal";
-import { checkAndResetTasks } from '@/utils/resetTasks';
+import { checkAndResetTasks } from "@/utils/resetTasks";
 
 //  dnd
 import {
@@ -42,20 +42,25 @@ const Todos = () => {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
+  //auth
+  const auth = getAuth();
+  const user = auth.currentUser;
+
   const [todosList, setTodosList] = useState(todos);
   const [activeId, setActiveId] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
   const [overColumn, setOverColumn] = useState(null);
 
-  const [nextMidnight, setNextMidnight] = useState(null);
 
   // 初回マウント時のリセットチェック用フラグ
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
+  const [isShowWarning, setIsShowWarning] = useState(true);
+
   // 初回マウント時に1回だけ実行
   useEffect(() => {
     if (!initialCheckDone && todos && todos.length > 0) {
-      console.log('Initial reset check...');
+      console.log("Initial reset check...");
       checkAndResetTasks(todos, dispatch);
       setInitialCheckDone(true);
     }
@@ -64,7 +69,7 @@ const Todos = () => {
   // todosの更新時のリセットチェック
   useEffect(() => {
     if (initialCheckDone && todos && todos.length > 0) {
-      console.log('Update triggered reset check...');
+      console.log("Update triggered reset check...");
       checkAndResetTasks(todos, dispatch);
     }
   }, [todos, initialCheckDone, dispatch]);
@@ -201,10 +206,6 @@ const Todos = () => {
         payload: { updatedTodos },
       });
 
-      //auth
-      const auth = getAuth();
-      const user = auth.currentUser;
-
       if (!user) {
         console.error("ユーザーが認証されていません");
         return;
@@ -260,20 +261,81 @@ const Todos = () => {
 
   // 進行状況で分類
   const categories = ["notStarted", "inProgress", "completed"];
+
+  // ユーザーの状態を判定する関数
+  const isGuestOrNotLoggedIn = () => {
+    // ユーザーがnullの場合は未ログイン
+    if (!user) return true;
+    // ユーザーが匿名（ゲスト）の場合
+    if (user.isAnonymous) return true;
+    // それ以外（通常のログインユーザー）の場合
+    return false;
+  };
+
   return (
     <div>
-      <div className="px-10 pt-10 mx-auto md:max-w-5xl md:px-5">
-        <div className="text-4xl font-bold">タスク管理</div>
+      {/* 未ログインまたはゲストの場合に警告メッセージを表示 */}
+      {isGuestOrNotLoggedIn() && isShowWarning && (
+        <div className="relative p-4 border-l-8 bg-amber-50 border-amber-500 text-amber-700">
+          <div className="flex items-center mb-1">
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="font-semibold">注意</span>
+          </div>
+          <button
+            onClick={() => setIsShowWarning(false)}
+            className="absolute text-3xl font-bold top-2 right-2 focus:outline-none"
+            aria-label="警告を閉じる"
+          >
+            ×
+          </button>
+          {!user ? (
+            <>
+              <p>
+                現在、機能お試しモードです。作成されたリストはリロードなどで失われます。
+              </p>
+              <p className="mt-1 text-sm">
+                ゲストログインまたはアカウント登録をしてください。
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                現在ゲストモードです。ブラウザのキャッシュ削除やログアウトでデータが失われます。
+              </p>
+              <p className="mt-1 text-sm">
+                新規登録をすることでデータを永続的に保存することができます。
+              </p>
+            </>
+          )}
+        </div>
+      )}
+      <div className="mx-auto mt-10 md:max-w-5xl md:px-5">
         <div>
+          <div className="text-4xl font-bold">タスク管理</div>
           <div>
-            タイトルを入力して+ボタンをクリックすると、リストの追加先に指定されているカラムにリストが新規作成されます。
-          </div>
-          <div>
-            詳細ページではタスクの追加、変更、削除、チェックを付けて進捗を記録・確認出来ます。
-          </div>
-          <div>リストやタスクはドラッグアンドドロップで並べ替えられます。</div>
+            <div>
+              タイトルを入力して+ボタンをクリックすると、リストの追加先に指定されているカラムにリストが新規作成されます。
+            </div>
+            <div>
+              詳細ページではタスクの追加、変更、削除、チェックを付けて進捗を記録・確認出来ます。
+            </div>
+            <div>
+              リストやタスクはドラッグアンドドロップで並べ替えられます。
+            </div>
+          </div>{" "}
         </div>
       </div>
+
       <DndContext
         id={"unique-dnd-context-id"}
         sensors={sensors}
@@ -282,7 +344,7 @@ const Todos = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 mx-auto mb-40 select-none md:grid-cols-3 md:max-w-5xl">
+        <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:grid-cols-3 md:max-w-5xl">
           {categories.map((category) => {
             const filterdTodoList = todosList.filter(
               (todoList) => todoList.category === category
@@ -299,11 +361,23 @@ const Todos = () => {
             );
           })}
 
-          <DragOverlay
-            dropAnimation={{
-              sideEffects: null,
-            }}
-          >
+          {/* リストが空の場合のメッセージを追加 */}
+          {(!todos || todos.length === 0) && (
+            <div className="absolute left-0 right-0 flex justify-center top-24">
+              <div className="text-center bg-white rounded-lg shadow-lg p-14">
+                <div className="mb-4 text-6xl text-gray-300">📝</div>
+                <h3 className="mb-2 text-xl font-semibold text-gray-600">
+                  リストが存在しません
+                </h3>
+                <p className="mb-4 text-gray-500">
+                  下部のフォームからリストを作成してください
+                </p>
+                <div className="text-2xl text-gray-400 animate-bounce">↓</div>
+              </div>
+            </div>
+          )}
+
+          <DragOverlay dropAnimation={{ sideEffects: null }}>
             {activeId ? (
               <Todo
                 todo={todosList.find((t) => t.id === activeId)}
@@ -314,7 +388,13 @@ const Todos = () => {
         </div>
       </DndContext>
       <div>
-        {!selectedTodoId && <Form categories={categories} />}
+        {!selectedTodoId && (
+          <div
+            className={`${!todos || todos.length === 0 ? "relative z-10" : ""}`}
+          >
+            <Form categories={categories} />
+          </div>
+        )}
         <Modal
           isOpen={isModalOpen}
           onClose={closeModal}

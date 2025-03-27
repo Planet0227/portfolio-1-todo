@@ -40,8 +40,7 @@ export default function TodoDetail({
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
 
-
-// ホバー表示用
+  // ホバー表示用
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
 
@@ -58,10 +57,9 @@ export default function TodoDetail({
 
   useEffect(() => {
     if (cachedList) {
-      setEditTitle(cachedList.title || "");
+      setEditTitle(cachedList?.title || "");
     }
   }, [cachedList]);
-
 
   //モーダルをEscで閉じる
   useEffect(() => {
@@ -138,7 +136,6 @@ export default function TodoDetail({
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ listId, updatedTitle }),
@@ -155,6 +152,33 @@ export default function TodoDetail({
       }
     }
   };
+
+  let categoryColor = "";
+  switch (cachedList?.category) {
+    case "completed":
+      categoryColor = "bg-green-200";
+      break;
+    case "inProgress":
+      categoryColor = "bg-orange-200";
+      break;
+    case "notStarted":
+      categoryColor = "bg-red-200";
+      break;
+  }
+
+  let categoryTitle = "";
+  switch (cachedList?.category) {
+    case "completed":
+      categoryTitle = "完了";
+      break;
+
+    case "inProgress":
+      categoryTitle = "実行中";
+      break;
+    case "notStarted":
+      categoryTitle = "未着手";
+      break;
+  }
 
   const onResetDaysUpdated = (updatedResetDays) => {
     setCachedList({ ...cachedList, resetDays: updatedResetDays });
@@ -250,7 +274,6 @@ export default function TodoDetail({
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          // ヘッダーのテンプレートリテラルはバッククォートで囲む必要があります
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ listId, updatedTasks }),
@@ -268,11 +291,10 @@ export default function TodoDetail({
   };
 
   if (!cachedList) {
-    return <div>指定されたTodoリストは見つかりませんでした。</div>;
+    return <div>存在しないリストです。</div>;
   }
 
   const sortedTodos = [...cachedList.todos].sort((a, b) => a.order - b.order);
-  
 
   return (
     <div className="select-none">
@@ -343,10 +365,19 @@ export default function TodoDetail({
             onChange={handleTitleChange}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <p className="text-gray-500 border-b-2 border-gray-400">
-            作成日： {cachedList.date}
-          </p>
-
+          <div className="mt-2">
+            <span className="text-gray-500">進捗：</span>
+            <span
+              className={`p-1 mb-3 text-lg ml-2
+                 border-white rounded-md border-1 ${categoryColor}`}
+            >
+              {categoryTitle}
+            </span>
+          </div>
+          <div className="mt-2 text-gray-500 border-gray-400">
+            <span>作成日： </span>
+            <span className="ml-2">{cachedList.date}</span>
+          </div>
 
           {/* WeekToggleButtonsに初期値と更新後のコールバックを渡す */}
           <WeekToggleButtons
@@ -354,47 +385,56 @@ export default function TodoDetail({
             initialResetDays={cachedList?.resetDays}
             onResetDaysUpdated={onResetDaysUpdated}
           />
-          <div className="flex items-center">
-            <p>リセット：</p>
+          <div className="flex items-center mt-2">
+            <p className="text-gray-500">リセット：</p>
             <button
               className="inline-flex px-2 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"
               onClick={resetComplete}
             >
               <p className="w-5 h-5 mt-0.5 rounded-full border-2 bg-green-500 border-white before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"></p>
-              <span className="text-gray-500 group-hover:text-white">をすべて外す</span>
+              <span className="text-gray-500 group-hover:text-white">
+                をすべて外す
+              </span>
             </button>
           </div>
+          <div className="mt-2 border-b-2 border-gray-400"></div>
         </div>
       </div>
 
       {/* メイン */}
-      <div className="relative pt-2 mt-2 mb-40 border-t-2 border-gray-400 mx-14 ">
+      <div className="relative mx-14">
         <DndContext
           collisionDetection={closestCorners}
-          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          modifiers={[restrictToVerticalAxis, ]}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext
-            strategy={verticalListSortingStrategy}
-            items={sortedTodos.map((todo) => todo.id)}
-          >
-            {sortedTodos.map((todo) => (
-              <TodoDetailItem
-                key={todo.id}
-                id={todo.id}
-                todo={todo}
-                todos={sortedTodos}
-                listId={listId}
-              />
-            ))}
-          </SortableContext>
+          {/* スクロール可能なコンテナ */}
+          <div className="h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2">
+            <SortableContext
+              strategy={verticalListSortingStrategy}
+              items={sortedTodos.map((todo) => todo.id)}
+            >
+              {sortedTodos.map((todo) => (
+                <TodoDetailItem
+                  key={todo.id}
+                  id={todo.id}
+                  todo={todo}
+                  todos={sortedTodos}
+                  listId={listId}
+                />
+              ))}
+            </SortableContext>
+          </div>
+
           <DragOverlay
+          
             dropAnimation={{
               sideEffects: defaultDropAnimationSideEffects({
                 styles: {},
               }),
             }}
+            
           >
             {activeId ? (
               <TodoDetailItem

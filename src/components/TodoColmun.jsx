@@ -28,7 +28,6 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
     case "completed":
       categoryTitle = "完了";
       break;
-
     case "inProgress":
       categoryTitle = "実行中";
       break;

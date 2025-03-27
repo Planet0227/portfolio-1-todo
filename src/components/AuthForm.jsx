@@ -19,7 +19,7 @@ const AuthForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [isShowPassword, setIsShowPassword] = useState(false);
   const router = useRouter();
   const {user} = useAuth();
 
@@ -96,7 +96,7 @@ const AuthForm = () => {
   };
 
   return (
-    <div>
+    <div className="select-none">
       <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-green-500">
         <h3
           className="text-3xl cursor-pointer"
@@ -148,7 +148,7 @@ const AuthForm = () => {
               <p className="text-sm text-gray-400">英数字を含む8〜20文字</p>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={isShowPassword ? "text" : "password"}
                   placeholder="パスワード"
                   minLength={8}
                   maxLength={20}
@@ -161,10 +161,10 @@ const AuthForm = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((prev) => !prev)}
+                  onClick={() => setIsShowPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
                 >
-                  <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                  <FontAwesomeIcon icon={isShowPassword ? faEye : faEyeSlash} />
                 </button>
               </div>
             </div>

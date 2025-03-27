@@ -56,22 +56,28 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
         }`}
       >
         <div className="flex items-center justify-between">
-          <div className={`text-lg font-semibold ${!todo.title ? "text-gray-400" : "text-gray-800"}`}>
+          <div className={`text-lg font-medium ${!todo.title ? "text-gray-400" : "text-gray-800"}`}>
             {todo.title || "タイトル未設定"}
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">{`${todo.todos.filter((t) => t.complete).length}/${todo.todos.length}`}</span>
-            <button className="text-xl text-gray-400 hover:text-gray-600">
+          <div className="flex items-center space-x-3">
+            <span className="px-2 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
+              {`${todo.todos.filter((t) => t.complete).length}/${todo.todos.length}`}
+            </span>
+            <button className="text-gray-400 transition-colors hover:text-blue-500">
               <FontAwesomeIcon icon={faChevronRight} />
             </button>
           </div>
         </div>
         {activeResetDays.length > 0 && (
-          <div className="p-1 mt-1 text-xs bg-gray-100 rounded text-sky-500">
-            {activeResetDays.map((day) => day.label).join("、")} 
+          <div className="flex gap-1 mt-2 ">
+            {activeResetDays.map(day => (
+              <span key={day.label} className="px-2 py-1 text-xs rounded-full text-sky-500 bg-sky-100">
+                {day.label}
+              </span>
+            ))}
           </div>
         )}
-        <div className="mt-1">
+        <div className="mt-2 border-gray-400">
           <List todo={todo.todos} listId={todo.id} />
         </div>
       </div>

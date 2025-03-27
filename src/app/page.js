@@ -124,14 +124,14 @@ export default function Home() {
 
   return (
     <TodoProvider>
-      <div>
-        <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-green-500">
+      <div className="select-none">
+        <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-lime-500">
           <h3 className="text-3xl">✓Task-Board</h3>
           {!user ? (
             // 未ログインの場合
             <button
               onClick={handleLoginClick}
-              className="flex items-center gap-2 text-lg"
+              className="flex items-center gap-2 text-lg hover:underline"
             >
               <FontAwesomeIcon icon={faRightToBracket} className="text-2xl" />
               <p>ログイン</p>
@@ -253,7 +253,6 @@ export default function Home() {
                     required
                   />
                 </label>
-                {/* アイコンURL入力部分は削除し、アップロードなどの実装に置き換え */}
                 <button
                   type="submit"
                   className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
@@ -285,7 +284,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="flex justify-end gap-4 mt-4">
+              <div className="flex justify-center gap-4 mt-4">
                 <button
                   onClick={() => setIsLogoutConfirmOpen(false)}
                   className="px-4 py-2 border rounded hover:bg-gray-200"

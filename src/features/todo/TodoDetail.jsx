@@ -405,12 +405,12 @@ export default function TodoDetail({
       <div className="relative mx-14">
         <DndContext
           collisionDetection={closestCorners}
-          modifiers={[restrictToVerticalAxis, ]}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}
-          <div className="h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2">
+          <div className="relative h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2">
             <SortableContext
               strategy={verticalListSortingStrategy}
               items={sortedTodos.map((todo) => todo.id)}
@@ -426,24 +426,6 @@ export default function TodoDetail({
               ))}
             </SortableContext>
           </div>
-
-          <DragOverlay
-          
-            dropAnimation={{
-              sideEffects: defaultDropAnimationSideEffects({
-                styles: {},
-              }),
-            }}
-            
-          >
-            {activeId ? (
-              <TodoDetailItem
-                id={activeItem.id}
-                todo={activeItem}
-                listId={listId}
-              />
-            ) : null}
-          </DragOverlay>
         </DndContext>
         <TodoDetailForm listId={listId} />
       </div>

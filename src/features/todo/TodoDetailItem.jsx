@@ -7,7 +7,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getAuth } from "firebase/auth";
 
-const TodoDetailItem = ({ todos, todo, id, listId }) => {
+const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
   const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
@@ -15,9 +15,9 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
   //  dnd
   const {
     isOver,
+    isDragging,
     activeIndex,
     overIndex,
-    isDragging,
     isSorting,
     setNodeRef,
     transform,
@@ -30,19 +30,19 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
   });
 
   const style = {
-    transform: isSorting ? undefined : CSS.Translate.toString(transform), //Translateに変更(歪み防止)
+    transform: isSorting ?  CSS.Translate.toString(transform) : undefined, //CSS.Translateに変更(歪み防止)
     transition,
-    opacity: isDragging ? "0.5" : "",
+    opacity: !isDragging && isSorting ? "0.6" : "",
   };
 
-  const sortDirection =
-    activeIndex > overIndex
-      ? "before"
-      : activeIndex < overIndex
-      ? "after"
-      : null;
+  // const sortDirection =
+  //   activeIndex > overIndex
+  //     ? "before"
+  //     : activeIndex < overIndex
+  //     ? "after"
+  //     : null;
 
-  const isShowIndicator = isOver && sortDirection != null;
+  // const isShowIndicator = isOver && sortDirection != null;
 
   // 削除
   const deleteTodo = async () => {
@@ -200,13 +200,7 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
         style={style}
         className={`flex w-full mb-2 border-gray-500 border-2 p-2 rounded-lg bg-white relative ${
           isDragging ? "z-10" : ""
-        }  ${
-          isShowIndicator
-            ? "after:absolute after:w-full after:left-0 after:h-[5px] after:rounded-full after:bg-blue-500"
-            : ""
-        } ${sortDirection === "before" ? "after:top-[-8.5px]" : ""} ${
-          sortDirection === "after" ? "after:bottom-[-8.5px]" : ""
-        }`}
+        }  `}
       >
         <div
           ref={setActivatorNodeRef}
@@ -254,3 +248,4 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 };
 
 export default TodoDetailItem;
+

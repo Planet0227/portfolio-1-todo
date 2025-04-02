@@ -9,11 +9,6 @@ export const checkAndResetTasks = async (todos, dispatch) => {
   const auth = getAuth();
   const userId = auth.currentUser?.uid;
 
-  if (!userId) {
-    console.error('ユーザーが認証されていません');
-    return;
-  }
-
   // デバッグ用ログ
   console.log('Current local time:', today.toLocaleString('ja-JP'));
   console.log('Last reset date:', lastResetDate ? new Date(lastResetDate).toLocaleString('ja-JP') : 'none');

@@ -64,15 +64,7 @@ const Todos = () => {
       checkAndResetTasks(todos, dispatch);
       setInitialCheckDone(true);
     }
-  }, [todos, initialCheckDone, dispatch]);
-
-  // todosの更新時のリセットチェック
-  useEffect(() => {
-    if (initialCheckDone && todos && todos.length > 0) {
-      console.log("Update triggered reset check...");
-      checkAndResetTasks(todos, dispatch);
-    }
-  }, [todos, initialCheckDone, dispatch]);
+  }, [todos, dispatch]);
 
   useEffect(() => {
     const sortedTodosList = [...todos].sort((a, b) => a.order - b.order);
@@ -163,6 +155,7 @@ const Todos = () => {
   const handleDragEnd = async (event) => {
     setActiveId(null);
     const { active, over } = event;
+    
 
     const overId = String(over?.id);
     const activeId = String(active.id);
@@ -238,20 +231,22 @@ const Todos = () => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
 
-    // // モーダル展開時のスタイル維持
-    // const scrollbarWidth =
-    //   window.innerWidth - document.documentElement.clientWidth;
-    // document.body.style.overflow = "hidden";
-    // document.body.style.paddingRight = `${scrollbarWidth}px`;
+    // モーダル展開時のスタイル維持
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+
+    
+    document.body.style.paddingRight = `${scrollbarWidth}px`;
   };
 
   const closeModal = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
 
-    // // スクロール復元
-    // document.body.style.overflow = "";
-    // document.body.style.paddingRight = "";
+    // スクロール復元
+    document.body.style.overflow = "";
+    document.body.style.paddingRight = "";
   };
 
   //5px動かすとドラッグと判定する。

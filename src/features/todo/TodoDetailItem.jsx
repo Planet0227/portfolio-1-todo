@@ -82,15 +82,11 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
 
   // タスク更新
   const updateContent = async (newContent) => {
-    if (newContent !== todo.content) {
-      const updatedTasks = todos.map((_todo) =>
-        _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
-      );
-      dispatch({
-        type: "todo/update",
-        payload: { listId, updatedTasks },
-      });
-
+    
+    const updatedTasks = todos.map((_todo) =>
+      _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
+    );
+    dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
       //auth
       const auth = getAuth();
       const user = auth.currentUser;
@@ -119,7 +115,7 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
         console.error("エラー:", error);
       }
       
-    }
+    
   };
 
   // チェックボックス更新
@@ -184,10 +180,19 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
   const handleContentChange = (e) => {
     const newContent = e.target.value;
     setEditContent(newContent);
-    updateContent(newContent);
+
+    const updatedTasks = todos.map((_todo) =>
+      _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
+    );
+    dispatch({
+      type: "todo/update",
+      payload: { listId, updatedTasks },
+    });
+
   };
   // 入力が空なら削除
-  const handleBlur = () => {
+  const handleContentBlur = () => {
+    updateContent(editContent);
     if (editContent.trim().length === 0) {
       deleteTodo();
     }
@@ -229,7 +234,7 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
           name={`todo-${todo.id}-textarea`}
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
-          onBlur={handleBlur}
+          onBlur={handleContentBlur}
           className={`w-10/12 self-center text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
             todo.complete ? "line-through text-gray-500" : ""
           }`}

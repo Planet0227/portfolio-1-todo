@@ -112,44 +112,45 @@ export default function TodoDetail({
     setCachedList(null);
     onClose();
   };
+
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
     setEditTitle(updatedTitle);
-    updateTitle(updatedTitle);
+    dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
+  };
+
+  const handleTitleBlur = () => {
+    updateTitle(editTitle);
   };
 
   //　タイトル更新
   const updateTitle = async (updatedTitle) => {
-    if (updatedTitle !== cachedList.title) {
-      dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
+    dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
 
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (!user) {
-        console.error("ユーザーが認証されていません");
-        return;
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      console.error("ユーザーが認証されていません");
+      return;
+    }
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch("/api/todos", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listId, updatedTitle }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "タイトルを更新できませんでした。");
       }
-
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/todos", {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ listId, updatedTitle }),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "タイトルを更新できませんでした。"
-          );
-        }
-      } catch (error) {
-        console.error("エラー:", error);
-      }
+    } catch (error) {
+      console.error("エラー:", error);
     }
   };
 
@@ -363,6 +364,7 @@ export default function TodoDetail({
             placeholder="タイトルを入力"
             value={editTitle}
             onChange={handleTitleChange}
+            onBlur={handleTitleBlur}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
           <div className="mt-2">

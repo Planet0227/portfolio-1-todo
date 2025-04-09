@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { useTodosDispatch } from "@/context/TodoContext";
-
-
+import { authenticatedFetch } from "@/utils/auth";
 
 const WeekToggleButtons = ({
   listId,
@@ -12,14 +11,12 @@ const WeekToggleButtons = ({
   onResetDaysUpdated,
 }) => {
   // 親から渡された初期状態を元にローカルstateを設定
-  const [resetDays, setResetDays] = useState(
-    initialResetDays
-  );
+  const [resetDays, setResetDays] = useState(initialResetDays);
   const dispatch = useTodosDispatch();
 
   // 親から初期状態が変更された場合、ローカルstateを更新
   useEffect(() => {
-      setResetDays(initialResetDays);
+    setResetDays(initialResetDays);
   }, [initialResetDays]);
 
   // 曜日トグルの更新処理
@@ -41,27 +38,11 @@ const WeekToggleButtons = ({
       },
     });
 
-    // 認証ユーザーを確認してサーバーへPATCHリクエスト
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ listId, updatedResetDays: updatedResetDays }),
+        body: JSON.stringify({ listId, updatedResetDays }),
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "曜日設定の更新に失敗しました。");
-      }
     } catch (error) {
       console.error("曜日設定更新エラー:", error);
     }

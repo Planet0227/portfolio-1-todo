@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useReducer } from "react";
 import { getAuth } from "firebase/auth";
-
+import { authenticatedFetch } from "@/utils/auth";
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
 
@@ -17,7 +17,7 @@ const todoReducer = (state, { type, payload }) => {
           ? { ...todoList, todos: [...todoList.todos, payload.newTodo] }
           : todoList
       );
-    case "todo/updateList":
+    case "todo/updateListTitle":
       return state.map((todoList) =>
         todoList.id === payload.listId
           ? { ...todoList, title: payload.updatedTitle }
@@ -27,6 +27,12 @@ const todoReducer = (state, { type, payload }) => {
       return state.map((todoList) =>
         todoList.id === payload.listId
           ? { ...todoList, todos: payload.updatedTasks }
+          : todoList
+      );
+    case "todo/updateList":
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? { ...todoList, category: payload.updatedCategory, order: payload.updatedOrder }
           : todoList
       );
     case "todo/updateResetDays":
@@ -73,28 +79,10 @@ const TodoProvider = ({ children }) => {
 
   useEffect(() => {
     const getTodos = async () => {
-      const ENDPOINT = "/api/todos";
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (!user) {
-        console.log("ユーザーが認証されていません");
-        return;
-      }
-
-      try {
-        const token = await user.getIdToken();
-        const todos = await fetch(ENDPOINT, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }).then((res) => res.json());
-        dispatch({ type: "todo/init", payload: todos });
-      } catch (error) {
-        console.error("Failed to fetch todos:", error);
-      }
+      const todos = await authenticatedFetch("/api/todos", {
+        method: "GET",
+      }).then((res) => res.json());
+      dispatch({ type: "todo/init", payload: todos });
     };
     getTodos();
   }, []);

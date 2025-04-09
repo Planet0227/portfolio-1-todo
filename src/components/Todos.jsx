@@ -32,6 +32,8 @@ import {
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 import { getAuth } from "firebase/auth";
+import { authenticatedFetch } from "@/utils/auth";
+import { CATEGORY_LIST } from "@/utils/categories";
 
 const Todos = () => {
   //モーダル
@@ -50,7 +52,6 @@ const Todos = () => {
   const [activeId, setActiveId] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
   const [overColumn, setOverColumn] = useState(null);
-
 
   // 初回マウント時のリセットチェック用フラグ
   const [initialCheckDone, setInitialCheckDone] = useState(false);
@@ -75,11 +76,13 @@ const Todos = () => {
     if (!id) {
       return null;
     }
-    // colmunのidが返ってきた場合はそのまま返す
-    if (id === "notStarted" || id === "inProgress" || id === "completed") {
+    // カテゴリーのIDリストを作成
+    const categoryIds = CATEGORY_LIST.map(cat => cat.id);
+    // カテゴリーIDが直接渡された場合はそのまま返す
+    if (categoryIds.includes(id)) {
       return id;
     }
-    // itemのidが渡された場合、itemもつカラムのidを返したい
+    // itemのidが渡された場合、そのitemが属するカラムのidを返す
     return todosList.find((todo) => todo.id === id)?.category;
   };
 
@@ -108,12 +111,11 @@ const Todos = () => {
         todo.id === activeId ? { ...todo, category: overColumn } : todo
       );
 
+      // カテゴリーIDのリストを取得
+      const categoryIds = CATEGORY_LIST.map(cat => cat.id);
+      
       // もし over.id がカラム自体を示している場合（＝個々のアイテムと衝突していない場合）
-      if (
-        overId === "notStarted" ||
-        overId === "inProgress" ||
-        overId === "completed"
-      ) {
+      if (categoryIds.includes(overId)) {
         // ターゲットカラム内のアイテム（ドラッグ中のものを除く）を取得
         const targetItems = updatedTodos
           .filter(
@@ -155,7 +157,6 @@ const Todos = () => {
   const handleDragEnd = async (event) => {
     setActiveId(null);
     const { active, over } = event;
-    
 
     const overId = String(over?.id);
     const activeId = String(active.id);
@@ -179,12 +180,9 @@ const Todos = () => {
         order: index + 1, // 1から順に振り直す
       }));
 
-      categories.forEach((cat) => {
-        // 現在の updatedTodos から該当カラムのアイテムを抽出（表示順は updatedTodos 内の順序通り）
-        const itemsInCat = updatedTodos.filter((todo) => todo.category === cat);
-        // 各アイテムに対して order を 1 から連番で割り当てる
+      CATEGORY_LIST.forEach((cat) => {
+        const itemsInCat = updatedTodos.filter((todo) => todo.category === cat.id);
         itemsInCat.forEach((item, index) => {
-          // updatedTodos 内の該当アイテムを更新
           const idx = updatedTodos.findIndex((todo) => todo.id === item.id);
           if (idx !== -1) {
             updatedTodos[idx] = { ...updatedTodos[idx], order: index + 1 };
@@ -199,30 +197,13 @@ const Todos = () => {
         payload: { updatedTodos },
       });
 
-      if (!user) {
-        console.error("ユーザーが認証されていません");
-        return;
-      }
-
       try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/todos", {
+        await authenticatedFetch("/api/todos", {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-          },
           body: JSON.stringify({ updatedTodos }),
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.error || "チェック状態を更新できませんでした。"
-          );
-        }
       } catch (error) {
-        console.error("エラー:", error);
+        console.error("タスク更新エラー:", error);
       }
     }
   };
@@ -236,7 +217,6 @@ const Todos = () => {
       window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
 
-    
     document.body.style.paddingRight = `${scrollbarWidth}px`;
   };
 
@@ -253,9 +233,6 @@ const Todos = () => {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } })
   );
-
-  // 進行状況で分類
-  const categories = ["notStarted", "inProgress", "completed"];
 
   // ユーザーの状態を判定する関数
   const isGuestOrNotLoggedIn = () => {
@@ -296,7 +273,7 @@ const Todos = () => {
           {!user ? (
             <>
               <p>
-                現在、機能お試しモードです。作成されたリストはリロードなどで失われます。
+                現在、機能お試しモードです。作成されたリストはページのリロードなどで失われます。
               </p>
               <p className="mt-1 text-sm">
                 ゲストログインまたはアカウント登録をしてください。
@@ -334,20 +311,20 @@ const Todos = () => {
       <DndContext
         id={"unique-dnd-context-id"}
         sensors={sensors}
-        collisionDetection={pointerWithin} //これにしないと無限ループが発生する。
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:grid-cols-3 md:max-w-5xl">
-          {categories.map((category) => {
+          {CATEGORY_LIST.map((category) => {
             const filterdTodoList = todosList.filter(
-              (todoList) => todoList.category === category
+              (todoList) => todoList.category === category.id
             );
             return (
-              <div key={category} className="w-full p-2">
+              <div key={category.id} className="w-full p-2">
                 <TodoColmun
-                  category={category}
+                  category={category.id}
                   todoList={filterdTodoList}
                   selectedTodoId={selectedTodoId}
                   openModal={openModal}
@@ -387,7 +364,7 @@ const Todos = () => {
           <div
             className={`${!todos || todos.length === 0 ? "relative z-10" : ""}`}
           >
-            <Form categories={categories} />
+            <Form categories={CATEGORY_LIST.map(cat => cat.id)} />
           </div>
         )}
         <Modal

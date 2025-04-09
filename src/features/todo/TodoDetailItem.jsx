@@ -6,8 +6,9 @@ import { useState, useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getAuth } from "firebase/auth";
+import { authenticatedFetch } from "@/utils/auth";
 
-const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
+const TodoDetailItem = ({ todos, todo, id, listId }) => {
   const [editContent, setEditContent] = useState(todo.content);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
@@ -30,7 +31,7 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
   });
 
   const style = {
-    transform: isSorting ?  CSS.Translate.toString(transform) : undefined, //CSS.Translateに変更(歪み防止)
+    transform: isSorting ? CSS.Translate.toString(transform) : undefined, //CSS.Translateに変更(歪み防止)
     transition,
     opacity: !isDragging && isSorting ? "0.6" : "",
   };
@@ -49,73 +50,30 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
     const taskId = todo.id;
     dispatch({ type: "todo/delete", payload: { listId, todoId: taskId } });
 
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-        },
         body: JSON.stringify({ listId, taskId }),
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "タスクの削除に失敗しました。");
-      }
-      console.log("タスクが削除されました。");
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タスク更新エラー:", error);
     }
-
-    
   };
 
   // タスク更新
   const updateContent = async (newContent) => {
-    
     const updatedTasks = todos.map((_todo) =>
       _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
-      //auth
-      const auth = getAuth();
-      const user = auth.currentUser;
-
-      if (!user) {
-        console.error("ユーザーが認証されていません");
-        return;
-      }
-
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch("/api/todos", {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-          },
-          body: JSON.stringify({ listId, updatedTasks }),
-        });
-    
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "タスクを更新できませんでした。");
-        }
-      } catch (error) {
-        console.error("エラー:", error);
-      }
-      
-    
+    try {
+      await authenticatedFetch("/api/todos", {
+        method: "PATCH",
+        body: JSON.stringify({ listId, updatedTasks }),
+      });
+    } catch (error) {
+      console.error("タスク更新エラー:", error);
+    }
   };
 
   // チェックボックス更新
@@ -124,32 +82,13 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
       _todo.id === todo.id ? { ..._todo, complete: !todo.complete } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
-    //auth
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-        },
         body: JSON.stringify({ listId, updatedTasks }),
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "チェック状態を更新できませんでした。");
-      }
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タスク更新エラー:", error);
     }
   };
 
@@ -188,7 +127,6 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
       type: "todo/update",
       payload: { listId, updatedTasks },
     });
-
   };
   // 入力が空なら削除
   const handleContentBlur = () => {
@@ -253,4 +191,3 @@ const TodoDetailItem = ({ todos, todo, id, listId,  }) => {
 };
 
 export default TodoDetailItem;
-

@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
-import { getAuth } from "firebase/auth";
+import { authenticatedFetch } from "@/utils/auth";
+import { getCategoryInfo } from "@/utils/categories";
 const Form = ({ categories }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
@@ -13,21 +14,20 @@ const Form = ({ categories }) => {
 
   // クリックが外部で行われたらオプションを閉じる
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (e) => {
       // トグルボタン以外がクリックされた場合にオプションを閉じる
-      if (
-        toggleButtonRef.current &&
-        !toggleButtonRef.current.contains(event.target)
-      ) {
-        setShowCategorySelector(false);
-      }
+      if (toggleButtonRef.current && toggleButtonRef.current.contains(e.target))
+        return;
+      if (e.target.closest("[data-todo]")) return;
+      setShowCategorySelector(false);
     };
-
-    document.addEventListener("mousedown", handleClickOutside);
+    if (showCategorySelector) {
+      document.addEventListener("click", handleClickOutside);
+    }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [showCategorySelector]);
 
   //　新しいTodoリスト
   const addTodoList = async (e) => {
@@ -81,61 +81,41 @@ const Form = ({ categories }) => {
     dispatch({ type: "todo/addList", payload: newTodoList });
     setInputValue("");
 
-    //POSTリクエスト
-  const auth = getAuth();
-  const user = auth.currentUser;
-
-  if (!user) {
-    console.error("ユーザーが認証されていません");
-    return;
-  }
-
-  try {
-    const token = await user.getIdToken();
-    const response = await fetch("/api/todos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-      },
-      body: JSON.stringify({ newTodoList }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || "サーバーエラー");
+    try {
+      await authenticatedFetch("/api/todos", {
+        method: "POST",
+        body: JSON.stringify({ newTodoList }),
+      });
+    } catch (error) {
+      console.error("タスク更新エラー:", error);
     }
-  } catch (error) {
-    console.error("エラー:", error);
-  }
   };
 
   return (
     <div className="fixed p-5 transform -translate-x-1/2 bg-white border-2 border-gray-300 rounded-lg shadow-xl select-none bottom-5 left-1/2">
       <div className="mb-2">
         {/* relative コンテナ内にポップアップ表示用の span を配置 */}
-        <div ref={toggleButtonRef} className="relative inline">
-          <span className="cursor-pointer select-none" onClick={() => setShowCategorySelector((prev) => !prev)}>リストの追加先：</span>
-          <button
-            className={`p-1 rounded-md text-lg cursor-pointer ${
-              selectedCategory === "notStarted"
-                ? "bg-red-200 hover:bg-red-300"
-                : selectedCategory === "inProgress"
-                ? "bg-orange-200 hover:bg-orange-300"
-                : "bg-green-200 hover:bg-green-300"
-            }`}
+        <div className="relative inline">
+          <span
+            className="cursor-pointer select-none"
             onClick={() => setShowCategorySelector((prev) => !prev)}
           >
-            {selectedCategory === "notStarted"
-              ? "未着手"
-              : selectedCategory === "inProgress"
-              ? "実行中"
-              : "完了"}
-          </button>
+            リストの追加先：
+          </span>
+          <span
+            className={`p-1 rounded-md text-lg cursor-pointer ${
+              getCategoryInfo(selectedCategory).styles.baseColor
+            } ${getCategoryInfo(selectedCategory).styles.hover}`}
+            onClick={() => setShowCategorySelector((prev) => !prev)}
+          >
+            {getCategoryInfo(selectedCategory).title}
+          </span>
         </div>
         {showCategorySelector && (
-          <div ref={toggleButtonRef}
-          className="absolute flex gap-2 p-2 bg-white border border-gray-300 rounded-md shadow-lg select-none bottom-24 left-20">
+          <div
+            ref={toggleButtonRef}
+            className="absolute flex gap-2 p-2 bg-white border border-gray-300 rounded-md shadow-lg select-none bottom-24 left-20"
+          >
             {categories.map((cat) => {
               return (
                 <div
@@ -144,19 +124,11 @@ const Form = ({ categories }) => {
                     setSelectedCategory(cat);
                     setShowCategorySelector(false);
                   }}
-                  className={`px-2 py-2 cursor-pointer rounded-md ${
-                    cat === "notStarted"
-                      ? "bg-red-200 hover:bg-red-300"
-                      : cat === "inProgress"
-                      ? "bg-orange-200 hover:bg-orange-300"
-                      : "bg-green-200 hover:bg-green-300"
-                  }`}
+                  className={`p-1 cursor-pointer rounded-md ${
+                    getCategoryInfo(cat).styles.baseColor
+                  } ${getCategoryInfo(cat).styles.hover}`}
                 >
-                  {cat === "notStarted"
-                    ? "未着手"
-                    : cat === "inProgress"
-                    ? "実行中"
-                    : "完了"}
+                  {getCategoryInfo(cat).title}
                 </div>
               );
             })}

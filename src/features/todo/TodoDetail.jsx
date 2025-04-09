@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
@@ -26,8 +26,9 @@ import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
-import { getAuth } from "firebase/auth";
 import WeekToggleButtons from "./WeekToggleButtons";
+import { authenticatedFetch } from "@/utils/auth";
+import { CATEGORY_LIST, getCategoryInfo } from "@/utils/categories";
 
 export default function TodoDetail({
   listId,
@@ -39,14 +40,15 @@ export default function TodoDetail({
   const dispatch = useTodosDispatch();
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
+  // const [selectedCategory, setSelectedCategory] = useState(
+  //   cachedList?.category
+  // );
+  const toggleButtonRef = useRef(null);
 
   // ホバー表示用
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
-
-  // ドラッグ中のアイテムとIDを保持
-  const [activeId, setActiveId] = useState(null);
-  const activeItem = cachedList?.todos.find((todo) => todo.id === activeId);
 
   useEffect(() => {
     if (listId) {
@@ -79,38 +81,34 @@ export default function TodoDetail({
     };
   }, [onClose]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      // トグルボタン以外がクリックされた場合にオプションを閉じる
+      if (toggleButtonRef.current && toggleButtonRef.current.contains(e.target))
+        return;
+      if (e.target.closest("[data-todo]")) return;
+      setShowCategorySelector(false);
+    };
+    if (showCategorySelector) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [showCategorySelector]);
+
   const deleteTodoList = async () => {
     dispatch({ type: "todo/deleteList", payload: { listId } });
-
-    //auth
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-        },
-        body: JSON.stringify({ listId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "リストの削除に失敗しました。");
-      }
-    } catch (error) {
-      console.error("リストが削除されました。:", error);
-    }
     setCachedList(null);
     onClose();
+    try {
+      await authenticatedFetch("/api/todos", {
+        method: "DELETE",
+        body: JSON.stringify({ listId }),
+      });
+    } catch (error) {
+      console.error("タイトル更新エラー:", error);
+    }
   };
 
   const handleTitleChange = (e) => {
@@ -119,67 +117,52 @@ export default function TodoDetail({
     dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
   };
 
-  const handleTitleBlur = () => {
-    updateTitle(editTitle);
-  };
-
-  //　タイトル更新
-  const updateTitle = async (updatedTitle) => {
-    dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
-
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
+  const handleTitleBlur = async () => {
+    // if (editTitle === cachedList.title) return;
+    dispatch({
+      type: "todo/updateListTitle",
+      payload: { listId, updatedTitle: editTitle },
+    });
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ listId, updatedTitle }),
+        body: JSON.stringify({ listId, updatedTitle: editTitle }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "タイトルを更新できませんでした。");
-      }
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タイトル更新エラー:", error);
+      setEditTitle(cachedList.title); // エラー時は元のタイトルに戻す
     }
   };
 
-  let categoryColor = "";
-  switch (cachedList?.category) {
-    case "completed":
-      categoryColor = "bg-green-200";
-      break;
-    case "inProgress":
-      categoryColor = "bg-orange-200";
-      break;
-    case "notStarted":
-      categoryColor = "bg-red-200";
-      break;
-  }
-
-  let categoryTitle = "";
-  switch (cachedList?.category) {
-    case "completed":
-      categoryTitle = "完了";
-      break;
-
-    case "inProgress":
-      categoryTitle = "実行中";
-      break;
-    case "notStarted":
-      categoryTitle = "未着手";
-      break;
-  }
+  const changeCategory = async (catId) => {
+    // グローバルの todos 配列から、指定カテゴリーのリスト件数を取得
+    const listsInCategory = todos.filter((list) => list.category === catId);
+    const newOrder = listsInCategory.length + 1;
+  
+    // cachedList で category と order を更新
+    const updatedList = { ...cachedList, category: catId, order: newOrder };
+    setCachedList(updatedList);
+  
+    // グローバル状態も更新 (実装に合わせ、更新内容を直接指定)
+    dispatch({
+      type: "todo/updateList",
+      payload: { listId, updatedCategory: catId, updatedOrder: newOrder },
+    });
+  
+    try {
+      await authenticatedFetch("/api/todos", {
+        method: "PATCH",
+        body: JSON.stringify({
+          listId,
+          updatedCategory: catId,
+          updatedOrder: newOrder,
+        })
+      });
+    } catch (error) {
+      console.error("カテゴリー更新エラー:", error);
+    }
+  };
+  
 
   const onResetDaysUpdated = (updatedResetDays) => {
     setCachedList({ ...cachedList, resetDays: updatedResetDays });
@@ -200,43 +183,18 @@ export default function TodoDetail({
       payload: { listId, updatedTasks },
     });
 
-    // 認証ユーザーの確認と更新処理
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ listId, updatedTasks }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "タスクを並び替えられませんでした。"
-        );
-      }
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タスク更新エラー:", error);
     }
-  };
-
-  const handleDragStart = (event) => {
-    setActiveId(event.active.id); // ドラッグ開始時のIDを保存
   };
 
   const handleDragEnd = async (event) => {
     const { active, over } = event;
-    setActiveId(null);
 
     if (!over || active.id === over.id) {
       return;
@@ -262,32 +220,13 @@ export default function TodoDetail({
     });
 
     // 認証ユーザーの確認と更新処理
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ listId, updatedTasks }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "タスクを並び替えられませんでした。"
-        );
-      }
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タスク更新エラー:", error);
     }
   };
 
@@ -367,15 +306,45 @@ export default function TodoDetail({
             onBlur={handleTitleBlur}
             className="w-full mb-1 text-3xl font-bold focus:outline-none"
           />
-          <div className="mt-2">
+          <div className="relative mt-2">
             <span className="text-gray-500">進捗：</span>
             <span
               className={`p-1 mb-3 text-lg ml-2
-                 border-white rounded-md border-1 ${categoryColor}`}
+                 border-white rounded-md cursor-pointer ${
+                   getCategoryInfo(cachedList.category).styles.baseColor
+                 } ${getCategoryInfo(cachedList.category).styles.hover}`}
+              onClick={() => setShowCategorySelector((prev) => !prev)}
             >
-              {categoryTitle}
+              {getCategoryInfo(cachedList.category).title}
             </span>
           </div>
+          {showCategorySelector && (
+            <div
+              ref={toggleButtonRef}
+              className="absolute bg-white border border-gray-300 rounded-md shadow-xl select-none bottom-14 left-44"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {CATEGORY_LIST.map((cat) => {
+                return (
+                  <div
+                    data-todo
+                    key={cat.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      changeCategory(cat.id);
+                      setShowCategorySelector(false);
+                    }}
+                    className={`p-1 cursor-pointer ${
+                      getCategoryInfo(cat.id).styles.baseColor
+                    } ${getCategoryInfo(cat.id).styles.hover}`}
+                  >
+                    {getCategoryInfo(cat.id).title}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="mt-2 text-gray-500 border-gray-400">
             <span>作成日： </span>
             <span className="ml-2">{cachedList.date}</span>
@@ -408,11 +377,10 @@ export default function TodoDetail({
         <DndContext
           collisionDetection={closestCorners}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}
-          <div className="relative h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2">
+          <div className="relative h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2 border-b-2 border-gray-400">
             <SortableContext
               strategy={verticalListSortingStrategy}
               items={sortedTodos.map((todo) => todo.id)}

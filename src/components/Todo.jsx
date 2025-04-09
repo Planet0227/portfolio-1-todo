@@ -55,14 +55,14 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
           selectedTodoId === todo.id ? "border-blue-500" : "border-gray-200"
         }`}
       >
-        <div className="flex items-center justify-between">
+        <div className="relative flex items-center justify-between">
           <div className={`text-lg font-medium ${!todo.title ? "text-gray-400" : "text-gray-800"}`}>
             {todo.title || "タイトル未設定"}
           </div>
-          <div className="flex items-center space-x-3">
-            <span className="px-2 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
+          <div className="flex items-center self-start space-x-3">
+            <div className="px-2 py-1 text-sm text-gray-600 rounded-full bg-gray-50">
               {`${todo.todos.filter((t) => t.complete).length}/${todo.todos.length}`}
-            </span>
+            </div>
             <button className="text-gray-400 transition-colors hover:text-blue-500">
               <FontAwesomeIcon icon={faChevronRight} />
             </button>

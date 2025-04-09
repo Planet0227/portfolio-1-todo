@@ -5,37 +5,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Todo from "./Todo";
-import useMediaQuery from "@/hook/useMediaQuery";
+import { getCategoryInfo } from "@/utils/categories";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
   const { setNodeRef } = useDroppable({ id: category });
-
-  let categoryColor = "";
-  switch (category) {
-    case "completed":
-      categoryColor = "bg-green-200";
-      break;
-    case "inProgress":
-      categoryColor = "bg-orange-200";
-      break;
-    case "notStarted":
-      categoryColor = "bg-red-200";
-      break;
-  }
-
-  let categoryTitle = "";
-  switch (category) {
-    case "completed":
-      categoryTitle = "完了";
-      break;
-    case "inProgress":
-      categoryTitle = "実行中";
-      break;
-    case "notStarted":
-      categoryTitle = "未着手";
-      break;
-  }
-  // const sortedTodo = [...todoList].sort((a, b) => a.order - b.order);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
   const strategy = isMobile ? rectSortingStrategy : verticalListSortingStrategy;
@@ -47,9 +21,9 @@ const TodoColmun = ({ category, todoList, openModal ,selectedTodoId }) => {
       >
         <div>
           <span
-            className={`p-1 mb-3 text-lg border-white rounded-md border-1 ${categoryColor}`}
+            className={`p-1 mb-3 text-lg border-white rounded-md border-1 ${getCategoryInfo(category).styles.baseColor}`}
           >
-            {categoryTitle}
+            {getCategoryInfo(category).title}
           </span>
           <span className="ml-3 text-gray-500">{todoList.length}</span>
         </div>

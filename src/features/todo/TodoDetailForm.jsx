@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import { getAuth } from "firebase/auth";
+import { authenticatedFetch } from "@/utils/auth";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
@@ -31,33 +32,13 @@ const TodoDetailForm = ({ listId }) => {
     dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
     setInputValue("");
 
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      console.error("ユーザーが認証されていません");
-      return;
-    }
-
     try {
-      const token = await user.getIdToken();
-      const response = await fetch("/api/todos", {
+      await authenticatedFetch("/api/todos", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // トークンをヘッダーにセット
-        },
         body: JSON.stringify({ listId, newTodo }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "新規タスクを保存できませんでした。"
-        );
-      }
     } catch (error) {
-      console.error("エラー:", error);
+      console.error("タスク更新エラー:", error);
     }
   };
   // textareaの高さの調整

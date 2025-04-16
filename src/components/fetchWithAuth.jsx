@@ -4,7 +4,7 @@ export const fetchWithAuth = async (url, method, body = null) => {
   const { user } = useAuth();
 
   if (!user) {
-    console.error("ユーザーが認証されていません");
+    console.log("ユーザーが認証されていません");
     return;
   }
 

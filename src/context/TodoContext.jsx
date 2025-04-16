@@ -1,6 +1,11 @@
 "use client";
-import { createContext, useContext, useEffect, useReducer } from "react";
-import { getAuth } from "firebase/auth";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useState,
+} from "react";
 import { authenticatedFetch } from "@/utils/auth";
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
@@ -14,7 +19,7 @@ const todoReducer = (state, { type, payload }) => {
     case "todo/add":
       return state.map((todoList) =>
         todoList.id === payload.id
-          ? { ...todoList, todos: [...todoList.todos, payload.newTodo] }
+          ? { ...todoList, tasks: [...todoList.tasks, payload.newTask] }
           : todoList
       );
     case "todo/updateListTitle":
@@ -26,13 +31,23 @@ const todoReducer = (state, { type, payload }) => {
     case "todo/update":
       return state.map((todoList) =>
         todoList.id === payload.listId
-          ? { ...todoList, todos: payload.updatedTasks }
+          ? { ...todoList, tasks: payload.updatedTasks }
           : todoList
       );
     case "todo/updateList":
       return state.map((todoList) =>
         todoList.id === payload.listId
-          ? { ...todoList, category: payload.updatedCategory, order: payload.updatedOrder }
+          ? {
+              ...todoList,
+              category: payload.updatedCategory,
+              order: payload.updatedOrder,
+            }
+          : todoList
+      );
+    case "todo/updateLock":
+      return state.map((todoList) =>
+        todoList.id === payload.listId
+          ? { ...todoList, lock: payload.lock }
           : todoList
       );
     case "todo/updateResetDays":
@@ -46,7 +61,7 @@ const todoReducer = (state, { type, payload }) => {
         todoList.id === payload.listId
           ? {
               ...todoList,
-              todos: todoList.todos.map((task) => {
+              tasks: todoList.tasks.map((task) => {
                 return { ...task, complete: false };
               }),
             }
@@ -59,9 +74,7 @@ const todoReducer = (state, { type, payload }) => {
         if (todoList.id === payload.listId) {
           return {
             ...todoList,
-            todos: todoList.todos.filter(
-              (_todo) => _todo.id !== payload.todoId
-            ),
+            tasks: todoList.tasks.filter((task) => task.id !== payload.taskId),
           };
         }
         return todoList;
@@ -76,19 +89,20 @@ const todoReducer = (state, { type, payload }) => {
 
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []);
-
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const getTodos = async () => {
       const todos = await authenticatedFetch("/api/todos", {
         method: "GET",
       }).then((res) => res.json());
       dispatch({ type: "todo/init", payload: todos });
+      setIsLoading(false);
     };
     getTodos();
   }, []);
 
   return (
-    <TodoContext.Provider value={state}>
+    <TodoContext.Provider value={{ todos: state, isLoading }}>
       <TodoContextDispatch.Provider value={dispatch}>
         {children}
       </TodoContextDispatch.Provider>
@@ -96,7 +110,15 @@ const TodoProvider = ({ children }) => {
   );
 };
 
-const useTodos = () => useContext(TodoContext);
+const useTodos = () => {
+  const context = useContext(TodoContext);
+  return context.todos;
+};
+
+const useTodosLoading = () => {
+  const context = useContext(TodoContext);
+  return context.isLoading;
+};
 const useTodosDispatch = () => useContext(TodoContextDispatch);
 
-export { TodoProvider, useTodos, useTodosDispatch };
+export { TodoProvider, useTodos, useTodosDispatch, useTodosLoading };

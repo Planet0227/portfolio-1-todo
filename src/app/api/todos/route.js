@@ -10,7 +10,6 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// リクエストヘッダーから Authorization: Bearer <TOKEN> で送信された Firebase ID トークンを検証し uid を取得
 async function getUserUid(request) {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -26,7 +25,6 @@ async function getUserUid(request) {
   }
 }
 
-// GET: ログイン中のユーザーの todos を取得（各 todo のサブコレクション tasks も取得）
 export async function GET(request) {
   try {
     // 認証トークンがない場合は空のリストを返す
@@ -50,7 +48,7 @@ export async function GET(request) {
           id: taskDoc.id,
           ...taskDoc.data(),
         }));
-        return { id: doc.id, ...doc.data(), todos: tasks };
+        return { id: doc.id, ...doc.data(), tasks: tasks };
       })
     );
     return new Response(JSON.stringify(todos), { status: 200 });
@@ -63,13 +61,11 @@ export async function GET(request) {
 }
 
 
-// POST: 新規 todo リスト作成 または既存リストへのタスク追加
 export async function POST(request) {
   try {
     const uid = await getUserUid(request);
-    const { newTodoList, newTodo, listId } = await request.json();
+    const { newTodoList, newTask, listId } = await request.json();
     
-    // パスを /users/{uid}/todos/ に変更
     const todosCollection = db.collection("users").doc(uid).collection("todos");
 
     if (listId) {
@@ -83,8 +79,8 @@ export async function POST(request) {
         );
       }
       // サブコレクション「tasks」に新規タスクを追加
-      const { id: taskId, ...newTodoData } = newTodo;
-      await todoRef.collection("tasks").doc(taskId).set(newTodoData);
+      const { id: taskId, ...newTaskData } = newTask;
+      await todoRef.collection("tasks").doc(taskId).set(newTaskData);
       // 追加後のタスク一覧を取得
       const tasksSnapshot = await todoRef.collection("tasks").get();
       const tasks = tasksSnapshot.docs.map((doc) => ({
@@ -94,7 +90,7 @@ export async function POST(request) {
       const updatedTodoList = {
         id: listId,
         ...docSnapshot.data(),
-        todos: tasks,
+        tasks: tasks,
       };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     } else if (newTodoList) {
@@ -105,7 +101,7 @@ export async function POST(request) {
       const docRef = todosCollection.doc(id);
       await docRef.set(todoData);
       // サブコレクション tasks はまだ存在しないため、todos は空の配列として返す
-      const createdTodoList = { id: id, ...todoData, todos: [] };
+      const createdTodoList = { id: id, ...todoData, tasks: [] };
       return new Response(JSON.stringify(createdTodoList), { status: 201 });
     }
   } catch (error) {
@@ -152,7 +148,7 @@ export async function DELETE(request) {
 export async function PATCH(request) {
   try {
     const uid = await getUserUid(request);
-    const { listId, updatedTitle, updatedTasks, updatedTodos, updatedResetDays, updatedCategory,updatedOrder  } = await request.json();
+    const { listId, updatedTitle, updatedTasks, updatedTodos, updatedResetDays, updatedCategory,updatedOrder, updatedLock   } = await request.json();
     const todosCollection = db.collection("users").doc(uid).collection("todos");
 
     // リストの並び替え
@@ -192,7 +188,7 @@ export async function PATCH(request) {
       const updatedTodoList = {
         id: listId,
         ...updatedListSnapshot.data(),
-        todos: tasks,
+        tasks: tasks,
       };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     } else if (updatedTasks !== undefined) {
@@ -212,7 +208,7 @@ export async function PATCH(request) {
       const updatedTodoList = {
         id: listId,
         ...updatedListSnapshot.data(),
-        todos: tasks,
+        tasks: tasks,
       };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     } else if (updatedResetDays !== undefined) {
@@ -233,6 +229,14 @@ export async function PATCH(request) {
       const tasksSnapshot = await todoRef.collection("tasks").get();
       const tasks = tasksSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       const updatedTodoList = { id: listId, ...updatedListSnapshot.data(), todos: tasks };
+      return new Response(JSON.stringify(updatedTodoList), { status: 200 });
+    } else if (updatedLock !== undefined) {
+      // --- ロック状態の更新 ---
+      await todoRef.update({ lock: updatedLock });
+      const updatedListSnapshot = await todoRef.get();
+      const tasksSnapshot = await todoRef.collection("tasks").get();
+      const tasks = tasksSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const updatedTodoList = { id: listId, ...updatedListSnapshot.data(), tasks: tasks };
       return new Response(JSON.stringify(updatedTodoList), { status: 200 });
     }
     

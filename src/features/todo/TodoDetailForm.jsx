@@ -12,30 +12,30 @@ const TodoDetailForm = ({ listId }) => {
   const todos = useTodos();
   const textareaRef = useRef(null);
 
-  const addTodo = async (e) => {
+  const addTask = async (e) => {
     e.preventDefault();
     if (inputValue === "") {
       return;
     }
     const targetListTasks =
-      todos.filter((todo) => todo.id === listId).map((todo) => todo.todos)[0] ||
+      todos.filter((todo) => todo.id === listId).map((todo) => todo.tasks)[0] ||
       [];
     const order = targetListTasks?.length + 1;
 
-    const newTodo = {
+    const newTask = {
       id: Math.floor(Math.random() * 1e7).toString(),
       content: inputValue,
       complete: false,
       order: order,
     };
 
-    dispatch({ type: "todo/add", payload: { id: listId, newTodo } });
+    dispatch({ type: "todo/add", payload: { id: listId, newTask } });
     setInputValue("");
 
     try {
       await authenticatedFetch("/api/todos", {
         method: "POST",
-        body: JSON.stringify({ listId, newTodo }),
+        body: JSON.stringify({ listId, newTask }),
       });
     } catch (error) {
       console.error("タスク更新エラー:", error);
@@ -53,16 +53,16 @@ const TodoDetailForm = ({ listId }) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault(); // 改行を防止
-      addTodo(e); // フォーム送信
+      addTask(e); // フォーム送信
     }
   };
   return (
     <div className="flex w-full p-2 border-2 border-green-500 rounded-lg">
       <div className="ml-[32px]"></div>
-      <form onSubmit={addTodo} className="flex w-full">
+      <form onSubmit={addTask} className="flex w-full">
         <div className="relative">
           <button
-            onClick={addTodo}
+            onClick={addTask}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className="flex items-center mt-0.5 justify-center flex-shrink-0 w-6 h-6 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"

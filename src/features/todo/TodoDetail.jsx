@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
   faDownLeftAndUpRightToCenter,
+  faLock,
+  faUnlock,
   faUpRightAndDownLeftFromCenter,
 } from "@fortawesome/free-solid-svg-icons";
 //  dnd
@@ -41,9 +43,7 @@ export default function TodoDetail({
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
-  // const [selectedCategory, setSelectedCategory] = useState(
-  //   cachedList?.category
-  // );
+
   const toggleButtonRef = useRef(null);
 
   // ホバー表示用
@@ -59,7 +59,7 @@ export default function TodoDetail({
 
   useEffect(() => {
     if (cachedList) {
-      setEditTitle(cachedList?.title || "");
+      setEditTitle(cachedList.title);
     }
   }, [cachedList]);
 
@@ -96,6 +96,19 @@ export default function TodoDetail({
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showCategorySelector]);
+
+  const updateLock = async () => {
+    const newLock = !cachedList.lock;
+    dispatch({ type: "todo/updateLock", payload: { listId, lock: newLock } });
+    try {
+      await authenticatedFetch("/api/todos", {
+        method: "PATCH",
+        body: JSON.stringify({ listId, updatedLock: newLock }),
+      });
+    } catch (error) {
+      console.error("タイトル更新エラー:", error);
+    }
+  };
 
   const deleteTodoList = async () => {
     dispatch({ type: "todo/deleteList", payload: { listId } });
@@ -138,17 +151,17 @@ export default function TodoDetail({
     // グローバルの todos 配列から、指定カテゴリーのリスト件数を取得
     const listsInCategory = todos.filter((list) => list.category === catId);
     const newOrder = listsInCategory.length + 1;
-  
+
     // cachedList で category と order を更新
     const updatedList = { ...cachedList, category: catId, order: newOrder };
     setCachedList(updatedList);
-  
+
     // グローバル状態も更新 (実装に合わせ、更新内容を直接指定)
     dispatch({
       type: "todo/updateList",
       payload: { listId, updatedCategory: catId, updatedOrder: newOrder },
     });
-  
+
     try {
       await authenticatedFetch("/api/todos", {
         method: "PATCH",
@@ -156,13 +169,12 @@ export default function TodoDetail({
           listId,
           updatedCategory: catId,
           updatedOrder: newOrder,
-        })
+        }),
       });
     } catch (error) {
       console.error("カテゴリー更新エラー:", error);
     }
   };
-  
 
   const onResetDaysUpdated = (updatedResetDays) => {
     setCachedList({ ...cachedList, resetDays: updatedResetDays });
@@ -170,13 +182,13 @@ export default function TodoDetail({
 
   // リセットボタン
   const resetComplete = async () => {
-    const updatedTasks = cachedList.todos.map((task) => ({
+    const updatedTasks = cachedList.tasks.map((task) => ({
       ...task,
       complete: false,
     }));
     console.log(updatedTasks);
 
-    setCachedList({ ...cachedList, todos: updatedTasks });
+    setCachedList({ ...cachedList, tasks: updatedTasks });
 
     dispatch({
       type: "todo/update",
@@ -201,7 +213,7 @@ export default function TodoDetail({
     }
 
     // ソート済みのタスク配列を利用する
-    const sortedTasks = [...cachedList.todos].sort((a, b) => a.order - b.order);
+    const sortedTasks = [...cachedList.tasks].sort((a, b) => a.order - b.order);
     const oldIndex = sortedTasks.findIndex((item) => item.id === active.id);
     const newIndex = sortedTasks.findIndex((item) => item.id === over.id);
 
@@ -212,7 +224,7 @@ export default function TodoDetail({
       })
     );
 
-    setCachedList({ ...cachedList, todos: updatedTasks });
+    setCachedList({ ...cachedList, tasks: updatedTasks });
 
     dispatch({
       type: "todo/update",
@@ -234,13 +246,13 @@ export default function TodoDetail({
     return <div>存在しないリストです。</div>;
   }
 
-  const sortedTodos = [...cachedList.todos].sort((a, b) => a.order - b.order);
+  const sortedTasks = [...cachedList.tasks].sort((a, b) => a.order - b.order);
 
   return (
     <div className="select-none">
       {/* ヘッダー */}
       <div className="sticky top-0 z-20 bg-white">
-        <div className="relative flex items-center justify-between p-4">
+        <div className="relative flex items-center justify-between px-4 py-3">
           <div>
             <button
               className="mx-2 text-xl text-gray-300 hover:text-gray-500"
@@ -286,42 +298,71 @@ export default function TodoDetail({
               </div>
             </div>
           </div>
-
-          <button
-            onClick={deleteTodoList}
-            className="px-5 py-2 text-sm font-medium text-center text-red-500 border border-red-500 rounded-lg hover:text-white hover:bg-red-500 focus:ring-4 focus:outline-none me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white shrink-0"
-          >
-            リストを削除
-          </button>
         </div>
 
         <div className="mx-14">
+          <div className="flex justify-between gap-4 mb-3">
+            <button
+              className="text-3xl "
+              onClick={updateLock}
+              title={cachedList?.lock ? "ロック解除" : "ロックする"}
+            >
+              {cachedList.lock ? (
+                <FontAwesomeIcon
+                  icon={faLock}
+                  className="text-gray-600 hover:text-gray-800"
+                />
+              ) : (
+                <FontAwesomeIcon
+                  icon={faUnlock}
+                  className="text-gray-400 hover:text-gray-600"
+                />
+              )}
+            </button>
+
+            <button
+              onClick={deleteTodoList}
+              disabled={cachedList?.lock}
+              className={`px-5 py-2 text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none me-2 shrink-0 transition-colors duration-300 ${
+                cachedList?.lock
+                  ? "text-gray-400 border-gray-400 cursor-not-allowed"
+                  : "text-red-500  border-red-500 hover:text-white hover:bg-red-500 dark:border-red-500 dark:text-red-500 dark:hover:text-white"
+              }`}
+            >
+              リストを削除
+            </button>
+          </div>
           <input
             type="text"
             name={`todo-${listId}-input`}
-            maxLength="18"
+            maxLength="20"
             placeholder="タイトルを入力"
             value={editTitle}
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
-            className="w-full mb-1 text-3xl font-bold focus:outline-none"
+            className="w-full mb-1 text-2xl font-bold focus:outline-none"
           />
-          <div className="relative mt-2">
+          <div className="relative flex items-center mt-2">
             <span className="text-gray-500">進捗：</span>
             <span
-              className={`p-1 mb-3 text-lg ml-2
-                 border-white rounded-md cursor-pointer ${
-                   getCategoryInfo(cachedList.category).styles.baseColor
-                 } ${getCategoryInfo(cachedList.category).styles.hover}`}
+              className={`items-center flex px-3 py-1 rounded-md gap-2 cursor-pointer ${
+                getCategoryInfo(cachedList.category).styles.baseColor
+              } ${getCategoryInfo(cachedList.category).styles.hover}`}
               onClick={() => setShowCategorySelector((prev) => !prev)}
             >
-              {getCategoryInfo(cachedList.category).title}
+              <FontAwesomeIcon
+                icon={getCategoryInfo(cachedList.category).icon}
+                className="text-white drop-shadow-lg"
+              />
+              <span className="text-sm font-semibold text-white drop-shadow-lg w-[3em] text-center">
+                {getCategoryInfo(cachedList.category).title}
+              </span>
             </span>
           </div>
           {showCategorySelector && (
             <div
               ref={toggleButtonRef}
-              className="absolute bg-white border border-gray-300 rounded-md shadow-xl select-none bottom-14 left-44"
+              className="absolute bg-white border border-gray-300 rounded-md shadow-xl select-none bottom-6 left-48"
               onClick={(e) => e.stopPropagation()}
             >
               {CATEGORY_LIST.map((cat) => {
@@ -334,11 +375,17 @@ export default function TodoDetail({
                       changeCategory(cat.id);
                       setShowCategorySelector(false);
                     }}
-                    className={`p-1 cursor-pointer ${
-                      getCategoryInfo(cat.id).styles.baseColor
-                    } ${getCategoryInfo(cat.id).styles.hover}`}
+                    className={`flex items-center h-8 px-3 gap-2 cursor-pointer
+    ${getCategoryInfo(cat.id).styles.baseColor}
+    ${getCategoryInfo(cat.id).styles.hover}`}
                   >
-                    {getCategoryInfo(cat.id).title}
+                    <FontAwesomeIcon
+                      icon={getCategoryInfo(cat.id).icon}
+                      className="text-sm text-white drop-shadow-lg"
+                    />
+                    <span className="text-sm font-semibold leading-none text-white drop-shadow-lg w-[3em] text-center">
+                      {getCategoryInfo(cat.id).title}
+                    </span>
                   </div>
                 );
               })}
@@ -380,17 +427,17 @@ export default function TodoDetail({
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}
-          <div className="relative h-[calc(100vh-386px)] overflow-y-auto pr-2 mb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2 border-b-2 border-gray-400">
+          <div className="relative max-h-[calc(100vh-386px)] overflow-y-auto mb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2 border-b-2 border-gray-400">
             <SortableContext
               strategy={verticalListSortingStrategy}
-              items={sortedTodos.map((todo) => todo.id)}
+              items={sortedTasks.map((task) => task.id)}
             >
-              {sortedTodos.map((todo) => (
+              {sortedTasks.map((task) => (
                 <TodoDetailItem
-                  key={todo.id}
-                  id={todo.id}
-                  todo={todo}
-                  todos={sortedTodos}
+                  key={task.id}
+                  id={task.id}
+                  task={task}
+                  tasks={sortedTasks}
                   listId={listId}
                 />
               ))}

@@ -10,7 +10,6 @@ const WeekToggleButtons = ({
   initialResetDays,
   onResetDaysUpdated,
 }) => {
-  // 親から渡された初期状態を元にローカルstateを設定
   const [resetDays, setResetDays] = useState(initialResetDays);
   const dispatch = useTodosDispatch();
 
@@ -68,7 +67,11 @@ const WeekToggleButtons = ({
           onClick={() => updateResetDays(day.key)}
           className={`px-3 py-1 text-md rounded-md ${
             resetDays[day.key]
-              ? "bg-sky-500 text-white hover:bg-sky-600"
+              ? day.key === "sun"
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : day.key === "sat"
+                ? "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-gray-500 text-white hover:bg-gray-600"
               : "bg-gray-100 text-gray-400 hover:bg-gray-200"
           }`}
         >

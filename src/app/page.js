@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Todos from "@/components/Todos";
-import { TodoProvider } from "@/context/TodoContext";
+import { TodoProvider, useTodosLoading } from "@/context/TodoContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { logout } from "@/firebase/auth";
 import {
@@ -18,10 +18,13 @@ import { useAuth } from "@/context/AuthContext";
 import Modal from "@/components/Modal";
 import { deleteUser, updateProfile } from "firebase/auth";
 import { deleteUserData } from "@/firebase/firebase";
+import Loading from "@/components/Loading";
 
-export default function Home() {
+const PageContent = () => {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const isLoading = useTodosLoading();
+  
   // ドロップダウン表示の状態管理
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   // モーダル表示の状態管理（アカウント設定）
@@ -118,7 +121,7 @@ export default function Home() {
     setAccountDropdownOpen((prev) => !prev);
   };
 
-  if (loading) return <p className="text-lg">Loading...</p>;
+  // if (loading || isLoading) return <p className="text-lg">Loading...</p>;
 
   return (
     <AuthProvider>
@@ -304,6 +307,24 @@ export default function Home() {
             </div>
           )}
         </div>
+      </TodoProvider>
+    </AuthProvider>
+  );
+}
+
+export default function Home() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  // （AuthContext の読み込み中の場合は下記で返す）
+  if (loading) {
+    return <Loading />;
+  }
+
+  // Auth の読み込みが完了していれば、TodoProvider をラップしたコンテンツを返す
+  return (
+    <AuthProvider>
+      <TodoProvider>
+        <PageContent />
       </TodoProvider>
     </AuthProvider>
   );

@@ -8,8 +8,8 @@ import { CSS } from "@dnd-kit/utilities";
 import { getAuth } from "firebase/auth";
 import { authenticatedFetch } from "@/utils/auth";
 
-const TodoDetailItem = ({ todos, todo, id, listId }) => {
-  const [editContent, setEditContent] = useState(todo.content);
+const TodoDetailItem = ({ tasks, task, id, listId }) => {
+  const [editContent, setEditContent] = useState(task.content);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
 
@@ -47,8 +47,8 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
   // 削除
   const deleteTodo = async () => {
-    const taskId = todo.id;
-    dispatch({ type: "todo/delete", payload: { listId, todoId: taskId } });
+    const taskId = task.id;
+    dispatch({ type: "todo/delete", payload: { listId, taskId: taskId } });
 
     try {
       await authenticatedFetch("/api/todos", {
@@ -62,8 +62,8 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
   // タスク更新
   const updateContent = async (newContent) => {
-    const updatedTasks = todos.map((_todo) =>
-      _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
+    const updatedTasks = tasks.map((_todo) =>
+      _todo.id === task.id ? { ..._todo, content: newContent } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
     try {
@@ -78,8 +78,8 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
   // チェックボックス更新
   const toggleCheckBox = async () => {
-    const updatedTasks = todos.map((_todo) =>
-      _todo.id === todo.id ? { ..._todo, complete: !todo.complete } : _todo
+    const updatedTasks = tasks.map((_todo) =>
+      _todo.id === task.id ? { ..._todo, complete: !task.complete } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
     try {
@@ -120,8 +120,8 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
     const newContent = e.target.value;
     setEditContent(newContent);
 
-    const updatedTasks = todos.map((_todo) =>
-      _todo.id === todo.id ? { ..._todo, content: newContent } : _todo
+    const updatedTasks = tasks.map((_todo) =>
+      _todo.id === task.id ? { ..._todo, content: newContent } : _todo
     );
     dispatch({
       type: "todo/update",
@@ -156,11 +156,11 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
 
         <input
           type="checkbox"
-          name={`todo-${todo.id}-checkBox`}
-          checked={todo.complete}
+          name={`todo-${task.id}-checkBox`}
+          checked={task.complete}
           onChange={toggleCheckBox}
           className={`ml-2 w-6 h-6 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
-            todo.complete
+            task.complete
               ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-0.5 before:flex before:items-center before:justify-center"
               : ""
           }`}
@@ -169,12 +169,12 @@ const TodoDetailItem = ({ todos, todo, id, listId }) => {
         <textarea
           ref={textareaRef}
           type="text"
-          name={`todo-${todo.id}-textarea`}
+          name={`todo-${task.id}-textarea`}
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
           onBlur={handleContentBlur}
           className={`w-10/12 self-center text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
-            todo.complete ? "line-through text-gray-500" : ""
+            task.complete ? "line-through text-gray-500" : ""
           }`}
           rows={1} // 最小高さを1行に設定
         />

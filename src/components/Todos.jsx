@@ -4,8 +4,8 @@ import Todo from "./Todo";
 import Form from "./Form";
 import TodoColmun from "./TodoColmun";
 import TodoDetail from "@/features/todo/TodoDetail";
-import { useTodos, useTodosDispatch } from "../context/TodoContext";
-import { useCallback, useEffect, useState } from "react";
+import { useTodos, useTodosDispatch, useTodosLoading } from "../context/TodoContext";
+import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { checkAndResetTasks } from "@/utils/resetTasks";
 
@@ -14,9 +14,7 @@ import {
   DndContext,
   DragOverlay,
   MouseSensor,
-  closestCenter,
-  closestCorners,
-  defaultDropAnimationSideEffects,
+  TouchSensor,
   pointerWithin,
   useSensor,
   useSensors,
@@ -41,8 +39,15 @@ const Todos = () => {
   const [selectedTodoId, setSelectedTodoId] = useState(null);
   const [magnification, setMagnification] = useState(false);
 
+  const [formVisible, setFormVisible] = useState(false);
+  const isTouchDevice = () => {
+    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  };
+
   const todos = useTodos();
   const dispatch = useTodosDispatch();
+
+  const isTodosLoading = useTodosLoading();
 
   //auth
   const auth = getAuth();
@@ -72,12 +77,30 @@ const Todos = () => {
     setTodosList(sortedTodosList);
   }, [todos]);
 
+  // マウス位置によるフォームの表示切替（下部100px以内なら表示）
+  useEffect(() => {
+    if (!isTouchDevice()) {
+      const handleMouseMove = (e) => {
+        const windowHeight = window.innerHeight;
+        if (e.clientY > windowHeight - 200) {
+          setFormVisible(true);
+        } else {
+          setFormVisible(false);
+        }
+      };
+      window.addEventListener("mousemove", handleMouseMove);
+      return () => window.removeEventListener("mousemove", handleMouseMove);
+    } else {
+      setFormVisible(true);
+    }
+  }, []);
+
   const findColumn = (id) => {
     if (!id) {
       return null;
     }
     // カテゴリーのIDリストを作成
-    const categoryIds = CATEGORY_LIST.map(cat => cat.id);
+    const categoryIds = CATEGORY_LIST.map((cat) => cat.id);
     // カテゴリーIDが直接渡された場合はそのまま返す
     if (categoryIds.includes(id)) {
       return id;
@@ -112,8 +135,8 @@ const Todos = () => {
       );
 
       // カテゴリーIDのリストを取得
-      const categoryIds = CATEGORY_LIST.map(cat => cat.id);
-      
+      const categoryIds = CATEGORY_LIST.map((cat) => cat.id);
+
       // もし over.id がカラム自体を示している場合（＝個々のアイテムと衝突していない場合）
       if (categoryIds.includes(overId)) {
         // ターゲットカラム内のアイテム（ドラッグ中のものを除く）を取得
@@ -181,7 +204,9 @@ const Todos = () => {
       }));
 
       CATEGORY_LIST.forEach((cat) => {
-        const itemsInCat = updatedTodos.filter((todo) => todo.category === cat.id);
+        const itemsInCat = updatedTodos.filter(
+          (todo) => todo.category === cat.id
+        );
         itemsInCat.forEach((item, index) => {
           const idx = updatedTodos.findIndex((todo) => todo.id === item.id);
           if (idx !== -1) {
@@ -212,26 +237,29 @@ const Todos = () => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
 
-    // モーダル展開時のスタイル維持
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
+    // // モーダル展開時のスタイル維持
+    // const scrollbarWidth =
+    //   window.innerWidth - document.documentElement.clientWidth;
+    // document.body.style.overflow = "hidden";
 
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    // document.body.style.paddingRight = `${scrollbarWidth}px`;
   };
 
   const closeModal = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
 
-    // スクロール復元
-    document.body.style.overflow = "";
-    document.body.style.paddingRight = "";
+    // // スクロール復元
+    // document.body.style.overflow = "";
+    // document.body.style.paddingRight = "";
   };
 
   //5px動かすとドラッグと判定する。
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 5 } })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    })
   );
 
   // ユーザーの状態を判定する関数
@@ -243,6 +271,10 @@ const Todos = () => {
     // それ以外（通常のログインユーザー）の場合
     return false;
   };
+
+  // if(!isTodosLoading){
+  //   return <p>Loading...</p>
+  // }
 
   return (
     <div>
@@ -291,7 +323,7 @@ const Todos = () => {
           )}
         </div>
       )}
-      <div className="mx-auto mt-10 md:max-w-5xl md:px-5">
+      <div className="mx-8 mt-10 md:mx-auto md:max-w-5xl md:px-5">
         <div>
           <div className="text-4xl font-bold">タスク管理</div>
           <div>
@@ -316,13 +348,13 @@ const Todos = () => {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:grid-cols-3 md:max-w-5xl">
+        <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:flex md:justify-center md:flex-nowrap">
           {CATEGORY_LIST.map((category) => {
             const filterdTodoList = todosList.filter(
               (todoList) => todoList.category === category.id
             );
             return (
-              <div key={category.id} className="w-full p-2">
+              <div key={category.id} className="flex-none w-full p-2 md:w-80">
                 <TodoColmun
                   category={category.id}
                   todoList={filterdTodoList}
@@ -359,27 +391,35 @@ const Todos = () => {
           </DragOverlay>
         </div>
       </DndContext>
-      <div>
-        {!selectedTodoId && (
-          <div
-            className={`${!todos || todos.length === 0 ? "relative z-10" : ""}`}
-          >
-            <Form categories={CATEGORY_LIST.map(cat => cat.id)} />
-          </div>
-        )}
-        <Modal
-          isOpen={isModalOpen}
+      {!isModalOpen && (
+        <div
+          className={`
+          fixed left-0 right-0 bottom-0 pointer-events-none transition-transform duration-300
+          ${formVisible && !activeId ? "translate-y-0" : "translate-y-28"}
+        `}
+        >
+          {/* Formコンポーネントは内部のスタイルのみを適用 */}
+          <Form
+            formVisible={formVisible}
+            activeId={activeId}
+            isTouchDevice={isTouchDevice}
+            categories={CATEGORY_LIST.map((cat) => cat.id)}
+          />
+        </div>
+      )}
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        magnification={magnification}
+      >
+        <TodoDetail
+          listId={selectedTodoId}
           onClose={closeModal}
           magnification={magnification}
-        >
-          <TodoDetail
-            listId={selectedTodoId}
-            onClose={closeModal}
-            magnification={magnification}
-            setMagnification={setMagnification}
-          />
-        </Modal>
-      </div>
+          setMagnification={setMagnification}
+        />
+      </Modal>
     </div>
   );
 };

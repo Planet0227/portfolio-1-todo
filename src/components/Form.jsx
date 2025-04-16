@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "../context/TodoContext";
 import { authenticatedFetch } from "@/utils/auth";
 import { getCategoryInfo } from "@/utils/categories";
-const Form = ({ categories }) => {
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCirclePlus, faMousePointer, faPlus } from "@fortawesome/free-solid-svg-icons";
+const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -75,8 +77,9 @@ const Form = ({ categories }) => {
       date: formattedDate,
       category: selectedCategory,
       resetDays: resetDays,
+      lock: false,
       order: order,
-      todos: [],
+      tasks: [],
     };
     dispatch({ type: "todo/addList", payload: newTodoList });
     setInputValue("");
@@ -92,50 +95,92 @@ const Form = ({ categories }) => {
   };
 
   return (
-    <div className="fixed p-5 transform -translate-x-1/2 bg-white border-2 border-gray-300 rounded-lg shadow-xl select-none bottom-5 left-1/2">
-      <div className="mb-2">
+    <div className="relative p-3 mx-auto bg-white border-2 border-gray-500 rounded-lg shadow-xl pointer-events-auto select-none md:px-5 bottom-5 w-full md:w-[600px]">
+      <div className={`flex items-center justify-center gap-2 mb-2 text-gray-600 ${!formVisible && "animate-pulse"}`}>
+        {formVisible && !activeId ? (
+          <>
+            <FontAwesomeIcon icon={faCirclePlus} />
+            <span className="text-sm font-bold">
+              Todoリストの新規作成
+            </span>
+          </>
+        ) : !activeId ? (
+          <>
+      {isTouchDevice() ? (
+        <>
+          <FontAwesomeIcon icon={faPlus} />
+          <span className="text-sm">
+            タップでフォームが表示されます
+          </span>
+        </>
+      ) : (
+        <>
+          <FontAwesomeIcon icon={faMousePointer} />
+          <span className="text-sm">
+            マウスを画面下に移動するとフォームが表示されます
+          </span>
+        </>
+      )}
+    </>
+        ) 
+      : ""
+      }
+      </div>
+      <div className="flex justify-start mt-6 ml-16">
         {/* relative コンテナ内にポップアップ表示用の span を配置 */}
-        <div className="relative inline">
+        <div className="relative flex">
           <span
-            className="cursor-pointer select-none"
+            className="flex items-center cursor-pointer select-none"
             onClick={() => setShowCategorySelector((prev) => !prev)}
           >
             リストの追加先：
           </span>
           <span
-            className={`p-1 rounded-md text-lg cursor-pointer ${
+            className={`items-center flex px-3 py-1 rounded-md gap-2 cursor-pointer ${
               getCategoryInfo(selectedCategory).styles.baseColor
             } ${getCategoryInfo(selectedCategory).styles.hover}`}
             onClick={() => setShowCategorySelector((prev) => !prev)}
           >
-            {getCategoryInfo(selectedCategory).title}
+            <FontAwesomeIcon
+              icon={getCategoryInfo(selectedCategory).icon}
+              className="text-white drop-shadow-lg"
+            />
+            <span className="text-sm font-semibold text-white drop-shadow-lg w-[3em] text-center">
+              {getCategoryInfo(selectedCategory).title}
+            </span>
           </span>
         </div>
-        {showCategorySelector && (
-          <div
-            ref={toggleButtonRef}
-            className="absolute flex gap-2 p-2 bg-white border border-gray-300 rounded-md shadow-lg select-none bottom-24 left-20"
-          >
-            {categories.map((cat) => {
-              return (
-                <div
-                  key={cat}
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setShowCategorySelector(false);
-                  }}
-                  className={`p-1 cursor-pointer rounded-md ${
-                    getCategoryInfo(cat).styles.baseColor
-                  } ${getCategoryInfo(cat).styles.hover}`}
-                >
-                  {getCategoryInfo(cat).title}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {showCategorySelector && formVisible && (
+            <div
+              ref={toggleButtonRef}
+              className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none bottom-20 left-24 "
+            >
+              {categories.map((cat) => {
+                return (
+                  <div
+                    key={cat}
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      setShowCategorySelector(false);
+                    }}
+                    className={`flex items-center h-8 px-3 gap-2 cursor-pointer  ${
+                      getCategoryInfo(cat).styles.baseColor
+                    } ${getCategoryInfo(cat).styles.hover}`}
+                  >
+                    <FontAwesomeIcon
+                      icon={getCategoryInfo(cat).icon}
+                      className="text-sm text-white drop-shadow-lg"
+                    />
+                    <span className="text-sm font-semibold leading-none text-white drop-shadow-lg w-[3em] text-center">
+                      {getCategoryInfo(cat).title}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
       </div>
-      <form onSubmit={addTodoList} className="flex">
+      <form onSubmit={addTodoList} className="flex justify-center">
         <button
           onClick={addTodoList}
           className="px-3 text-2xl text-zinc-600 bg-white rounded hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]  hover:translate-y-[2px] transition-all duration-200"
@@ -149,7 +194,7 @@ const Form = ({ categories }) => {
           placeholder="タイトルを入力"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="text-lg border-b border-gray-400 w-96 focus:caret-black focus:outline-none"
+          className="text-lg border-b border-gray-400 w-[400px] focus:caret-black focus:outline-none"
         />
       </form>
     </div>

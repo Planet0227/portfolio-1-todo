@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Todos from "@/components/Todos";
 import { TodoProvider, useTodosLoading } from "@/context/TodoContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { logout } from "@/firebase/auth";
+import { logout, signInAsGuest } from "@/firebase/auth";
 import {
   faChevronLeft,
   faRightToBracket,
@@ -19,12 +19,13 @@ import Modal from "@/components/Modal";
 import { deleteUser, updateProfile } from "firebase/auth";
 import { deleteUserData } from "@/firebase/firebase";
 import Loading from "@/components/Loading";
+import AccountSettings from "@/components/AccountSetting";
 
 const PageContent = () => {
   const router = useRouter();
   const { user, loading } = useAuth();
   const isLoading = useTodosLoading();
-  
+
   // ドロップダウン表示の状態管理
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   // モーダル表示の状態管理（アカウント設定）
@@ -73,11 +74,6 @@ const PageContent = () => {
     };
   }, [accountDropdownOpen]);
 
-  // 未ログインの場合はログイン画面へ遷移
-  const handleLoginClick = () => {
-    router.push("/login");
-  };
-
   // ログアウト処理（実行後、確認オーバーレイを閉じてページリロード）
   const handleLogoutClick = async () => {
     try {
@@ -90,6 +86,16 @@ const PageContent = () => {
       window.location.reload();
     } catch (error) {
       console.error("ログアウトエラー", error);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    try {
+      await signInAsGuest();
+      router.push("/");
+      window.location.reload();
+    } catch (error) {
+      console.error("ゲストログイン失敗:", error);
     }
   };
 
@@ -131,21 +137,33 @@ const PageContent = () => {
             <h3 className="text-3xl">✓Task-Board</h3>
             {!user ? (
               // 未ログインの場合
-              <button
-                onClick={handleLoginClick}
-                className="flex items-center gap-2 text-lg hover:underline"
-              >
-                <FontAwesomeIcon icon={faRightToBracket} className="text-2xl" />
-                <p>ログイン</p>
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={handleGuestLogin}
+                  className="flex items-center gap-2 text-lg hover:underline"
+                >
+                  <FontAwesomeIcon icon={faSignInAlt} className="text-2xl" />
+                  <p>ゲストログイン</p>
+                </button>
+                <button
+                  onClick={() => router.push("/login")}
+                  className="flex items-center gap-2 text-lg hover:underline"
+                >
+                  <FontAwesomeIcon
+                    icon={faRightToBracket}
+                    className="text-2xl"
+                  />
+                  <p>ログイン/新規登録</p>
+                </button>
+              </div>
             ) : isGuest ? (
               // ゲストログインの場合
               <div className="relative inline-block">
                 <button
                   onClick={toggleAccountDropdown}
-                  className="flex items-center gap-2 text-lg focus:outline-none"
+                  className="flex items-center gap-2 text-lg hover:underline"
                 >
-                  <FontAwesomeIcon icon={faUser} className="text-2xl" />
+                  <FontAwesomeIcon icon={faUser} className="p-1.5 bg-gray-400 rounded-full w-7 h-7" />
                   <span>ゲスト</span>
                 </button>
               </div>
@@ -154,10 +172,18 @@ const PageContent = () => {
               <div className="relative inline-block">
                 <button
                   onClick={toggleAccountDropdown}
-                  className="flex items-center gap-2 text-lg focus:outline-none"
+                  className="flex items-center gap-2 hover:underline"
                 >
-                  <FontAwesomeIcon icon={faUser} className="text-2xl" />
-                  <span>{user.displayName || user.email}</span>
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="ユーザーアイコン"
+                      className="w-12 h-12 bg-white border border-white rounded-full"
+                    />
+                  ) : (
+                    <FontAwesomeIcon icon={faUser} className="p-1.5 bg-gray-400 rounded-full w-7 h-7" />
+                  )}
+                  <span className="text-lg">{user.displayName || user.email}</span>
                 </button>
               </div>
             )}
@@ -171,7 +197,14 @@ const PageContent = () => {
               {isGuest ? (
                 <>
                   <button
-                    onClick={handleLoginClick}
+                    onClick={() => router.push("/login?mode=register")}
+                    className="flex items-center w-full px-6 py-3 text-left text-lime-500 hover:bg-gray-200"
+                  >
+                    <p>新規登録</p>
+                    <FontAwesomeIcon icon={faSignInAlt} className="pl-3" />
+                  </button>
+                  <button
+                    onClick={() => router.push("/login")}
                     className="flex items-center w-full px-6 py-3 text-left text-blue-500 hover:bg-gray-200"
                   >
                     <p>ログイン</p>
@@ -218,54 +251,7 @@ const PageContent = () => {
             isOpen={isAccountModalOpen}
             onClose={() => setIsAccountModalOpen(false)}
           >
-            <div>
-              <div className="relative flex items-center justify-between p-4">
-                <button
-                  className="mx-2 text-xl text-gray-300 hover:text-gray-500"
-                  onClick={() => setIsAccountModalOpen(false)}
-                  onMouseEnter={() => setIsHoveredExit(true)}
-                  onMouseLeave={() => setIsHoveredExit(false)}
-                >
-                  <FontAwesomeIcon icon={faChevronLeft} />
-                </button>
-                <div
-                  className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-2 transition-all top-11 duration-300 ${
-                    isHoveredExit
-                      ? "opacity-100 scale-100"
-                      : "opacity-0 scale-90 pointer-events-none"
-                  }`}
-                >
-                  <div>閉じる</div>
-                  <div>（esc）</div>
-                </div>
-              </div>
-              <div className="p-4">
-                <h2 className="mb-4 text-xl font-bold">アカウント設定</h2>
-                <form
-                  onSubmit={handleAccountSave}
-                  className="flex flex-col gap-3 p-8"
-                >
-                  <label className="flex flex-col">
-                    ユーザー名
-                    <input
-                      type="text"
-                      value={newDisplayName}
-                      onChange={(e) => setNewDisplayName(e.target.value)}
-                      className="p-2 mt-1 border"
-                      placeholder="ユーザー名"
-                      name="displayName"
-                      required
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
-                  >
-                    保存
-                  </button>
-                </form>
-              </div>
-            </div>
+            <AccountSettings onClose={() => setIsAccountModalOpen(false)}/>
           </Modal>
 
           {/* ログアウト確認オーバーレイ */}
@@ -310,10 +296,9 @@ const PageContent = () => {
       </TodoProvider>
     </AuthProvider>
   );
-}
+};
 
 export default function Home() {
-  const router = useRouter();
   const { user, loading } = useAuth();
   // （AuthContext の読み込み中の場合は下記で返す）
   if (loading) {

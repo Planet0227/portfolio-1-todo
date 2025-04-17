@@ -1,48 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   registerWithEmail,
   loginWithEmail,
   linkAnonymousAccount,
   signInAsGuest,
 } from "@/firebase/auth";
-import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { getAuth, updateProfile } from "firebase/auth";
 import { useAuth } from "@/context/AuthContext";
 
 const AuthForm = () => {
-  const [isRegister, setIsRegister] = useState(false);
+  const searchParams = useSearchParams();
+  const initialRegister = searchParams.get("mode") === "register";
+  const [isRegister, setIsRegister] = useState(initialRegister);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isShowPassword, setIsShowPassword] = useState(false);
   const router = useRouter();
-  const {user} = useAuth();
 
-  const isGuest = user && user.isAnonymous;
+  const { user } = useAuth();
 
-  
+  // const isGuest = user && user.isAnonymous;
 
-  // ゲストログイン
-  const handleGuestLogin = async () => {
-    try {
-      await signInAsGuest();
-      router.push("/");
-    } catch (error) {
-      console.error("ゲストログイン失敗:", error);
-      setErrorMessage("ゲストログインに失敗しました。");
-    }
-  };
+  // // ゲストログイン
+  // const handleGuestLogin = async () => {
+  //   try {
+  //     await signInAsGuest();
+  //     router.push("/");
+  //   } catch (error) {
+  //     console.error("ゲストログイン失敗:", error);
+  //     setErrorMessage("ゲストログインに失敗しました。");
+  //   }
+  // };
 
   // メールでログイン
   const handleLogin = async () => {
     setErrorMessage("");
     try {
-      const user = await loginWithEmail(email, password);
+      await loginWithEmail(email, password);
       router.push("/");
     } catch (error) {
       if (error.code === "auth/invalid-email") {
@@ -57,8 +59,13 @@ const AuthForm = () => {
 
   // メールでサインアップ
   const handleRegister = async () => {
-    if (!username || !email || !password) return;
+    if (!username || !email || !password || !confirmPassword) return;
     setErrorMessage("");
+    // パスワードが一致しない場合はエラー表示
+    if (password !== confirmPassword) {
+      setErrorMessage("パスワードが一致しません。");
+      return;
+    }
     try {
       const authInstance = getAuth();
       let user;
@@ -68,12 +75,10 @@ const AuthForm = () => {
         user = await linkAnonymousAccount(email, password);
       } else {
         // 匿名ユーザーが存在しない場合は新規作成
-        console.log("新規");
         user = await registerWithEmail(email, password, username);
       }
       if (user) {
         // リンク後、displayName を更新
-        console.log("リンク");
         await updateProfile(user, { displayName: username });
       }
       router.push("/");
@@ -107,8 +112,8 @@ const AuthForm = () => {
       </header>
       <div
         className={`flex items-center justify-center min-h-screen bg-gradient-to-br ${
-          isRegister ? "from-green-400" : " from-blue-400"
-        } `}
+          isRegister ? "from-green-400" : "from-blue-400"
+        }`}
       >
         <div className="w-full max-w-md p-8 transition duration-300 transform bg-white shadow-lg rounded-xl">
           <header className="mb-6 text-center">
@@ -168,6 +173,34 @@ const AuthForm = () => {
                 </button>
               </div>
             </div>
+            {isRegister && (
+              <div className="mb-6">
+                <p>パスワード（確認用）</p>
+                <div className="relative">
+                  <input
+                    type={isShowPassword ? "text" : "password"}
+                    placeholder="確認用パスワード"
+                    minLength={8}
+                    maxLength={20}
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setErrorMessage("");
+                    }}
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsShowPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
+                  >
+                    <FontAwesomeIcon
+                      icon={isShowPassword ? faEye : faEyeSlash}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="mb-4">
               <p className="text-red-500 text-sm min-h-[1.5rem]">
@@ -175,17 +208,20 @@ const AuthForm = () => {
               </p>
             </div>
 
-            {/* 新規登録 */}
             <button
               type="submit"
               onClick={isRegister ? handleRegister : handleLogin}
-              disabled={isRegister && (!username || !email || !password)}
+              disabled={
+                isRegister &&
+                (!username || !email || !password || !confirmPassword)
+              }
               className={`w-full p-3 mb-4 text-white rounded-lg transition duration-300 ${
                 isRegister
                   ? "bg-green-500 hover:bg-green-600"
                   : "bg-blue-500 hover:bg-blue-600"
               } ${
-                isRegister && (!username || !email || !password)
+                isRegister &&
+                (!username || !email || !password || !confirmPassword)
                   ? "opacity-60 cursor-not-allowed"
                   : ""
               }`}
@@ -193,21 +229,7 @@ const AuthForm = () => {
               {isRegister ? "新規登録して利用" : "ログイン"}
             </button>
           </form>
-          {isRegister && (
-            <button
-            type="button"
-            onClick={handleGuestLogin}
-            disabled={isRegister && (username || email || password) || isGuest}
-              className={`w-full p-3 mb-4 text-white bg-gray-500 rounded-lg hover:bg-gray-600  ${
-                isRegister && (username || email || password) || isGuest
-                  ? "opacity-60 cursor-not-allowed"
-                  : ""
-              }`}
-              
-            >
-              ゲストとして機能を試す
-            </button>
-          )}
+
           <div className="text-center">
             <button
               onClick={() => {
@@ -218,7 +240,7 @@ const AuthForm = () => {
             >
               {isRegister
                 ? "既存のアカウントでログイン"
-                : "新規登録/ゲストログインはこちら"}
+                : "新規登録はこちら"}
             </button>
           </div>
         </div>

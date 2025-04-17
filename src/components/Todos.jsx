@@ -4,7 +4,11 @@ import Todo from "./Todo";
 import Form from "./Form";
 import TodoColmun from "./TodoColmun";
 import TodoDetail from "@/features/todo/TodoDetail";
-import { useTodos, useTodosDispatch, useTodosLoading } from "../context/TodoContext";
+import {
+  useTodos,
+  useTodosDispatch,
+  useTodosLoading,
+} from "../context/TodoContext";
 import { useEffect, useState } from "react";
 import Modal from "./Modal";
 import { checkAndResetTasks } from "@/utils/resetTasks";
@@ -32,6 +36,9 @@ import {
 import { getAuth } from "firebase/auth";
 import { authenticatedFetch } from "@/utils/auth";
 import { CATEGORY_LIST } from "@/utils/categories";
+import { useRouter } from "next/navigation";
+import { signInAsGuest } from "@/firebase/auth";
+import WarningMessage from "./WarningMessage";
 
 const Todos = () => {
   //モーダル
@@ -46,6 +53,8 @@ const Todos = () => {
 
   const todos = useTodos();
   const dispatch = useTodosDispatch();
+
+  const router = useRouter();
 
   const isTodosLoading = useTodosLoading();
 
@@ -151,8 +160,6 @@ const Todos = () => {
           todo.id === activeId ? { ...todo, order: newOrder } : todo
         );
       } else {
-        // もし個々の item と衝突している場合は通常通り再配置（ここでは必要に応じて arrayMove を利用）
-
         const oldIndex = todosList.findIndex((t) => t.id === active.id);
         const newIndex = todosList.findIndex((t) => t.id === over.id);
         updatedTodos = arrayMove(todosList, oldIndex, newIndex).map(
@@ -195,7 +202,7 @@ const Todos = () => {
       //   return; // IDが見つからなければ処理を中断
       // }
 
-      // active.idからtodoを特定しstatusをcolumnのid(status)に変更する
+      // active.idからtodoを特定しstatusをcolumnのidに変更する
       updatedTodos = arrayMove(todosList, oldIndex, newIndex);
 
       updatedTodos = updatedTodos.map((todo, index) => ({
@@ -236,22 +243,11 @@ const Todos = () => {
   const openModal = (id) => {
     setSelectedTodoId(id);
     setIsModalOpen(true);
-
-    // // モーダル展開時のスタイル維持
-    // const scrollbarWidth =
-    //   window.innerWidth - document.documentElement.clientWidth;
-    // document.body.style.overflow = "hidden";
-
-    // document.body.style.paddingRight = `${scrollbarWidth}px`;
   };
 
   const closeModal = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
-
-    // // スクロール復元
-    // document.body.style.overflow = "";
-    // document.body.style.paddingRight = "";
   };
 
   //5px動かすとドラッグと判定する。
@@ -272,58 +268,27 @@ const Todos = () => {
     return false;
   };
 
-  // if(!isTodosLoading){
-  //   return <p>Loading...</p>
-  // }
+  const handleGuestLogin = async () => {
+    try {
+      await signInAsGuest();
+      router.push("/");
+      window.location.reload();
+    } catch (error) {
+      console.error("ゲストログイン失敗:", error);
+    }
+  };
 
   return (
     <div>
-      {/* 未ログインまたはゲストの場合に警告メッセージを表示 */}
-      {isGuestOrNotLoggedIn() && isShowWarning && (
-        <div className="relative p-4 border-l-8 bg-amber-50 border-amber-500 text-amber-700">
-          <div className="flex items-center mb-1">
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="font-semibold">注意</span>
-          </div>
-          <button
-            onClick={() => setIsShowWarning(false)}
-            className="absolute text-3xl font-bold top-2 right-2 focus:outline-none"
-            aria-label="警告を閉じる"
-          >
-            ×
-          </button>
-          {!user ? (
-            <>
-              <p>
-                現在、機能お試しモードです。作成されたリストはページのリロードなどで失われます。
-              </p>
-              <p className="mt-1 text-sm">
-                ゲストログインまたはアカウント登録をしてください。
-              </p>
-            </>
-          ) : (
-            <>
-              <p>
-                現在ゲストモードです。ブラウザのキャッシュ削除やログアウトでデータが失われます。
-              </p>
-              <p className="mt-1 text-sm">
-                新規登録をすることでデータを永続的に保存することができます。
-              </p>
-            </>
-          )}
-        </div>
+       {isGuestOrNotLoggedIn() && isShowWarning && (
+        <WarningMessage
+          user={user}
+          isShowWarning={isShowWarning}
+          setIsShowWarning={setIsShowWarning}
+          handleGuestLogin={handleGuestLogin}
+        />
       )}
-      <div className="mx-8 mt-10 md:mx-auto md:max-w-5xl md:px-5">
+      <div className="mx-8 mt-8 md:mx-auto md:max-w-5xl md:px-5">
         <div>
           <div className="text-4xl font-bold">タスク管理</div>
           <div>
@@ -336,7 +301,7 @@ const Todos = () => {
             <div>
               リストやタスクはドラッグアンドドロップで並べ替えられます。
             </div>
-          </div>{" "}
+          </div>
         </div>
       </div>
 

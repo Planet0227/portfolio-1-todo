@@ -6,10 +6,8 @@ const Modal = ({ isOpen, onClose, magnification, children }) => {
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true); // アニメーションを開始
-      // document.body.style.overflow = "hidden"; // 背景のスクロールを無効化
     } else if (!isOpen && isAnimating) {
       const timer = setTimeout(() => setIsAnimating(false), 200); // アニメーション終了後に非表示
-      document.body.style.overflow = ""; // 背景スクロールを有効化
       return () => clearTimeout(timer);
     }
   }, [isOpen]);

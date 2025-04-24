@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import { getAuth } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");

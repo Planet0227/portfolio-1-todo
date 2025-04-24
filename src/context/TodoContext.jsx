@@ -6,7 +6,7 @@ import {
   useReducer,
   useState,
 } from "react";
-import { authenticatedFetch } from "@/utils/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
 

@@ -2,57 +2,79 @@
 
 import { useState, useEffect } from "react";
 import { updateProfile } from "firebase/auth";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { app } from "@/firebase/firebaseConfig";
 import { useAuth } from "@/context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faUser } from "@fortawesome/free-solid-svg-icons";
+import { authenticatedFetch } from "@/utils/authToken";
 
 const AccountSettings = ({ onClose }) => {
-  const { user } = useAuth();
+  const { user, accountInfo, loading, dispatch } = useAuth();
   const [newDisplayName, setNewDisplayName] = useState("");
   const [newIconUrl, setNewIconUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [isHoveredExit, setIsHoveredExit] = useState(false);
 
+  // 初期値セット
   useEffect(() => {
-    if (user) {
-      setNewDisplayName(user.displayName || "");
-      setNewIconUrl(user.photoURL || "");
+    if (!loading && user) {
+      setNewDisplayName(accountInfo?.displayName || user.displayName || "");
+      setNewIconUrl(accountInfo?.iconDataUrl || "");
     }
-  }, [user]);
+  }, [user, accountInfo, loading]);
 
-  const handleImageSelect = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
-    // if (!file) return;
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 300;
+        const scale = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scale;
+  
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  
+        // JPEGに変換 & 画質70%
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+        setNewIconUrl(compressedBase64);
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+
     setUploading(true);
     setError("");
+    dispatch({
+      type: "SET_ACCOUNT_INFO",
+      payload: { displayName: newDisplayName, iconDataUrl: newIconUrl },
+    });
+
     try {
-      const storage = getStorage(app);
-      const fileRef = ref(storage, `users/${user.uid}/profile.jpg`);
-      await uploadBytes(fileRef, file);
-      const downloadURL = await getDownloadURL(fileRef);
-      console.log("画像URL:", downloadURL);
-      setNewIconUrl(downloadURL);
-    } catch (error) {
-      console.error("画像アップロードエラー:", error);
-      setError("画像のアップロードに失敗しました。");
+      await authenticatedFetch("/api/account", {
+        method: "PATCH",
+        body: JSON.stringify({ displayName: newDisplayName,
+          iconDataUrl: newIconUrl, }),
+      });
+
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleAccountSave = async (e) => {
-    e.preventDefault();
-    try {
-      await updateProfile(user, {
-        displayName: newDisplayName,
-        photoURL: newIconUrl,
-      });
-      onClose();
-    } catch (error) {
-      console.error("アカウント更新エラー:", error);
     }
   };
 
@@ -71,25 +93,22 @@ const AccountSettings = ({ onClose }) => {
         </button>
         <div
           className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-2 top-12 transition-all duration-300 ${
-            isHoveredExit
-              ? "opacity-100 scale-100"
-              : "opacity-0 scale-90 pointer-events-none"
+            isHoveredExit ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"
           }`}
         >
           <div>閉じる</div>
           <div>（esc）</div>
         </div>
         <h2 className="text-lg font-semibold text-gray-800">アカウント設定</h2>
-        <div className="w-6" /> {/* スペーサー */}
+        <div className="w-6" />
       </div>
 
       {/* コンテンツ */}
       <div className="px-12 py-6">
-        <form onSubmit={handleAccountSave} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {/* ユーザー名 */}
           <div className="flex flex-col">
-            <label className="mb-2 text-sm font-medium text-gray-700">
-              ユーザー名
-            </label>
+            <label className="mb-2 text-sm font-medium text-gray-700">ユーザー名</label>
             <input
               type="text"
               value={newDisplayName}
@@ -100,62 +119,41 @@ const AccountSettings = ({ onClose }) => {
             />
           </div>
 
+          {/* プロフィール画像 */}
           <div className="flex flex-col">
-            <label className="mb-2 text-sm font-medium text-gray-700">
-              プロフィール画像
-            </label>
+            <label className="mb-2 text-sm font-medium text-gray-700">プロフィール画像</label>
             <div className="flex items-center space-x-4">
               {newIconUrl ? (
-                // <img
-                //   src={newIconUrl}
-                //   alt="プロフィールプレビュー"
-                //   className="object-cover w-16 h-16 border rounded-full"
-                // />
                 <img
-                  src={user.photoURL}
-                  alt="プロフィールアイコン"
-                  style={{ width: 64, height: 64, borderRadius: "50%" }}
+                  src={newIconUrl}
+                  alt="アイコンプレビュー"
+                  className="object-cover w-24 h-24 border rounded-full"
                 />
               ) : (
                 <div className="flex items-center justify-center w-16 h-16 bg-gray-400 border rounded-full">
-                  <FontAwesomeIcon
-                    className="w-10 h-10 text-white"
-                    icon={faUser}
-                  />
+                  <FontAwesomeIcon className="w-10 h-10 text-white" icon={faUser} />
                 </div>
               )}
-              {/* <label className="px-4 py-2 text-green-700 bg-green-100 rounded-lg cursor-pointer hover:bg-green-200">
+              <label className="px-4 py-2 text-green-700 bg-green-100 rounded-lg cursor-pointer hover:bg-green-200">
                 画像を選択
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageSelect}
+                  onChange={handleImageChange}
                   className="hidden"
                 />
-              </label> */}
-              <label className="flex flex-col w-full">
-                アイコンURL
-                <input
-                  type="text"
-                  value={newIconUrl}
-                  onChange={(e) => setNewIconUrl(e.target.value)}
-                  className="p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-                />
-                webサイトの画像をURLを指定してください。
-                <br />
-                大きすぎる画像はアスペクト比が崩れます。
               </label>
             </div>
-            {uploading && (
-              <p className="mt-2 text-xs text-gray-500">アップロード中...</p>
-            )}
+            {uploading && <p className="mt-2 text-xs text-gray-500">保存中...</p>}
             {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
           </div>
 
+          {/* 保存ボタン */}
           <div className="mt-20">
             <button
               type="submit"
               className="w-full py-3 text-white transition bg-green-500 rounded-lg hover:bg-green-600"
+              disabled={uploading}
             >
               保存
             </button>

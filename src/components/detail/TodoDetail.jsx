@@ -7,6 +7,7 @@ import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChevronLeft,
+  faCopy,
   faDownLeftAndUpRightToCenter,
   faLock,
   faUnlock,
@@ -29,8 +30,9 @@ import {
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 import WeekToggleButtons from "./WeekToggleButtons";
-import { authenticatedFetch } from "@/utils/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 import { CATEGORY_LIST, getCategoryInfo } from "@/utils/categories";
+import CategoryHeader from "@/components/common/CategoryHeader";
 
 export default function TodoDetail({
   listId,
@@ -43,12 +45,15 @@ export default function TodoDetail({
   const [cachedList, setCachedList] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMounted, setToastMounted] = useState(false);
 
   const toggleButtonRef = useRef(null);
 
   // ホバー表示用
   const [isHoveredExit, setIsHoveredExit] = useState(false);
   const [isHoveredMg, setIsisHoveredMg] = useState(false);
+  const [isHoveredCopy, setIsHoveredCopy] = useState(false);
 
   useEffect(() => {
     if (listId) {
@@ -63,7 +68,7 @@ export default function TodoDetail({
     }
   }, [cachedList]);
 
-  //モーダルをEscで閉じる
+  //キー入力を検知
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -81,9 +86,9 @@ export default function TodoDetail({
     };
   }, [onClose]);
 
+  // トグルボタン以外がクリックされた場合にオプションを閉じる
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // トグルボタン以外がクリックされた場合にオプションを閉じる
       if (toggleButtonRef.current && toggleButtonRef.current.contains(e.target))
         return;
       if (e.target.closest("[data-todo]")) return;
@@ -96,6 +101,14 @@ export default function TodoDetail({
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showCategorySelector]);
+  
+  //　コピークリック2秒後にトーストを消す
+  useEffect(() => {
+    if (!showToast && toastMounted) {
+      const tid = setTimeout(() => setToastMounted(false), 500);
+      return () => clearTimeout(tid);
+    }
+  }, [showToast, toastMounted]);
 
   const updateLock = async () => {
     const newLock = !cachedList.lock;
@@ -108,6 +121,28 @@ export default function TodoDetail({
     } catch (error) {
       console.error("タイトル更新エラー:", error);
     }
+  };
+
+  const handleCopy = () => {
+    if (!cachedList) return;
+    // タスクは order 順にソート
+    const sortedTasks = [...cachedList.tasks].sort((a, b) => a.order - b.order);
+    // コピー用テキストを組み立て
+    const lines = [`タイトル: ${cachedList.title}`, "", "タスク一覧："];
+    sortedTasks.forEach((task) => {
+      const checkbox = task.complete ? "✓" : " ";
+      lines.push(`・ [${checkbox}] ${task.content}`);
+    });
+    const textToCopy = lines.join("\n");
+    // クリップボードに書き込み
+    navigator.clipboard
+      .writeText(lines.join("\n"))
+      .then(() => {
+        setToastMounted(true);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000); // 2秒後に不透明度を0%
+      })
+      .catch(console.error);
   };
 
   const deleteTodoList = async () => {
@@ -250,6 +285,19 @@ export default function TodoDetail({
 
   return (
     <div className="select-none">
+      {/* トースト */}
+      {/* 不透明度の変更に0.5秒かける */}
+      {toastMounted && (
+        <div
+          className={
+            `fixed z-50 px-4 py-2 text-white transform -translate-x-1/2 rounded shadow-lg top-5 
+            bg-lime-500 left-1/2 transition-opacity duration-500 
+            ${showToast ? "opacity-100" : "opacity-0"}`
+          }
+        >
+          コピーしました
+        </div>
+      )}
       {/* ヘッダー */}
       <div className="sticky top-0 z-20 bg-white">
         <div className="relative flex items-center justify-between px-4 py-3">
@@ -297,28 +345,53 @@ export default function TodoDetail({
                 <div>（F2）</div>
               </div>
             </div>
+
+            {/* コピー */}
+            <button
+              className="hidden mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
+              onClick={handleCopy}
+              onMouseEnter={() => setIsHoveredCopy(true)}
+              onMouseLeave={() => setIsHoveredCopy(false)}
+            >
+              <FontAwesomeIcon icon={faCopy} />
+            </button>
+            <div
+              className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white bg-gray-600 rounded shadow-lg left-[98px] transition-all duration-300 ${
+                isHoveredCopy
+                  ? "opacity-100 scale-100"
+                  : "opacity-0 scale-90 pointer-events-none"
+              }`}
+            >
+              <div>
+                テキスト
+                <br />
+                でコピー
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="mx-14">
           <div className="flex justify-between gap-4 mb-3">
-            <button
-              className="text-3xl "
-              onClick={updateLock}
-              title={cachedList?.lock ? "ロック解除" : "ロックする"}
-            >
-              {cachedList.lock ? (
-                <FontAwesomeIcon
-                  icon={faLock}
-                  className="text-gray-600 hover:text-gray-800"
-                />
-              ) : (
-                <FontAwesomeIcon
-                  icon={faUnlock}
-                  className="text-gray-400 hover:text-gray-600"
-                />
-              )}
-            </button>
+            <div className="flex">
+              <button
+                className="text-3xl"
+                onClick={updateLock}
+                title={cachedList?.lock ? "ロック解除" : "ロックする"}
+              >
+                {cachedList.lock ? (
+                  <FontAwesomeIcon
+                    icon={faLock}
+                    className="text-gray-600 hover:text-gray-800"
+                  />
+                ) : (
+                  <FontAwesomeIcon
+                    icon={faUnlock}
+                    className="text-gray-400 hover:text-gray-600"
+                  />
+                )}
+              </button>
+            </div>
 
             <button
               onClick={deleteTodoList}
@@ -345,24 +418,16 @@ export default function TodoDetail({
           <div className="relative flex items-center mt-2">
             <span className="text-gray-500">進捗：</span>
             <span
-              className={`items-center flex px-3 py-1 rounded-md gap-2 cursor-pointer ${
-                getCategoryInfo(cachedList.category).styles.baseColor
-              } ${getCategoryInfo(cachedList.category).styles.hover}`}
+              className={`cursor-pointer`}
               onClick={() => setShowCategorySelector((prev) => !prev)}
             >
-              <FontAwesomeIcon
-                icon={getCategoryInfo(cachedList.category).icon}
-                className="text-white drop-shadow-lg"
-              />
-              <span className="text-sm font-semibold text-white drop-shadow-lg w-[3em] text-center">
-                {getCategoryInfo(cachedList.category).title}
-              </span>
+              <CategoryHeader category={cachedList.category} className="rounded-md" />
             </span>
           </div>
           {showCategorySelector && (
             <div
               ref={toggleButtonRef}
-              className="absolute bg-white border border-gray-300 rounded-md shadow-xl select-none bottom-6 left-48"
+              className="absolute overflow-hidden bg-white border border-gray-300 rounded-md shadow-xl select-none top-36 left-48"
               onClick={(e) => e.stopPropagation()}
             >
               {CATEGORY_LIST.map((cat) => {
@@ -375,17 +440,9 @@ export default function TodoDetail({
                       changeCategory(cat.id);
                       setShowCategorySelector(false);
                     }}
-                    className={`flex items-center h-8 px-3 gap-2 cursor-pointer
-    ${getCategoryInfo(cat.id).styles.baseColor}
-    ${getCategoryInfo(cat.id).styles.hover}`}
+                    className={`cursor-pointer`}
                   >
-                    <FontAwesomeIcon
-                      icon={getCategoryInfo(cat.id).icon}
-                      className="text-sm text-white drop-shadow-lg"
-                    />
-                    <span className="text-sm font-semibold leading-none text-white drop-shadow-lg w-[3em] text-center">
-                      {getCategoryInfo(cat.id).title}
-                    </span>
+                    <CategoryHeader category={cat.id}/>
                   </div>
                 );
               })}

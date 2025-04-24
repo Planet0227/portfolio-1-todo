@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import { useTodosDispatch } from "@/context/TodoContext";
-import { authenticatedFetch } from "@/utils/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 
 const WeekToggleButtons = ({
   listId,

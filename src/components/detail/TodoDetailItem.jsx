@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getAuth } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 
 const TodoDetailItem = ({ tasks, task, id, listId }) => {
   const [editContent, setEditContent] = useState(task.content);

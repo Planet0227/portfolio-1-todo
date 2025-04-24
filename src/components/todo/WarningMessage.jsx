@@ -4,15 +4,24 @@ import { faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 
+
+
 const WarningMessage = ({
   user,
-  isShowWarning,
-  setIsShowWarning,
-  handleGuestLogin,
+  onClose
 }) => {
   const router = useRouter();
 
-  if (!isShowWarning) return null;
+  const handleGuestLogin = async () => {
+    try {
+      await signInAsGuest();
+      router.push("/");
+      window.location.reload();
+    } catch (error) {
+      console.error("ゲストログイン失敗:", error);
+    }
+  };
+
 
   return (
     <div className="relative p-4 border-l-8 bg-amber-50 border-amber-500 text-amber-700">
@@ -24,7 +33,7 @@ const WarningMessage = ({
         <span className="font-semibold">注意</span>
       </div>
       <button
-        onClick={() => setIsShowWarning(false)}
+        onClick={onClose}
         className="absolute text-3xl font-bold top-2 right-2 focus:outline-none"
         aria-label="警告を閉じる"
       >
@@ -55,7 +64,7 @@ const WarningMessage = ({
       ) : (
         <>
           <p>
-            現在ゲストモードです。ブラウザのキャッシュ削除やログアウトでデータが失われます。
+            現在ゲストモードです。ブラウザのキャッシュクリアやログアウトでデータが失われます。
           </p>
           <span className="flex mt-1 text-sm">
             <p

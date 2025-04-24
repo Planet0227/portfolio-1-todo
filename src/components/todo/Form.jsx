@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useTodos, useTodosDispatch } from "../context/TodoContext";
-import { authenticatedFetch } from "@/utils/auth";
+import { useTodos, useTodosDispatch } from "../../context/TodoContext";
+import { authenticatedFetch } from "@/utils/authToken";
 import { getCategoryInfo } from "@/utils/categories";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCirclePlus, faMousePointer, faPlus } from "@fortawesome/free-solid-svg-icons";
+import CategoryHeader from "../common/CategoryHeader";
 const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
@@ -163,17 +164,9 @@ const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
                       setSelectedCategory(cat);
                       setShowCategorySelector(false);
                     }}
-                    className={`flex items-center h-8 px-3 gap-2 cursor-pointer  ${
-                      getCategoryInfo(cat).styles.baseColor
-                    } ${getCategoryInfo(cat).styles.hover}`}
+                    className={`cursor-pointer`}
                   >
-                    <FontAwesomeIcon
-                      icon={getCategoryInfo(cat).icon}
-                      className="text-sm text-white drop-shadow-lg"
-                    />
-                    <span className="text-sm font-semibold leading-none text-white drop-shadow-lg w-[3em] text-center">
-                      {getCategoryInfo(cat).title}
-                    </span>
+                    <CategoryHeader category={cat} />
                   </div>
                 );
               })}

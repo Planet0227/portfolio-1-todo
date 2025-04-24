@@ -71,13 +71,3 @@ export const getCategoryInfo = (categoryId) => {
 };
 
 
-// // カテゴリーのスタイルを組み合わせて返す関数
-// export const getCategoryStyles = (categoryId) => {
-//   return getCategoryInfo(categoryId).styles.base;
-// };
-
-// // カテゴリーの表示名を取得する関数
-// export const getCategoryTitle = (categoryId) => {
-//   return getCategoryInfo(categoryId).title;
-// };
-

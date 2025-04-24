@@ -1,30 +1,77 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useReducer } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { authenticatedFetch } from "@/utils/authToken";
 import { app } from "../firebase/firebaseConfig";
-import { signInAsGuest } from "@/firebase/auth";
 
 const auth = getAuth(app);
-const AuthContext = createContext();
 
+// 1. State と Dispatch 用の Context
+const AuthStateContext = createContext();
+const AuthDispatchContext = createContext();
+
+// 2. 初期 state
+const initialState = {
+  user: null,
+  accountInfo: null,
+  loading: true,
+};
+
+// 3. Reducer
+// action は { type, payload } の形を想定
+const authReducer = (state, { type, payload }) => {
+  switch (type) {
+    case "SET_LOADING":
+      return { ...state, loading: payload };
+    case "SET_USER":
+      return { ...state, user: payload };
+    case "SET_ACCOUNT_INFO":
+      return { ...state, accountInfo: payload };
+    default:
+      throw new Error(`Unhandled action type: ${type}`);
+  }
+};
+
+// 4. Provider コンポーネント
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth,(currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
+    dispatch({ type: "SET_LOADING", payload: true });
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      dispatch({ type: "SET_USER", payload: currentUser });
+      if (currentUser) {
+        try {
+          const res = await authenticatedFetch("/api/account", { method: "GET" });
+          const data = res.ok ? await res.json() : null;
+          dispatch({ type: "SET_ACCOUNT_INFO", payload: data });
+        } catch (err) {
+          console.error("Failed to fetch account info:", err);
+          dispatch({ type: "SET_ACCOUNT_INFO", payload: null });
+        }
+      } else {
+        dispatch({ type: "SET_ACCOUNT_INFO", payload: null });
+      }
+      dispatch({ type: "SET_LOADING", payload: false });
     });
     return () => unsubscribe();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthStateContext.Provider value={state}>
+      <AuthDispatchContext.Provider value={dispatch}>
+        {children}
+      </AuthDispatchContext.Provider>
+    </AuthStateContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// 5. カスタムフック
+export const useAuthState = () => useContext(AuthStateContext);
+export const useAuthDispatch = () => useContext(AuthDispatchContext);
+export const useAuth = () => {
+  const state = useAuthState();
+  const dispatch = useAuthDispatch();
+  return { ...state, dispatch };
+};

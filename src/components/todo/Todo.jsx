@@ -23,10 +23,8 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
     id: todo.id,
   });
 
-  const transitionDuration = isDragging ? "0s" : "0.5s";
   const style = {
     transform: isSorting ? CSS.Translate.toString(transform) : undefined,
-    transition: `opacity ${transitionDuration} ease`,
     opacity: isDragging ? "0" : "1",
   };
 

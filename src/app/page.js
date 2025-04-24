@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Todos from "@/components/Todos";
+import Todos from "@/components/todo/Todos";
 import { TodoProvider, useTodosLoading } from "@/context/TodoContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { logout, signInAsGuest } from "@/firebase/auth";
@@ -15,15 +15,15 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Modal from "@/components/Modal";
+import Modal from "@/components/common/Modal";
 import { deleteUser, updateProfile } from "firebase/auth";
 import { deleteUserData } from "@/firebase/firebase";
-import Loading from "@/components/Loading";
-import AccountSettings from "@/components/AccountSetting";
+import Loading from "@/components/common/Loading";
+import AccountSettings from "@/components/auth/AccountSetting";
 
 const PageContent = () => {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, accountInfo } = useAuth();
   const isLoading = useTodosLoading();
 
   // ドロップダウン表示の状態管理
@@ -33,9 +33,8 @@ const PageContent = () => {
   // ログアウト確認オーバーレイの状態管理
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   // アカウント設定フォームの状態（例：ユーザー名とアイコン）
-  const [newDisplayName, setNewDisplayName] = useState("");
-  const [newIconUrl, setNewIconUrl] = useState("");
-  const [isHoveredExit, setIsHoveredExit] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState(accountInfo?.displayName);
+  const [newIconUrl, setNewIconUrl] = useState(accountInfo?.iconDataUrl);
   // ゲストログインかどうかの判定
   const isGuest = user && user.isAnonymous;
 
@@ -101,26 +100,15 @@ const PageContent = () => {
 
   // ユーザー情報が更新されたタイミングでフォームの初期値を設定
   useEffect(() => {
-    if (user) {
-      setNewDisplayName(user.displayName || "");
-      setNewIconUrl(user.photoURL || "");
+    if (!loading && user) {
+      setNewDisplayName(accountInfo.displayName || user.displayName || "");
+      if (accountInfo && accountInfo.iconDataUrl) {
+        setNewIconUrl(accountInfo.iconDataUrl);
+      }
     }
-  }, [user]);
+  }, [user, accountInfo, loading]);
 
-  // アカウント設定モーダルの保存処理（通常ユーザーのみ対象）
-  const handleAccountSave = async (e) => {
-    e.preventDefault();
-    try {
-      await updateProfile(user, {
-        displayName: newDisplayName,
-        photoURL: newIconUrl,
-      });
-      setIsAccountModalOpen(false);
-      setAccountDropdownOpen(false);
-    } catch (error) {
-      console.error("アカウント更新エラー:", error);
-    }
-  };
+  // アカウント設定モーダルの保存処理（通常ユーザーのみ対象
 
   // ユーザー表示部分（アイコンと名前）のクリックでドロップダウンを切替
   const toggleAccountDropdown = () => {
@@ -130,8 +118,7 @@ const PageContent = () => {
   // if (loading || isLoading) return <p className="text-lg">Loading...</p>;
 
   return (
-    <AuthProvider>
-      <TodoProvider>
+    
         <div className="select-none">
           <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-lime-500">
             <h3 className="text-3xl">✓Task-Board</h3>
@@ -174,16 +161,16 @@ const PageContent = () => {
                   onClick={toggleAccountDropdown}
                   className="flex items-center gap-2 hover:underline"
                 >
-                  {user.photoURL ? (
+                  {newIconUrl ? (
                     <img
-                      src={user.photoURL}
+                      src={newIconUrl}
                       alt="ユーザーアイコン"
-                      className="w-12 h-12 bg-white border border-white rounded-full"
+                      className="object-cover w-12 h-12 rounded-full"
                     />
                   ) : (
                     <FontAwesomeIcon icon={faUser} className="p-1.5 bg-gray-400 rounded-full w-7 h-7" />
                   )}
-                  <span className="text-lg">{user.displayName || user.email}</span>
+                  <span className="text-lg">{newDisplayName}</span>
                 </button>
               </div>
             )}
@@ -192,7 +179,7 @@ const PageContent = () => {
           {accountDropdownOpen && (
             <div
               ref={dropDownRef}
-              className="fixed right-0 z-50 w-40 text-black bg-white rounded shadow-lg top-12"
+              className="fixed right-0 z-50 w-40 text-black bg-white rounded shadow-lg top-16"
             >
               {isGuest ? (
                 <>
@@ -293,8 +280,7 @@ const PageContent = () => {
             </div>
           )}
         </div>
-      </TodoProvider>
-    </AuthProvider>
+
   );
 };
 

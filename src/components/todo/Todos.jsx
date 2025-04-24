@@ -2,15 +2,15 @@
 
 import Todo from "./Todo";
 import Form from "./Form";
-import TodoColmun from "./TodoColmun";
-import TodoDetail from "@/features/todo/TodoDetail";
+import TodoColmun from "./TodoColumn";
+import TodoDetail from "@/components/detail/TodoDetail";
 import {
   useTodos,
   useTodosDispatch,
   useTodosLoading,
-} from "../context/TodoContext";
+} from "../../context/TodoContext";
 import { useEffect, useState } from "react";
-import Modal from "./Modal";
+import Modal from "../common/Modal";
 import { checkAndResetTasks } from "@/utils/resetTasks";
 
 //  dnd
@@ -23,22 +23,13 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  rectSortingStrategy,
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  restrictToParentElement,
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers";
-import { getAuth } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/auth";
+
+import { authenticatedFetch } from "@/utils/authToken";
 import { CATEGORY_LIST } from "@/utils/categories";
-import { useRouter } from "next/navigation";
-import { signInAsGuest } from "@/firebase/auth";
 import WarningMessage from "./WarningMessage";
+import { TodosDescription } from "./TodosDescription";
+import { useAuth } from "@/context/AuthContext";
 
 const Todos = () => {
   //モーダル
@@ -54,13 +45,11 @@ const Todos = () => {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
-  const router = useRouter();
-
   const isTodosLoading = useTodosLoading();
-
   //auth
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const { user, loading } = useAuth();
+  const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
+  const [isShowWarning, setIsShowWarning] = useState(true);
 
   const [todosList, setTodosList] = useState(todos);
   const [activeId, setActiveId] = useState(null);
@@ -69,8 +58,6 @@ const Todos = () => {
 
   // 初回マウント時のリセットチェック用フラグ
   const [initialCheckDone, setInitialCheckDone] = useState(false);
-
-  const [isShowWarning, setIsShowWarning] = useState(true);
 
   // 初回マウント時に1回だけ実行
   useEffect(() => {
@@ -86,7 +73,7 @@ const Todos = () => {
     setTodosList(sortedTodosList);
   }, [todos]);
 
-  // マウス位置によるフォームの表示切替（下部100px以内なら表示）
+  // マウス位置によるフォームの表示切替（下部200px以内なら表示）
   useEffect(() => {
     if (!isTouchDevice()) {
       const handleMouseMove = (e) => {
@@ -258,52 +245,13 @@ const Todos = () => {
     })
   );
 
-  // ユーザーの状態を判定する関数
-  const isGuestOrNotLoggedIn = () => {
-    // ユーザーがnullの場合は未ログイン
-    if (!user) return true;
-    // ユーザーが匿名（ゲスト）の場合
-    if (user.isAnonymous) return true;
-    // それ以外（通常のログインユーザー）の場合
-    return false;
-  };
-
-  const handleGuestLogin = async () => {
-    try {
-      await signInAsGuest();
-      router.push("/");
-      window.location.reload();
-    } catch (error) {
-      console.error("ゲストログイン失敗:", error);
-    }
-  };
-
   return (
     <div>
-       {isGuestOrNotLoggedIn() && isShowWarning && (
-        <WarningMessage
-          user={user}
-          isShowWarning={isShowWarning}
-          setIsShowWarning={setIsShowWarning}
-          handleGuestLogin={handleGuestLogin}
-        />
+      {isGuestOrNotLoggedIn() && isShowWarning && (
+        <WarningMessage user={user} onClose={() => setIsShowWarning(false)} />
       )}
-      <div className="mx-8 mt-8 md:mx-auto md:max-w-5xl md:px-5">
-        <div>
-          <div className="text-4xl font-bold">タスク管理</div>
-          <div>
-            <div>
-              タイトルを入力して+ボタンをクリックすると、リストの追加先に指定されているカラムにリストが新規作成されます。
-            </div>
-            <div>
-              詳細ページではタスクの追加、変更、削除、チェックを付けて進捗を記録・確認出来ます。
-            </div>
-            <div>
-              リストやタスクはドラッグアンドドロップで並べ替えられます。
-            </div>
-          </div>
-        </div>
-      </div>
+
+      <TodosDescription />
 
       <DndContext
         id={"unique-dnd-context-id"}
@@ -332,13 +280,13 @@ const Todos = () => {
 
           {/* リストが空の場合のメッセージを追加 */}
           {(!todos || todos.length === 0) && (
-            <div className="absolute left-0 right-0 flex justify-center top-24">
-              <div className="text-center bg-white rounded-lg shadow-lg p-14">
+            <div className="absolute left-0 right-0 flex justify-center top-40">
+              <div className="p-20 text-center bg-white rounded-lg shadow-lg">
                 <div className="mb-4 text-6xl text-gray-300">📝</div>
-                <h3 className="mb-2 text-xl font-semibold text-gray-600">
-                  リストが存在しません
+                <h3 className="mb-2 text-2xl font-semibold text-gray-600">
+                  リストがありません
                 </h3>
-                <p className="mb-4 text-gray-500">
+                <p className="mb-4 text-lg text-gray-500">
                   下部のフォームからリストを作成してください
                 </p>
                 <div className="text-2xl text-gray-400 animate-bounce">↓</div>
@@ -346,7 +294,7 @@ const Todos = () => {
             </div>
           )}
 
-          <DragOverlay dropAnimation={{ sideEffects: null }}>
+          <DragOverlay >
             {activeId ? (
               <Todo
                 todo={todosList.find((t) => t.id === activeId)}
@@ -363,7 +311,6 @@ const Todos = () => {
           ${formVisible && !activeId ? "translate-y-0" : "translate-y-28"}
         `}
         >
-          {/* Formコンポーネントは内部のスタイルのみを適用 */}
           <Form
             formVisible={formVisible}
             activeId={activeId}

@@ -25,21 +25,6 @@ const AuthForm = () => {
   const [isShowPassword, setIsShowPassword] = useState(false);
   const router = useRouter();
 
-  const { user } = useAuth();
-
-  // const isGuest = user && user.isAnonymous;
-
-  // // ゲストログイン
-  // const handleGuestLogin = async () => {
-  //   try {
-  //     await signInAsGuest();
-  //     router.push("/");
-  //   } catch (error) {
-  //     console.error("ゲストログイン失敗:", error);
-  //     setErrorMessage("ゲストログインに失敗しました。");
-  //   }
-  // };
-
   // メールでログイン
   const handleLogin = async () => {
     setErrorMessage("");
@@ -166,6 +151,7 @@ const AuthForm = () => {
                 />
                 <button
                   type="button"
+                  tabIndex={-1}
                   onClick={() => setIsShowPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
                 >
@@ -191,6 +177,7 @@ const AuthForm = () => {
                   />
                   <button
                     type="button"
+                    tabIndex={-1}
                     onClick={() => setIsShowPassword((prev) => !prev)}
                     className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500"
                   >
@@ -210,7 +197,6 @@ const AuthForm = () => {
 
             <button
               type="submit"
-              onClick={isRegister ? handleRegister : handleLogin}
               disabled={
                 isRegister &&
                 (!username || !email || !password || !confirmPassword)
@@ -238,9 +224,7 @@ const AuthForm = () => {
               }}
               className="text-sm text-blue-500 hover:underline"
             >
-              {isRegister
-                ? "既存のアカウントでログイン"
-                : "新規登録はこちら"}
+              {isRegister ? "既存のアカウントでログイン" : "新規登録はこちら"}
             </button>
           </div>
         </div>

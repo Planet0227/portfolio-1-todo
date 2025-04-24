@@ -19,15 +19,21 @@ async function getUserUid(request) {
   return decodedToken.uid;
 }
 
+// ドキュメントIDを固定値 "default" にする
+const INFO_DOC_ID = "default";
+
 // GET: プロフィール取得
 export async function GET(request) {
   try {
     const uid = await getUserUid(request);
-    const userDoc = await db.collection("users").doc(uid).get();
-    if (!userDoc.exists) {
+    const docRef = db.collection("users").doc(uid)
+                     .collection("accountInfo").doc(INFO_DOC_ID);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
       return new Response(JSON.stringify({}), { status: 200 });
     }
-    return new Response(JSON.stringify(userDoc.data()), { status: 200 });
+    return new Response(JSON.stringify(docSnap.data()), { status: 200 });
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 401,
@@ -41,12 +47,14 @@ export async function PATCH(request) {
     const uid = await getUserUid(request);
     const { displayName, iconDataUrl } = await request.json();
 
-    const userRef = db.collection("users").doc(uid);
+    const docRef = db.collection("users").doc(uid)
+                     .collection("accountInfo").doc(INFO_DOC_ID);
+
     const updateData = {};
     if (displayName !== undefined) updateData.displayName = displayName;
     if (iconDataUrl !== undefined) updateData.iconDataUrl = iconDataUrl;
 
-    await userRef.set(updateData, { merge: true });
+    await docRef.set(updateData, { merge: true });
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (error) {

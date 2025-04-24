@@ -1,5 +1,7 @@
 import { getAuth } from "firebase/auth";
 
+// token取得簡略
+
 export class AuthError extends Error {
   constructor(message = "認証エラーが発生しました") {
     super(message);

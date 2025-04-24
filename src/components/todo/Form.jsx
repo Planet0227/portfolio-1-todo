@@ -4,9 +4,13 @@ import { useTodos, useTodosDispatch } from "../../context/TodoContext";
 import { authenticatedFetch } from "@/utils/authToken";
 import { getCategoryInfo } from "@/utils/categories";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCirclePlus, faMousePointer, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCirclePlus,
+  faMousePointer,
+  faPlus,
+} from "@fortawesome/free-solid-svg-icons";
 import CategoryHeader from "../common/CategoryHeader";
-const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
+const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -97,35 +101,35 @@ const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
 
   return (
     <div className="relative p-3 mx-auto bg-white border-2 border-gray-500 rounded-lg shadow-xl pointer-events-auto select-none md:px-5 bottom-5 w-full md:w-[600px]">
-      <div className={`flex items-center justify-center gap-2 mb-2 text-gray-600 ${!formVisible && "animate-pulse"}`}>
-        {formVisible && !activeId ? (
+      <div
+        className={`flex items-center justify-center gap-2 mb-2 text-gray-600 ${
+          !formVisible && "animate-pulse"
+        }`}
+      >
+        {formVisible && !dragItem ? (
           <>
             <FontAwesomeIcon icon={faCirclePlus} />
-            <span className="text-sm font-bold">
-              Todoリストの新規作成
-            </span>
+            <span className="text-sm font-bold">Todoリストの新規作成</span>
           </>
-        ) : !activeId ? (
+        ) : !dragItem ? (
           <>
-      {isTouchDevice() ? (
-        <>
-          <FontAwesomeIcon icon={faPlus} />
-          <span className="text-sm">
-            タップでフォームが表示されます
-          </span>
-        </>
-      ) : (
-        <>
-          <FontAwesomeIcon icon={faMousePointer} />
-          <span className="text-sm">
-            マウスを画面下に移動するとフォームが表示されます
-          </span>
-        </>
-      )}
-    </>
-        ) 
-      : ""
-      }
+            {isTouchDevice() ? (
+              <>
+                <FontAwesomeIcon icon={faPlus} />
+                <span className="text-sm">タップでフォームが表示されます</span>
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon={faMousePointer} />
+                <span className="text-sm">
+                  マウスを画面下に移動するとフォームが表示されます
+                </span>
+              </>
+            )}
+          </>
+        ) : (
+          ""
+        )}
       </div>
       <div className="flex justify-start mt-6 ml-16">
         {/* relative コンテナ内にポップアップ表示用の span を配置 */}
@@ -137,41 +141,33 @@ const Form = ({ categories, formVisible, activeId, isTouchDevice }) => {
             リストの追加先：
           </span>
           <span
-            className={`items-center flex px-3 py-1 rounded-md gap-2 cursor-pointer ${
-              getCategoryInfo(selectedCategory).styles.baseColor
-            } ${getCategoryInfo(selectedCategory).styles.hover}`}
+            className={`cursor-pointer`}
             onClick={() => setShowCategorySelector((prev) => !prev)}
           >
-            <FontAwesomeIcon
-              icon={getCategoryInfo(selectedCategory).icon}
-              className="text-white drop-shadow-lg"
-            />
-            <span className="text-sm font-semibold text-white drop-shadow-lg w-[3em] text-center">
-              {getCategoryInfo(selectedCategory).title}
-            </span>
+            <CategoryHeader category={selectedCategory} className="rounded-md" />
           </span>
         </div>
         {showCategorySelector && formVisible && (
-            <div
-              ref={toggleButtonRef}
-              className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none bottom-20 left-24 "
-            >
-              {categories.map((cat) => {
-                return (
-                  <div
-                    key={cat}
-                    onClick={() => {
-                      setSelectedCategory(cat);
-                      setShowCategorySelector(false);
-                    }}
-                    className={`cursor-pointer`}
-                  >
-                    <CategoryHeader category={cat} />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <div
+            ref={toggleButtonRef}
+            className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none bottom-20 left-24 "
+          >
+            {categories.map((cat) => {
+              return (
+                <div
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setShowCategorySelector(false);
+                  }}
+                  className={`cursor-pointer`}
+                >
+                  <CategoryHeader category={cat} />
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <form onSubmit={addTodoList} className="flex justify-center">
         <button

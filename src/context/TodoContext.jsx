@@ -13,7 +13,7 @@ const TodoContextDispatch = createContext();
 const todoReducer = (state, { type, payload }) => {
   switch (type) {
     case "todo/init":
-      return payload;
+      return  [...payload].sort((a, b) => a.order - b.order);
     case "todo/addList":
       return [...state, payload];
     case "todo/add":

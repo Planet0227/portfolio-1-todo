@@ -14,8 +14,18 @@ import Modal from "../common/Modal";
 import { checkAndResetTasks } from "@/utils/resetTasks";
 
 //  dnd
-import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  MouseSensor,
+  TouchSensor,
+  pointerWithin,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 
+import { authenticatedFetch } from "@/utils/authToken";
 import { CATEGORY_LIST } from "@/utils/categories";
 import WarningMessage from "./WarningMessage";
 import { TodosDescription } from "./TodosDescription";
@@ -42,14 +52,15 @@ const Todos = () => {
   const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
   const [isShowWarning, setIsShowWarning] = useState(true);
 
-  // const [todos, setTodosList] = useState(todos);
+  const [todosList, setTodosList] = useState(todos);
+
 
   // 初回マウント時のリセットチェック用フラグ
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
   // DnD ロジックをフックで切り出し
   const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =
-    useDnDTodos(todos, dispatch);
+    useDnDTodos(todosList, setTodosList, dispatch);
 
   // 初回マウント時に1回だけ実行
   useEffect(() => {
@@ -59,6 +70,11 @@ const Todos = () => {
       setInitialCheckDone(true);
     }
   }, [todos, dispatch]);
+
+  useEffect(() => {
+    const sortedTodosList = [...todos].sort((a, b) => a.order - b.order);
+    setTodosList(sortedTodosList);
+  }, [todos]);
 
   // マウス位置によるフォームの表示切替（下部200px以内なら表示）
   useEffect(() => {
@@ -77,6 +93,7 @@ const Todos = () => {
       setFormVisible(true);
     }
   }, []);
+
 
   const openModal = (id) => {
     setSelectedTodoId(id);
@@ -106,7 +123,7 @@ const Todos = () => {
       >
         <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:flex md:justify-center md:flex-nowrap">
           {CATEGORY_LIST.map((category) => {
-            const filterdTodoList = todos.filter(
+            const filterdTodoList = todosList.filter(
               (todoList) => todoList.category === category.id
             );
             return (
@@ -137,10 +154,10 @@ const Todos = () => {
             </div>
           )}
 
-          <DragOverlay>
+          <DragOverlay >
             {dragItem ? (
               <Todo
-                todo={todos.find((t) => t.id === dragItem)}
+                todo={todosList.find((t) => t.id === dragItem)}
                 isOverlay={true}
               />
             ) : null}

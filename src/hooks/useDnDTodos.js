@@ -5,7 +5,7 @@ import { MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useState } from "react";
 import { authenticatedFetch } from "@/utils/authToken";
 
-export const useDnDTodos = (todos, dispatch) => {
+export const useDnDTodos = (todosList, setTodosList, dispatch) => {
   const [dragItem, setDragItem] = useState(null);
 
   //5px動かすとドラッグと判定する。
@@ -27,7 +27,7 @@ export const useDnDTodos = (todos, dispatch) => {
       return id;
     }
     // itemのidが渡された場合、そのitemが属するカラムのidを返す
-    return todos.find((todo) => todo.id === id)?.category;
+    return todosList.find((todo) => todo.id === id)?.category;
   };
 
   const handleDragStart = (event) => {
@@ -45,7 +45,7 @@ export const useDnDTodos = (todos, dispatch) => {
     const activeId = String(active.id);
     const overColumn = findColumn(overId);
     const activeColumn = findColumn(activeId);
-    let updatedTodos = [...todos];
+    let updatedTodos = [...todosList];
 
     // ドラッグ元とターゲットが異なるカラムの場合
     if (activeColumn !== overColumn) {
@@ -71,33 +71,27 @@ export const useDnDTodos = (todos, dispatch) => {
           todo.id === activeId ? { ...todo, order: newOrder } : todo
         );
       } else {
-        const oldIndex = todos.findIndex((t) => t.id === active.id);
-        const newIndex = todos.findIndex((t) => t.id === over.id);
-        updatedTodos = arrayMove(todos, oldIndex, newIndex).map(
+        const oldIndex = todosList.findIndex((t) => t.id === active.id);
+        const newIndex = todosList.findIndex((t) => t.id === over.id);
+        updatedTodos = arrayMove(todosList, oldIndex, newIndex).map(
           (todo, index) => ({
             ...todo,
             order: index + 1,
           })
         );
       }
-      dispatch({
-        type: "todo/sort",
-        payload: { updatedTodos },
-      });
+      setTodosList(updatedTodos);
     } else {
       // 同一カラム内での並べ替えは従来通り
-      const oldIndex = todos.findIndex((t) => t.id === active.id);
-      const newIndex = todos.findIndex((t) => t.id === over.id);
-      updatedTodos = arrayMove(todos, oldIndex, newIndex).map(
+      const oldIndex = todosList.findIndex((t) => t.id === active.id);
+      const newIndex = todosList.findIndex((t) => t.id === over.id);
+      updatedTodos = arrayMove(todosList, oldIndex, newIndex).map(
         (todo, index) => ({
           ...todo,
           order: index + 1,
         })
       );
-      dispatch({
-        type: "todo/sort",
-        payload: { updatedTodos },
-      });
+      setTodosList(updatedTodos);
     }
   };
 
@@ -110,17 +104,17 @@ export const useDnDTodos = (todos, dispatch) => {
     const overColumn = findColumn(overId);
     const activeColumn = findColumn(activeId);
 
-    let updatedTodos = [...todos];
+    let updatedTodos = [...todosList];
 
     if (activeColumn === overColumn) {
-      const oldIndex = todos.findIndex((t) => t.id === active.id);
-      const newIndex = todos.findIndex((t) => t.id === over.id);
+      const oldIndex = todosList.findIndex((t) => t.id === active.id);
+      const newIndex = todosList.findIndex((t) => t.id === over.id);
       // if (oldIndex === -1 || newIndex === -1) {
       //   return; // IDが見つからなければ処理を中断
       // }
 
       // active.idからtodoを特定しstatusをcolumnのidに変更する
-      updatedTodos = arrayMove(todos, oldIndex, newIndex);
+      updatedTodos = arrayMove(todosList, oldIndex, newIndex);
 
       updatedTodos = updatedTodos.map((todo, index) => ({
         ...todo,
@@ -138,6 +132,8 @@ export const useDnDTodos = (todos, dispatch) => {
           }
         });
       });
+      
+      setTodosList(updatedTodos);
 
       // 状態更新
       dispatch({

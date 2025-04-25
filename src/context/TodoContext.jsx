@@ -13,9 +13,9 @@ const TodoContextDispatch = createContext();
 const todoReducer = (state, { type, payload }) => {
   switch (type) {
     case "todo/init":
-      return  [...payload].sort((a, b) => a.order - b.order);
+      return  [...payload]
     case "todo/addList":
-      return [...state, payload];
+      return [...state, payload]
     case "todo/add":
       return state.map((todoList) =>
         todoList.id === payload.id
@@ -68,13 +68,13 @@ const todoReducer = (state, { type, payload }) => {
           : todoList
       );
     case "todo/deleteList":
-      return state.filter((todoList) => todoList.id !== payload.listId);
+      return state.filter((todoList) => todoList.id !== payload.listId).sort((a, b) => a.order - b.order);
     case "todo/delete":
       return state.map((todoList) => {
         if (todoList.id === payload.listId) {
           return {
             ...todoList,
-            tasks: todoList.tasks.filter((task) => task.id !== payload.taskId),
+            tasks: todoList.tasks.filter((task) => task.id !== payload.taskId).sort((a, b) => a.order - b.order),
           };
         }
         return todoList;

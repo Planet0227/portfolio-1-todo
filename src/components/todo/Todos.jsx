@@ -17,20 +17,15 @@ import { checkAndResetTasks } from "@/utils/resetTasks";
 import {
   DndContext,
   DragOverlay,
-  MouseSensor,
-  TouchSensor,
   pointerWithin,
-  useSensor,
-  useSensors,
 } from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
 
-import { authenticatedFetch } from "@/utils/authToken";
 import { CATEGORY_LIST } from "@/utils/categories";
 import WarningMessage from "./WarningMessage";
 import { TodosDescription } from "./TodosDescription";
 import { useAuth } from "@/context/AuthContext";
 import { useDnDTodos } from "@/hooks/useDnDTodos";
+import Loading from "../common/Loading";
 
 const Todos = () => {
   //モーダル
@@ -46,7 +41,9 @@ const Todos = () => {
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
-  const isTodosLoading = useTodosLoading();
+
+
+  
   //auth
   const { user, loading } = useAuth();
   const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
@@ -104,9 +101,10 @@ const Todos = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
   };
-
+  
   return (
     <div>
+      
       {isGuestOrNotLoggedIn() && isShowWarning && (
         <WarningMessage user={user} onClose={() => setIsShowWarning(false)} />
       )}
@@ -138,8 +136,9 @@ const Todos = () => {
             );
           })}
 
+
           {/* リストが空の場合のメッセージを追加 */}
-          {(!todos || todos.length === 0) && (
+          {(!todosList || todosList.length === 0) && (
             <div className="absolute left-0 right-0 flex justify-center top-40">
               <div className="p-20 text-center bg-white rounded-lg shadow-lg">
                 <div className="mb-4 text-6xl text-gray-300">📝</div>

@@ -11,15 +11,12 @@ const auth = getAuth(app);
 const AuthStateContext = createContext();
 const AuthDispatchContext = createContext();
 
-// 2. 初期 state
 const initialState = {
   user: null,
   accountInfo: null,
   loading: true,
 };
 
-// 3. Reducer
-// action は { type, payload } の形を想定
 const authReducer = (state, { type, payload }) => {
   switch (type) {
     case "SET_LOADING":
@@ -29,7 +26,7 @@ const authReducer = (state, { type, payload }) => {
     case "SET_ACCOUNT_INFO":
       return { ...state, accountInfo: payload };
     default:
-      throw new Error(`Unhandled action type: ${type}`);
+      throw new Error(`アクションに失敗しました。: ${type}`);
   }
 };
 
@@ -48,11 +45,8 @@ export const AuthProvider = ({ children }) => {
           dispatch({ type: "SET_ACCOUNT_INFO", payload: data });
         } catch (err) {
           console.error("Failed to fetch account info:", err);
-          dispatch({ type: "SET_ACCOUNT_INFO", payload: null });
         }
-      } else {
-        dispatch({ type: "SET_ACCOUNT_INFO", payload: null });
-      }
+      } 
       dispatch({ type: "SET_LOADING", payload: false });
     });
     return () => unsubscribe();

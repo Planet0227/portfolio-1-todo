@@ -84,7 +84,7 @@ const TodoDetailForm = ({ listId }) => {
           ref={textareaRef}
           type="text"
           name={"todo-DetailForm"}
-          placeholder="タスクを入力"
+          placeholder="タスクを入力（ Enter:追加 / Shift+Enter:改行 ）"
           value={inputValue}
           rows={1}
           onChange={(e) => setInputValue(e.target.value)}

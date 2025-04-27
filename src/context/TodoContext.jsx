@@ -89,20 +89,20 @@ const todoReducer = (state, { type, payload }) => {
 
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isTodosLoading, setisTodosLoading] = useState(true);
   useEffect(() => {
     const getTodos = async () => {
       const todos = await authenticatedFetch("/api/todos", {
         method: "GET",
       }).then((res) => res.json());
       dispatch({ type: "todo/init", payload: todos });
-      setIsLoading(false);
+      setisTodosLoading(false);
     };
     getTodos();
   }, []);
 
   return (
-    <TodoContext.Provider value={{ todos: state, isLoading }}>
+    <TodoContext.Provider value={{ todos: state, isTodosLoading }}>
       <TodoContextDispatch.Provider value={dispatch}>
         {children}
       </TodoContextDispatch.Provider>
@@ -117,7 +117,7 @@ const useTodos = () => {
 
 const useTodosLoading = () => {
   const context = useContext(TodoContext);
-  return context.isLoading;
+  return context.isTodosLoading;
 };
 const useTodosDispatch = () => useContext(TodoContextDispatch);
 

@@ -180,7 +180,7 @@ const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
           type="text"
           name={"todo-form"}
           maxLength="20"
-          placeholder="タイトルを入力"
+          placeholder="タイトルを入力（Enter:追加）"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           className="text-lg border-b border-gray-400 w-[400px] focus:caret-black focus:outline-none"

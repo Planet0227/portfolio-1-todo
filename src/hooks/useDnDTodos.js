@@ -2,10 +2,11 @@
 import { CATEGORY_LIST } from "@/utils/categories";
 import { arrayMove } from "@dnd-kit/sortable";
 import { MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { authenticatedFetch } from "@/utils/authToken";
 
 export const useDnDTodos = (todosList, setTodosList, dispatch) => {
+
   const [dragItem, setDragItem] = useState(null);
 
   //5px動かすとドラッグと判定する。
@@ -30,11 +31,11 @@ export const useDnDTodos = (todosList, setTodosList, dispatch) => {
     return todosList.find((todo) => todo.id === id)?.category;
   };
 
-  const handleDragStart = (event) => {
+  const handleDragStart = useCallback((event) => {
     const { active, over } = event;
     if (!active) return;
     setDragItem(active.id);
-  };
+  },[]);
 
   const handleDragOver = (event) => {
     const { active, over } = event;

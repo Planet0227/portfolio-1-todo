@@ -17,7 +17,7 @@ const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
   return (
     <>
       <div
-        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-3 bg-white md:sticky top-14  `}
+        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-3 bg-white `}
       >
         <div className="flex items-center rounded-md">
           <CategoryHeader category={category} className="rounded-md" disableHover={true} />

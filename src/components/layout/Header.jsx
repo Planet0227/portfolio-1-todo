@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 import Modal from "@/components/common/Modal";
@@ -18,38 +20,30 @@ import ConfirmOverlay from "../common/ConfirmOverlay";
 export const Header = () => {
   const router = useRouter();
   const { user, loading, accountInfo } = useAuth();
-  // ドロップダウン表示の状態管理
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  // モーダル表示の状態管理（アカウント設定）
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  // ログアウト確認オーバーレイの状態管理
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const isGuest = user && user.isAnonymous;
+
   const displayName =
     accountInfo?.displayName || user?.displayName || (isGuest ? "ゲスト" : "");
   const iconUrl = accountInfo?.iconDataUrl;
-  // アカウント設定フォームの状態（例：ユーザー名とアイコン）
+
   const [newDisplayName, setNewDisplayName] = useState(displayName);
   const [newIconUrl, setNewIconUrl] = useState(iconUrl);
 
-  const dropDownRef = useRef();
+  const dropDownRef = useRef(null);
 
-  //モーダルをEscで閉じる
+  // Escキーでモーダル閉じる
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        setIsAccountModalOpen(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    const onEsc = (e) => e.key === "Escape" && setIsAccountModalOpen(false);
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
   }, []);
 
+  // クリック外でドロップダウン閉じる
   useEffect(() => {
     const handleClickOutside = (e) => {
-      // クリックがモーダル内なら何もしない
       if (
         dropDownRef.current?.contains(e.target) ||
         e.target.closest("[data-todo]")
@@ -64,8 +58,7 @@ export const Header = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, [dropdownOpen]);
 
-  // ログアウト処理（実行後、確認オーバーレイを閉じてページリロード）
-  const handleLogoutClick = async () => {
+  const handleLogout = async () => {
     try {
       if (isGuest) {
         await deleteUserData(user.uid);
@@ -74,8 +67,8 @@ export const Header = () => {
       await logout();
       setIsLogoutConfirmOpen(false);
       window.location.reload();
-    } catch (error) {
-      console.error("ログアウトエラー", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -84,143 +77,124 @@ export const Header = () => {
       await signInAsGuest();
       router.push("/");
       window.location.reload();
-    } catch (error) {
-      console.error("ゲストログイン失敗:", error);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  // ユーザー情報が更新されたタイミングでフォームの初期値を設定
-  useEffect(() => {
+   // ユーザー情報が更新されたタイミングでフォームの初期値を設定
+   useEffect(() => {
     if (!loading && user) {
-      setNewDisplayName(accountInfo.displayName || user.displayName || "");
-      if (accountInfo && accountInfo.iconDataUrl) {
-        setNewIconUrl(accountInfo.iconDataUrl);
-      }
+      setNewDisplayName(
+        accountInfo?.displayName ||
+          user.displayName ||
+          (isGuest ? "ゲスト" : "")
+      );
+      setNewIconUrl(accountInfo?.iconDataUrl || "");
     }
-  }, [user, accountInfo, loading]);
+  }, [user, accountInfo, loading, isGuest]);
 
-  // ユーザー表示部分（アイコンと名前）のクリックでドロップダウンを切替
-  const toggleAccountDropdown = () => {
-    setDropdownOpen((prev) => !prev);
-  };
+  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
   return (
-    <>
-      <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-lime-500">
-        <h3 className="text-3xl">✓Task-Board</h3>
+    <header className="sticky top-0 z-30 shadow-md bg-lime-500">
+      <div className="container flex items-center justify-between px-6 py-4 mx-auto">
+        <h1
+          className="text-3xl font-extrabold text-white transition-opacity cursor-pointer hover:opacity-90"
+          onClick={() => router.push("/")}
+        >
+          ✓ Task-Board
+        </h1>
+
+        {/* 未ログイン */}
         {!user ? (
-          // 未ログインの場合
-          <div className="flex gap-4">
-            <button
-              onClick={handleGuestLogin}
-              className="flex items-center gap-2 text-lg hover:underline"
-            >
-              <FontAwesomeIcon icon={faSignInAlt} className="text-2xl" />
-              <p>ゲストログイン</p>
-            </button>
-            <button
-              onClick={() => router.push("/login")}
-              className="flex items-center gap-2 text-lg hover:underline"
-            >
-              <FontAwesomeIcon icon={faRightToBracket} className="text-2xl" />
-              <p>ログイン/新規登録</p>
-            </button>
-          </div>
-        ) : isGuest ? (
-          // ゲストログインの場合
-          <div className="relative inline-block">
-            <button
-              onClick={toggleAccountDropdown}
-              className="flex items-center gap-2 text-lg hover:underline"
-            >
-              <FontAwesomeIcon
-                icon={faUser}
-                className="p-1.5 bg-gray-400 rounded-full w-7 h-7"
-              />
-              <span>ゲスト</span>
-            </button>
-          </div>
+          <div className="flex items-center space-x-4">
+          <button
+            onClick={handleGuestLogin}
+            className="flex items-center px-4 py-2 space-x-2 transition bg-white border border-white rounded-lg hover:bg-white/80"
+          >
+            <FontAwesomeIcon icon={faSignInAlt} />
+            <span className="text-lime-500">ゲストログイン</span>
+          </button>
+          <button
+            onClick={() => router.push("/login")}
+            className="flex items-center px-4 py-2 space-x-2 transition bg-white border border-white rounded-lg hover:bg-white/80"
+          >
+            <FontAwesomeIcon icon={faRightToBracket} />
+            <span className="text-lime-500">ログイン / 新規登録</span>
+          </button>
+        </div>
         ) : (
-          // 通常ログインの場合
-          <div className="relative inline-block">
+          // ログイン済み
+          <div className="relative">
             <button
-              onClick={toggleAccountDropdown}
-              className="flex items-center gap-2 hover:underline"
+              onClick={toggleDropdown}
+              className="flex items-center space-x-2 focus:outline-none"
             >
               {newIconUrl ? (
                 <img
                   src={newIconUrl}
                   alt="ユーザーアイコン"
-                  className="object-cover w-12 h-12 rounded-full"
+                  className="object-cover w-10 h-10 border-2 border-white rounded-full"
                 />
               ) : (
                 <FontAwesomeIcon
                   icon={faUser}
-                  className="p-1.5 bg-gray-400 rounded-full w-7 h-7"
+                  className="w-8 h-8 text-white"
                 />
               )}
-              <span className="text-lg">{newDisplayName}</span>
+              <span className="font-semibold text-white">{newDisplayName}</span>
             </button>
+
+            {dropdownOpen && (
+              <div
+                ref={dropDownRef}
+                className="absolute left-0 w-40 mt-2 overflow-hidden bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5"
+              >
+                {isGuest ? (
+                  <>
+                    <button
+                      onClick={() => router.push("/login?mode=register")}
+                      className="flex items-center w-full px-4 py-2 text-sm transition text-lime-600 hover:bg-lime-50"
+                    >
+                      <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+                      新規登録
+                    </button>
+                    <button
+                      onClick={() => router.push("/login")}
+                      className="flex items-center w-full px-4 py-2 text-sm transition text-sky-500 hover:bg-sky-50 "
+                    >
+                      <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
+                      ログイン
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setIsAccountModalOpen(true);
+                        setDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-sm text-left text-gray-700 transition hover:bg-gray-100"
+                    >
+                      アカウント設定
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setIsLogoutConfirmOpen(true)}
+                  className="flex items-center w-full px-4 py-3 text-sm text-red-500 transition hover:bg-red-50"
+                >
+                  <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+                  ログアウト
+                </button>
+              </div>
+            )}
           </div>
         )}
-      </header>
+      </div>
 
-      {dropdownOpen && (
-        <div
-          ref={dropDownRef}
-          className="fixed right-0 z-50 w-40 text-black bg-white rounded shadow-lg top-16"
-        >
-          {isGuest ? (
-            <>
-              <button
-                onClick={() => router.push("/login?mode=register")}
-                className="flex items-center w-full px-6 py-3 text-left text-lime-500 hover:bg-gray-200"
-              >
-                <p>新規登録</p>
-                <FontAwesomeIcon icon={faSignInAlt} className="pl-3" />
-              </button>
-              <button
-                onClick={() => router.push("/login")}
-                className="flex items-center w-full px-6 py-3 text-left text-blue-500 hover:bg-gray-200"
-              >
-                <p>ログイン</p>
-                <FontAwesomeIcon icon={faSignInAlt} className="pl-3" />
-              </button>
-              <button
-                onClick={() => setIsLogoutConfirmOpen(true)}
-                className="flex items-center w-full px-6 py-3 text-left text-red-400 hover:bg-gray-200"
-              >
-                <p>ログアウト</p>
-                <FontAwesomeIcon icon={faSignOutAlt} className="pl-3" />
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={() => {
-                  setIsAccountModalOpen(true);
-                  setDropdownOpen(false);
-                }}
-                className="block w-full px-6 py-3 text-left hover:bg-gray-200"
-              >
-                アカウント設定
-              </button>
-              <button
-                onClick={() => {
-                  setIsLogoutConfirmOpen(true);
-                  setDropdownOpen(false);
-                }}
-                className="flex items-center w-full px-6 py-3 text-left text-red-400 hover:bg-gray-200"
-              >
-                <p>ログアウト</p>
-                <FontAwesomeIcon icon={faSignOutAlt} className="pl-3" />
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* アカウント設定用モーダル（通常ユーザーのみ対象） */}
+      {/* モーダル & オーバーレイ */}
       <Modal
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}
@@ -228,7 +202,6 @@ export const Header = () => {
         <AccountSettings onClose={() => setIsAccountModalOpen(false)} />
       </Modal>
 
-      {/* ログアウト確認オーバーレイ */}
       {isLogoutConfirmOpen && (
         <ConfirmOverlay
           isOpen={isLogoutConfirmOpen}
@@ -237,21 +210,20 @@ export const Header = () => {
             isGuest ? (
               <>
                 <p>
-                  ゲストアカウントの場合は{" "}
-                  <span className="text-red-500">再ログインできません</span>。
+                  ゲストアカウントは<span className="text-red-500">再ログインできません。</span>
                 </p>
-                <p>本当にログアウトしてよろしいですか？</p>
+                <p>本当にログアウトしますか？</p>
               </>
             ) : (
-              <p>本当にログアウトしてよろしいですか？</p>
+              <p>本当にログアウトしますか？</p>
             )
           }
           onCancel={() => setIsLogoutConfirmOpen(false)}
-          onConfirm={handleLogoutClick}
+          onConfirm={handleLogout}
           confirmText="ログアウト"
           cancelText="キャンセル"
         />
       )}
-    </>
+    </header>
   );
 };

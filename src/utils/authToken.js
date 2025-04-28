@@ -14,7 +14,7 @@ export const authenticatedFetch = async (ENDPOINT, options = {}) => {
   const user = auth.currentUser;
   
   if (!user) {
-    throw new AuthError("ユーザーが認証されていません");
+    return
   }
 
   try {

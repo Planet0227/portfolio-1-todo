@@ -24,29 +24,51 @@ const AccountSettings = ({ onClose }) => {
     }
   }, [user, accountInfo, loading]);
 
+  // 画像選択時の処理 (エラーハンドリング追加)
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
+    // エラーをクリア
+    setError("");
+
     const reader = new FileReader();
+
+    // ファイル読み込みエラー
+    reader.onerror = (event) => {
+      setError('ファイルの読み込み中にエラーが発生しました');
+    };
+
     reader.onload = (event) => {
       const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const MAX_WIDTH = 300;
-        const scale = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scale;
-  
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-  
-        // JPEGに変換 & 画質70%
-        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
-        setNewIconUrl(compressedBase64);
+
+      // 画像読み込みエラー
+      img.onerror = () => {
+        setError('画像の読み込みに失敗しました');
       };
+
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 300;
+          const scale = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scale;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // JPEGに変換 & 画質70%
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          setNewIconUrl(compressedBase64);
+        } catch (err) {
+          setError('画像の圧縮中にエラーが発生しました');
+        }
+      };
+
       img.src = event.target.result;
     };
+
     reader.readAsDataURL(file);
   };
   

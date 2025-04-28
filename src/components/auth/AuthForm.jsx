@@ -88,12 +88,12 @@ const AuthForm = () => {
   return (
     <div className="select-none">
       <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-lime-500">
-        <h3
-          className="text-3xl cursor-pointer"
+        <h1
+          className="text-3xl font-extrabold text-white transition-opacity cursor-pointer hover:opacity-90"
           onClick={() => router.push("/")}
         >
           ✓Task-Board
-        </h3>
+        </h1>
       </header>
       <div
         className={`flex items-center justify-center min-h-screen bg-gradient-to-br ${

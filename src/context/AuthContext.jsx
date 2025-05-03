@@ -22,9 +22,9 @@ const authReducer = (state, { type, payload }) => {
     case "SET_LOADING":
       return { ...state, loading: payload };
     case "SET_USER":
-      return { ...state, user: payload };
+      return { ...state, user: payload, loading: false };
     case "SET_ACCOUNT_INFO":
-      return { ...state, accountInfo: payload };
+      return { ...state, accountInfo: payload, loading: false };
     default:
       throw new Error(`アクションに失敗しました。: ${type}`);
   }
@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   useEffect(() => {
-    dispatch({ type: "SET_LOADING", payload: true });
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       dispatch({ type: "SET_USER", payload: currentUser });
       if (currentUser) {
@@ -45,9 +44,11 @@ export const AuthProvider = ({ children }) => {
           dispatch({ type: "SET_ACCOUNT_INFO", payload: data });
         } catch (err) {
           console.error("Failed to fetch account info:", err);
+          dispatch({ type: "SET_LOADING", payload: false });
         }
-      } 
-      dispatch({ type: "SET_LOADING", payload: false });
+      } else {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
     });
     return () => unsubscribe();
   }, []);

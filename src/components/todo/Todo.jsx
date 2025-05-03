@@ -23,6 +23,10 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
     id: todo.id,
   });
 
+  const isTouchDevice = () => {
+    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  };
+
   const style = {
     transform: isSorting ? CSS.Translate.toString(transform) : undefined,
     opacity: isDragging ? "0" : "1",
@@ -50,6 +54,28 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
 
   // 複合表示用配列
   const resetLabels = [];
+
+  const getDayLabelStyle = (type) => {
+    switch (type) {
+      case "everyday":
+        return "text-emerald-700 bg-emerald-200";
+      case "weekday":
+      case "mon":
+      case "tue":
+      case "wed":
+      case "thu":
+      case "fri":
+        return "text-gray-700 bg-gray-200";
+      case "weekend":
+      case "sun":
+        return "text-red-600 bg-red-200";
+      case "sat":
+        return "text-blue-600 bg-blue-200";
+      default:
+        return "text-gray-600 bg-gray-100";
+    }
+  };
+  
 
   //全部true "毎日"
   if (isEveryday) {
@@ -92,7 +118,11 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
         ref={setActivatorNodeRef}
         {...attributes}
         {...listeners}
-        className={`bg-white border-2 relative px-4 py-1 rounded-xl shadow transition-colors duration-200 cursor-pointer min-h-32 max-h-32 md:min-h-20 md:max-h-48 overflow-hidden hover:bg-gray-50 ${
+        style={{
+          ...style,
+          touchAction: 'none'
+        }}
+        className={`bg-white border-2 relative px-2 md:px-4 py-1 rounded-xl shadow transition-colors duration-200 cursor-pointer min-h-14 max-h-14 md:min-h-20 md:max-h-48 overflow-hidden hover:bg-gray-50 select-none ${
           selectedTodoId === todo.id ? "border-sky-500" : "border-gray-100"
         }`}
       >
@@ -100,7 +130,7 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
           <div className="flex">
             {/* カテゴリーバー */}
             <div
-              className={`${category.styles.baseColor} h-4 flex items-center p-1 rounded-md absolute left-4 top-2 gap-2`}
+              className={`${category.styles.baseColor} h-3 md:h-4 flex items-center p-1 rounded-md absolute left-2 top-1  md:top-2 gap-2`}
             >
               <FontAwesomeIcon
                 icon={category.icon}
@@ -111,32 +141,16 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
             {todo.lock && (
               <FontAwesomeIcon
                 icon={faLock}
-                className="absolute flex items-center h-4 gap-2 px-2 text-gray-600 rounded-md right-4 top-2"
+                className="absolute flex items-center h-3 gap-2 px-2 text-gray-600 rounded-md md:text-base md:h-4 right-1 top-1 md:top-2"
               />
             )}
             {activeResetDays.length > 0 && (
-              <div className="absolute flex flex-wrap items-center gap-1 mt-1 left-10">
+              <div className="absolute flex flex-wrap items-center gap-1 top-1 md:top-2 left-10">
                 {resetLabels.map(({ label, type }) => (
                   <span
                     key={label}
-                    className={`px-1 text-xs font-semibold rounded-full 
-                   ${
-                     type === "everyday"
-                       ? "text-emerald-700 bg-emerald-200"
-                       : type === "weekday"
-                       ? "text-gray-600 bg-gray-200"
-                       : type === "mon" ||
-                         type === "tue" ||
-                         type === "wed" ||
-                         type === "thu" ||
-                         type === "fri"
-                       ? "text-gray-600 bg-gray-200"
-                       : type === "sat"
-                       ? "text-blue-600 bg-blue-200"
-                       : type === "sun" || type === "weekend"
-                       ? "text-red-600 bg-red-200"
-                       : "text-gray-600 bg-gray-200"
-                   }`}
+                    className={`px-1 text-[8px] md:text-xs font-semibold rounded-full 
+                  ${getDayLabelStyle(type)}`}
                   >
                     <span>{label}</span>
                   </span>
@@ -146,30 +160,33 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
           </div>
 
           {/* タイトルと進捗 */}
-          <div className="flex items-start justify-between mt-6">
+          <div className="flex items-start justify-between mt-4 md:mt-6">
             <div
-              className={`text-sm md:text-base font-semibold ${
+              className={`text-[11px] md:text-base font-semibold ${
                 !todo.title ? "text-gray-400" : "text-gray-800"
               }`}
             >
               {todo.title || "タイトル未設定"}
             </div>
             <div className="flex items-center space-x-2">
-              <div className="px-2 py-0.5 text-sm text-gray-500 bg-gray-50 rounded-full">
+              <div className="px-1 md:px-2 py-0.5 text-[10px] md:text-sm text-gray-500 bg-gray-50 rounded-full">
                 {`${todo.tasks.filter((t) => t.complete).length}/${
                   todo.tasks.length
                 }`}
               </div>
-              <button className="text-gray-400 transition-colors hover:text-blue-500">
+              <button className="text-[10px] text-gray-400 transition-colors hover:text-blue-500 md:text-base">
                 <FontAwesomeIcon icon={faChevronRight} />
               </button>
             </div>
           </div>
 
           {/* Todoリスト */}
-          <div className="mt-1">
+          {!isTouchDevice() &&(
+            <div className="mt-1">
             <List todo={todo.tasks} listId={todo.id} />
           </div>
+          )}
+          
         </div>
       </div>
     </div>

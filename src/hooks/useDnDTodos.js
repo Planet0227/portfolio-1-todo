@@ -13,7 +13,7 @@ export const useDnDTodos = (todosList, setTodosList, dispatch) => {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 5 },
+      activationConstraint: { delay: 200, tolerance: 5 },
     })
   );
 

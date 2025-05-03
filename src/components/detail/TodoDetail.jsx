@@ -5,6 +5,12 @@ import { useTodos, useTodosDispatch } from "@/context/TodoContext";
 import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import WeekToggleButtons from "./WeekToggleButtons";
+import { authenticatedFetch } from "@/utils/authToken";
+import { CATEGORY_LIST } from "@/utils/categories";
+import CategoryHeader from "@/components/common/CategoryHeader";
+
+// icon
 import {
   faChevronLeft,
   faCopy,
@@ -13,12 +19,16 @@ import {
   faUnlock,
   faUpRightAndDownLeftFromCenter,
 } from "@fortawesome/free-solid-svg-icons";
+
 //  dnd
 import {
   DndContext,
-  DragOverlay,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   defaultDropAnimationSideEffects,
+  useSensor,
+  useSensors,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -29,10 +39,6 @@ import {
   restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
-import WeekToggleButtons from "./WeekToggleButtons";
-import { authenticatedFetch } from "@/utils/authToken";
-import { CATEGORY_LIST, getCategoryInfo } from "@/utils/categories";
-import CategoryHeader from "@/components/common/CategoryHeader";
 
 export default function TodoDetail({
   listId,
@@ -50,9 +56,16 @@ export default function TodoDetail({
 
   const toggleButtonRef = useRef(null);
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    })
+  );
+
   // ホバー表示用
   const [isHoveredExit, setIsHoveredExit] = useState(false);
-  const [isHoveredMg, setIsisHoveredMg] = useState(false);
+  const [isHoveredMg, setIsHoveredMg] = useState(false);
   const [isHoveredCopy, setIsHoveredCopy] = useState(false);
 
   useEffect(() => {
@@ -101,7 +114,7 @@ export default function TodoDetail({
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showCategorySelector]);
-  
+
   //　コピークリック2秒後にトーストを消す
   useEffect(() => {
     if (!showToast && toastMounted) {
@@ -289,18 +302,16 @@ export default function TodoDetail({
       {/* 不透明度の変更に0.5秒かける */}
       {toastMounted && (
         <div
-          className={
-            `fixed z-50 px-4 py-2 text-white transform -translate-x-1/2 rounded shadow-lg top-5 
+          className={`fixed z-50 md:px-4 md:py-2 text-white transform -translate-x-1/2 rounded shadow-lg top-5 
             bg-lime-500 left-1/2 transition-opacity duration-500 
-            ${showToast ? "opacity-100" : "opacity-0"}`
-          }
+            ${showToast ? "opacity-100" : "opacity-0"}`}
         >
           コピーしました
         </div>
       )}
       {/* ヘッダー */}
       <div className="sticky top-0 z-20 bg-white">
-        <div className="relative flex items-center justify-between px-4 py-3">
+        <div className="relative flex items-center justify-between px-3 py-3 border-b md:px-4">
           <div>
             <button
               className="mx-2 text-xl text-gray-300 hover:text-gray-500"
@@ -324,8 +335,8 @@ export default function TodoDetail({
             <button
               className="hidden mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
               onClick={() => setMagnification((prev) => !prev)}
-              onMouseEnter={() => setIsisHoveredMg(true)}
-              onMouseLeave={() => setIsisHoveredMg(false)}
+              onMouseEnter={() => setIsHoveredMg(true)}
+              onMouseLeave={() => setIsHoveredMg(false)}
             >
               {magnification ? (
                 <FontAwesomeIcon icon={faDownLeftAndUpRightToCenter} />
@@ -348,7 +359,7 @@ export default function TodoDetail({
 
             {/* コピー */}
             <button
-              className="hidden mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
+              className="mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
               onClick={handleCopy}
               onMouseEnter={() => setIsHoveredCopy(true)}
               onMouseLeave={() => setIsHoveredCopy(false)}
@@ -356,7 +367,7 @@ export default function TodoDetail({
               <FontAwesomeIcon icon={faCopy} />
             </button>
             <div
-              className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white bg-gray-600 rounded shadow-lg left-[98px] transition-all duration-300 ${
+              className={`absolute z-10 flex flex-col items-center px-2 py-1 text-xs text-white bg-gray-600 rounded shadow-lg left-[98px] transition-all duration-300 ${
                 isHoveredCopy
                   ? "opacity-100 scale-100"
                   : "opacity-0 scale-90 pointer-events-none"
@@ -370,12 +381,12 @@ export default function TodoDetail({
             </div>
           </div>
         </div>
-
-        <div className="mx-14">
+        {/* main*/}
+        <div className="pt-2 mx-4 md:mx-14">
           <div className="flex justify-between gap-4 mb-3">
             <div className="flex">
               <button
-                className="text-3xl"
+                className="text-xl md:text-3xl"
                 onClick={updateLock}
                 title={cachedList?.lock ? "ロック解除" : "ロックする"}
               >
@@ -396,7 +407,7 @@ export default function TodoDetail({
             <button
               onClick={deleteTodoList}
               disabled={cachedList?.lock}
-              className={`px-5 py-2 text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none me-2 shrink-0 transition-colors duration-300 ${
+              className={`px-3 p-1 md:px-5 md:py-2 text-xs md:text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none me-2 shrink-0 transition-colors duration-300 ${
                 cachedList?.lock
                   ? "text-gray-400 border-gray-400 cursor-not-allowed"
                   : "text-red-500  border-red-500 hover:text-white hover:bg-red-500 dark:border-red-500 dark:text-red-500 dark:hover:text-white"
@@ -413,21 +424,24 @@ export default function TodoDetail({
             value={editTitle}
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
-            className="w-full mb-1 text-2xl font-bold focus:outline-none"
+            className="w-full mb-1 text-xl font-bold md:text-2xl focus:outline-none"
           />
           <div className="relative flex items-center mt-2">
-            <span className="text-gray-500">進捗：</span>
+            <span className="text-sm text-gray-500 md:text-base">進捗：</span>
             <span
               className={`cursor-pointer`}
               onClick={() => setShowCategorySelector((prev) => !prev)}
             >
-              <CategoryHeader category={cachedList.category} className="rounded-md" />
+              <CategoryHeader
+                category={cachedList.category}
+                className="text-sm rounded-md md:text-base"
+              />
             </span>
           </div>
           {showCategorySelector && (
             <div
               ref={toggleButtonRef}
-              className="absolute overflow-hidden bg-white border border-gray-300 rounded-md shadow-xl select-none top-36 left-48"
+              className="absolute overflow-hidden bg-white border border-gray-300 rounded-md shadow-xl select-none top-32 left-36 md:top-36 md:left-48"
               onClick={(e) => e.stopPropagation()}
             >
               {CATEGORY_LIST.map((cat) => {
@@ -440,9 +454,9 @@ export default function TodoDetail({
                       changeCategory(cat.id);
                       setShowCategorySelector(false);
                     }}
-                    className={`cursor-pointer`}
+                    className={`cursor-pointer text-sm md:text-base`}
                   >
-                    <CategoryHeader category={cat.id}/>
+                    <CategoryHeader category={cat.id} />
                   </div>
                 );
               })}
@@ -450,8 +464,10 @@ export default function TodoDetail({
           )}
 
           <div className="mt-2 text-gray-500 border-gray-400">
-            <span>作成日： </span>
-            <span className="ml-2">{cachedList.date}</span>
+            <span className="text-sm md:text-base">作成日： </span>
+            <span className="ml-1 text-sm md:ml-2 md:text-base">
+              {cachedList.date}
+            </span>
           </div>
 
           {/* WeekToggleButtonsに初期値と更新後のコールバックを渡す */}
@@ -461,30 +477,31 @@ export default function TodoDetail({
             onResetDaysUpdated={onResetDaysUpdated}
           />
           <div className="flex items-center mt-2">
-            <p className="text-gray-500">リセット：</p>
+            <p className="text-sm text-gray-500 md:text-base">リセット：</p>
             <button
-              className="inline-flex px-2 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"
+              className="inline-flex px-1 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"
               onClick={resetComplete}
             >
-              <p className="w-5 h-5 mt-0.5 rounded-full border-2 bg-green-500 border-white before:content-['✓'] before:text-white before:text-sm before:flex before:items-center before:justify-center"></p>
-              <span className="text-gray-500 group-hover:text-white">
+              <p className="w-4 h-4 md:w-5 md:h-5 mt-0.5 rounded-full border-2 bg-green-500 border-white before:content-['✓'] before:text-xs before:text-white md:before:text-sm before:flex before:items-center before:justify-center"></p>
+              <span className="text-xs text-gray-500 group-hover:text-white md:text-base">
                 をすべて外す
               </span>
             </button>
           </div>
-          <div className="mt-2 border-b-2 border-gray-400"></div>
+          <div className="mt-2"></div>
         </div>
       </div>
 
       {/* メイン */}
-      <div className="relative mx-14">
+      <div className="relative mx-4 md:mx-14">
         <DndContext
+          sensors={sensors}
           collisionDetection={closestCorners}
           modifiers={[restrictToVerticalAxis, restrictToParentElement]}
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}
-          <div className="relative max-h-[calc(100vh-386px)] overflow-y-auto mb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pt-2 border-b-2 border-gray-400">
+          <div className="relative max-h-[calc(100vh-400px)] overflow-y-auto mb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <SortableContext
               strategy={verticalListSortingStrategy}
               items={sortedTasks.map((task) => task.id)}

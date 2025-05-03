@@ -17,18 +17,18 @@ const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
   return (
     <>
       <div
-        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-3 bg-white `}
+        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-2 md:mb-3 bg-white `}
       >
         <div className="flex items-center rounded-md">
           <CategoryHeader category={category} className="rounded-md" disableHover={true} />
-          <span className="ml-3 text-gray-500">{todoList.length}</span>
+          <span className="ml-3 text-sm text-gray-500 md:text-base">{todoList.length}</span>
         </div>
       </div>
       <SortableContext id={category} items={todoList} strategy={strategy}>
         {/* gapがあるとちらつく&無限ループエラー */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 p-3 bg-gray-100 bg-opacity-50 rounded-lg min-h-32 md:min-h-screen auto-rows-auto md:flex md:flex-col"
+          className="grid grid-cols-2 p-2 bg-gray-100 bg-opacity-50 rounded-lg min-h-16 md:min-h-screen auto-rows-auto md:flex md:flex-col"
         >
           {todoList.map((todo) => (
             <Todo

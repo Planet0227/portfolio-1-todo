@@ -98,9 +98,9 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-30 shadow-md bg-lime-500">
-      <div className="container flex items-center justify-between px-6 py-4 mx-auto">
+      <div className="container flex items-center justify-between px-3 py-2 mx-auto md:px-6 md:py-4">
         <h1
-          className="text-3xl font-extrabold text-white transition-opacity cursor-pointer hover:opacity-90"
+          className="text-base font-extrabold text-white transition-opacity cursor-pointer md:text-3xl hover:opacity-90"
           onClick={() => router.push("/")}
         >
           ✓ Task-Board
@@ -149,20 +149,20 @@ export const Header = () => {
             {dropdownOpen && (
               <div
                 ref={dropDownRef}
-                className="absolute left-0 w-40 mt-2 overflow-hidden bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5"
+                className="absolute w-32 overflow-hidden bg-white rounded-lg shadow-xl md:w-40 left-2 ring-1 ring-black ring-opacity-5"
               >
                 {isGuest ? (
                   <>
                     <button
                       onClick={() => router.push("/login?mode=register")}
-                      className="flex items-center w-full px-4 py-2 text-sm transition text-lime-600 hover:bg-lime-50"
+                      className="flex items-center w-full px-4 py-2 text-xs transition md:text-sm text-lime-600 hover:bg-lime-50"
                     >
                       <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
                       新規登録
                     </button>
                     <button
                       onClick={() => router.push("/login")}
-                      className="flex items-center w-full px-4 py-2 text-sm transition text-sky-500 hover:bg-sky-50 "
+                      className="flex items-center w-full px-4 py-2 text-xs transition md:text-sm text-sky-500 hover:bg-sky-50 "
                     >
                       <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
                       ログイン
@@ -175,7 +175,7 @@ export const Header = () => {
                         setIsAccountModalOpen(true);
                         setDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-3 text-sm text-left text-gray-700 transition hover:bg-gray-100"
+                      className="w-full px-4 py-3 text-xs text-left text-gray-700 transition md:text-sm hover:bg-gray-100"
                     >
                       アカウント設定
                     </button>
@@ -183,7 +183,7 @@ export const Header = () => {
                 )}
                 <button
                   onClick={() => setIsLogoutConfirmOpen(true)}
-                  className="flex items-center w-full px-4 py-3 text-sm text-red-500 transition hover:bg-red-50"
+                  className="flex items-center w-full px-4 py-3 text-xs text-red-500 transition md:text-sm hover:bg-red-50"
                 >
                   <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
                   ログアウト

@@ -141,7 +141,7 @@ const TodoDetailItem = ({ tasks, task, id, listId }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full mb-2 border-gray-500 border-2 p-2 rounded-lg bg-white relative ${
+        className={`flex w-full mb-1 md:mb-2 border-gray-500 border-0 md:border-0 p-1 md:p-2 rounded-lg bg-white relative ${
           isDragging ? "z-10" : ""
         }  `}
       >
@@ -173,7 +173,7 @@ const TodoDetailItem = ({ tasks, task, id, listId }) => {
           value={editContent}
           onChange={handleContentChange} // 変更を即座に反映
           onBlur={handleContentBlur}
-          className={`w-10/12 self-center text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
+          className={`w-10/12 self-center text-md md:text-lg ml-2 flex-1 focus:outline-none resize-none overflow-hidden whitespace-pre-wrap break-words ${
             task.complete ? "line-through text-gray-500" : ""
           }`}
           rows={1} // 最小高さを1行に設定

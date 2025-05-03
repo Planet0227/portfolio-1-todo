@@ -65,7 +65,7 @@ const TodoDetailForm = ({ listId }) => {
             onClick={addTask}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="flex items-center mt-0.5 justify-center flex-shrink-0 w-6 h-6 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
+            className="flex items-center md:mt-0.5 justify-center flex-shrink-0 w-6 h-6 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
           >
             +
           </button>
@@ -84,12 +84,12 @@ const TodoDetailForm = ({ listId }) => {
           ref={textareaRef}
           type="text"
           name={"todo-DetailForm"}
-          placeholder="タスクを入力（ Enter:追加 / Shift+Enter:改行 ）"
+          placeholder="タスクを入力"
           value={inputValue}
           rows={1}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          className="flex-1 w-9/12 ml-2 overflow-hidden text-lg break-words whitespace-pre-wrap resize-none focus:outline-none"
+          className="flex-1 w-9/12 ml-2 overflow-hidden break-words whitespace-pre-wrap resize-none text-md md:text-lg focus:outline-none"
         />
       </form>
       <div className="ml-11"></div>

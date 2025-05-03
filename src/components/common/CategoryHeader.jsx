@@ -17,7 +17,7 @@ const CategoryHeader = ({ category, className = "" , disableHover = false}) => {
           icon={getCategoryInfo(category).icon}
           className="text-white drop-shadow-lg"
         />
-        <span className="w-[3em] text-center text-sm font-semibold text-white drop-shadow-lg">
+        <span className="w-[3em] text-center text-xs md:text-sm font-semibold text-white drop-shadow-lg">
           {getCategoryInfo(category).title}
         </span>
       </div>

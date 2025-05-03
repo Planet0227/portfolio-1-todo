@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "../../context/TodoContext";
 import { authenticatedFetch } from "@/utils/authToken";
-import { getCategoryInfo } from "@/utils/categories";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCirclePlus,
@@ -10,7 +9,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import CategoryHeader from "../common/CategoryHeader";
-const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
+const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -100,28 +99,28 @@ const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
   };
 
   return (
-    <div className="relative p-3 mx-auto bg-white border-2 border-gray-500 rounded-lg shadow-xl pointer-events-auto select-none md:px-5 bottom-5 w-full md:w-[600px]">
+    <div className="relative p-2 md:p-3 mx-auto bg-white border-2 border-gray-500 rounded-lg shadow-xl pointer-events-auto select-none md:px-5 w-full md:w-[600px]">
       <div
         className={`flex items-center justify-center gap-2 mb-2 text-gray-600 ${
           !formVisible && "animate-pulse"
         }`}
       >
-        {formVisible && !dragItem ? (
+        {(formVisible || formExpanded) && !dragItem ? (
           <>
             <FontAwesomeIcon icon={faCirclePlus} />
-            <span className="text-sm font-bold">Todoリストの新規作成</span>
+            <span className="text-xs font-bold md:text-sm">Todoリストの新規作成</span>
           </>
         ) : !dragItem ? (
           <>
-            {isTouchDevice() ? (
+            {isTouchDevice ? (
               <>
                 <FontAwesomeIcon icon={faPlus} />
-                <span className="text-sm">タップでフォームが表示されます</span>
+                <span className="text-xs md:text-sm">タップでフォームが表示されます</span>
               </>
             ) : (
               <>
                 <FontAwesomeIcon icon={faMousePointer} />
-                <span className="text-sm">
+                <span className="text-xs md:text-sm">
                   マウスを画面下に移動するとフォームが表示されます
                 </span>
               </>
@@ -135,7 +134,7 @@ const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
         {/* relative コンテナ内にポップアップ表示用の span を配置 */}
         <div className="relative flex">
           <span
-            className="flex items-center cursor-pointer select-none"
+            className="flex items-center text-sm cursor-pointer select-none md:text-base"
             onClick={() => setShowCategorySelector((prev) => !prev)}
           >
             リストの追加先：
@@ -147,10 +146,10 @@ const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
             <CategoryHeader category={selectedCategory} className="rounded-md" />
           </span>
         </div>
-        {showCategorySelector && formVisible && (
+        {showCategorySelector && (formVisible || formExpanded) && (
           <div
             ref={toggleButtonRef}
-            className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none bottom-20 left-24 "
+            className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none left-3 md:left-24 bottom-20"
           >
             {categories.map((cat) => {
               return (
@@ -180,10 +179,10 @@ const Form = ({ categories, formVisible, dragItem, isTouchDevice }) => {
           type="text"
           name={"todo-form"}
           maxLength="20"
-          placeholder="タイトルを入力（Enter:追加）"
+          placeholder="タイトルを入力"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="text-lg border-b border-gray-400 w-[400px] focus:caret-black focus:outline-none"
+          className="text-base md:text-lg border-b border-gray-400 w-[400px] focus:caret-black focus:outline-none"
         />
       </form>
     </div>

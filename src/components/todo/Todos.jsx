@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Todo from "./Todo";
 import Form from "./Form";
@@ -7,13 +7,12 @@ import TodoDetail from "@/components/detail/TodoDetail";
 import {
   useTodos,
   useTodosDispatch,
-  useTodosLoading,
 } from "../../context/TodoContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Modal from "../common/Modal";
 import { checkAndResetTasks } from "@/utils/resetTasks";
 
-//  dnd
+// dnd
 import {
   DndContext,
   DragOverlay,
@@ -25,72 +24,101 @@ import WarningMessage from "./WarningMessage";
 import { TodosDescription } from "./TodosDescription";
 import { useAuth } from "@/context/AuthContext";
 import { useDnDTodos } from "@/hooks/useDnDTodos";
-import Loading from "../common/Loading";
 
 const Todos = () => {
-  //モーダル
+  // モーダル
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTodoId, setSelectedTodoId] = useState(null);
   const [magnification, setMagnification] = useState(false);
 
-  const [formVisible, setFormVisible] = useState(false);
-  const isTouchDevice = () => {
-    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  };
+  // フォーム表示制御
+  const [formVisible, setFormVisible] = useState(false); // デスクトップ用自動表示
+  const [formExpanded, setFormExpanded] = useState(false); // モバイルタップ表示
+  const [isTouch, setIsTouch] = useState(false);
+  const containerRef = useRef(null);
+
+  // タッチデバイス判定
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    }
+  }, []);
 
   const todos = useTodos();
   const dispatch = useTodosDispatch();
 
-
-
-  
-  //auth
-  const { user, loading } = useAuth();
+  // auth
+  const { user } = useAuth();
   const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
   const [isShowWarning, setIsShowWarning] = useState(true);
 
   const [todosList, setTodosList] = useState(todos);
 
-
-  // 初回マウント時のリセットチェック用フラグ
+  // 初回リセットチェック
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
-  // DnD ロジックをフックで切り出し
+  // DnD
   const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =
     useDnDTodos(todosList, setTodosList, dispatch);
 
-  // 初回マウント時に1回だけ実行
+  // 初回マウント時に一回だけ実行
   useEffect(() => {
     if (!initialCheckDone && todos && todos.length > 0) {
-      console.log("Initial reset check...");
       checkAndResetTasks(todos, dispatch);
       setInitialCheckDone(true);
     }
-  }, [todos, dispatch]);
+  }, [todos, dispatch, initialCheckDone]);
 
+  // ソート反映
   useEffect(() => {
-    const sortedTodosList = [...todos].sort((a, b) => a.order - b.order);
-    setTodosList(sortedTodosList);
+    const sorted = [...todos].sort((a, b) => a.order - b.order);
+    setTodosList(sorted);
   }, [todos]);
 
-  // マウス位置によるフォームの表示切替（下部200px以内なら表示）
+  // デスクトップ: マウス位置でフォーム表示
   useEffect(() => {
-    if (!isTouchDevice()) {
+    if (!isTouch) {
       const handleMouseMove = (e) => {
-        const windowHeight = window.innerHeight;
-        if (e.clientY > windowHeight - 200) {
-          setFormVisible(true);
-        } else {
-          setFormVisible(false);
+        const h = window.innerHeight;
+        setFormVisible(e.clientY > h - 200);
+      };
+      window.addEventListener('mousemove', handleMouseMove);
+      return () => window.removeEventListener('mousemove', handleMouseMove);
+    } else {
+      setFormVisible(false);
+    }
+  }, [isTouch]);
+
+  // モバイル: タップ時にフォーム展開
+  useEffect(() => {
+    if (isTouch && containerRef.current) {
+      const handleTap = (e) => {
+        if (!formExpanded) {
+          // フォーム領域内タップで展開
+          const formEl = document.getElementById('todo-form');
+          if (formEl && formEl.contains(e.target)) {
+            setFormExpanded(true);
+          }
         }
       };
-      window.addEventListener("mousemove", handleMouseMove);
-      return () => window.removeEventListener("mousemove", handleMouseMove);
-    } else {
-      setFormVisible(true);
+      document.addEventListener('touchstart', handleTap);
+      return () => document.removeEventListener('touchstart', handleTap);
     }
-  }, []);
+  }, [isTouch, formExpanded]);
 
+  // モバイル: 展開中にフォーム外タップで閉じる
+  useEffect(() => {
+    if (isTouch && formExpanded) {
+      const handleOutside = (e) => {
+        const formEl = document.getElementById('todo-form');
+        if (formEl && !formEl.contains(e.target)) {
+          setFormExpanded(false);
+        }
+      };
+      document.addEventListener('touchstart', handleOutside);
+      return () => document.removeEventListener('touchstart', handleOutside);
+    }
+  }, [isTouch, formExpanded]);
 
   const openModal = (id) => {
     setSelectedTodoId(id);
@@ -101,10 +129,9 @@ const Todos = () => {
     setSelectedTodoId(null);
     setIsModalOpen(false);
   };
-  
+
   return (
-    <div>
-      
+    <div ref={containerRef}>
       {isGuestOrNotLoggedIn() && isShowWarning && (
         <WarningMessage user={user} onClose={() => setIsShowWarning(false)} />
       )}
@@ -112,23 +139,20 @@ const Todos = () => {
       <TodosDescription />
 
       <DndContext
-        id={"unique-dnd-context-id"}
         sensors={sensors}
         collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="relative grid grid-cols-1 mx-auto mb-40 select-none md:flex md:justify-center md:flex-nowrap">
-          {CATEGORY_LIST.map((category) => {
-            const filterdTodoList = todosList.filter(
-              (todoList) => todoList.category === category.id
-            );
+        <div className="relative grid grid-cols-1 mb-40 select-none md:mx-auto md:flex md:justify-center md:flex-nowrap">
+          {CATEGORY_LIST.map((cat) => {
+            const list = todosList.filter((t) => t.category === cat.id);
             return (
-              <div key={category.id} className="flex-none w-full p-2 md:w-80">
+              <div key={cat.id} className="flex-none w-full p-2 md:w-80">
                 <TodoColmun
-                  category={category.id}
-                  todoList={filterdTodoList}
+                  category={cat.id}
+                  todoList={list}
                   selectedTodoId={selectedTodoId}
                   openModal={openModal}
                 />
@@ -136,9 +160,7 @@ const Todos = () => {
             );
           })}
 
-
-          {/* リストが空の場合のメッセージを追加 */}
-          {(!todosList || todosList.length === 0) && (
+          {todosList.length === 0 && (
             <div className="absolute left-0 right-0 flex justify-center top-40">
               <div className="p-20 text-center bg-white rounded-lg shadow-lg">
                 <div className="mb-4 text-6xl text-gray-300">📝</div>
@@ -153,37 +175,42 @@ const Todos = () => {
             </div>
           )}
 
-          <DragOverlay >
-            {dragItem ? (
+          <DragOverlay>
+            {dragItem && (
               <Todo
                 todo={todosList.find((t) => t.id === dragItem)}
-                isOverlay={true}
+                isOverlay
               />
-            ) : null}
+            )}
           </DragOverlay>
         </div>
       </DndContext>
+
+      {/* フォーム */}
       {!isModalOpen && (
         <div
-          className={`
-          fixed left-0 right-0 bottom-0 pointer-events-none transition-transform duration-300
-          ${formVisible && !dragItem ? "translate-y-0" : "translate-y-28"}
-        `}
+          id="todo-form"
+          className={`fixed left-0 right-0 bottom-0 transition-transform duration-300 pointer-events-none ${
+            !isTouch
+              ? formVisible && !dragItem
+                ? 'translate-y-0 pointer-events-auto'
+                : 'translate-y-20'
+              : formExpanded
+              ? 'translate-y-0 pointer-events-auto'
+              : 'translate-y-20'
+          }`}
         >
           <Form
             formVisible={formVisible}
+            formExpanded={formExpanded}
             dragItem={dragItem}
-            isTouchDevice={isTouchDevice}
-            categories={CATEGORY_LIST.map((cat) => cat.id)}
+            isTouchDevice={isTouch}
+            categories={CATEGORY_LIST.map((c) => c.id)}
           />
         </div>
       )}
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        magnification={magnification}
-      >
+      <Modal isOpen={isModalOpen} onClose={closeModal} magnification={magnification}>
         <TodoDetail
           listId={selectedTodoId}
           onClose={closeModal}

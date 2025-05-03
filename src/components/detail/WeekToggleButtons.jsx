@@ -60,12 +60,12 @@ const WeekToggleButtons = ({
 
   return (
     <div className="flex items-center gap-2 mt-2">
-      <p className="text-gray-500">繰り返し：</p>
+      <p className="text-xs text-gray-500 md:text-base">繰り返し：</p>
       {days.map((day) => (
         <button
           key={day.key}
           onClick={() => updateResetDays(day.key)}
-          className={`px-3 py-1 text-md rounded-md ${
+          className={`px-2 md:px-3 py-1 text-sm md:text-base rounded-md ${
             resetDays[day.key]
               ? day.key === "sun"
                 ? "bg-red-500 text-white hover:bg-red-600"

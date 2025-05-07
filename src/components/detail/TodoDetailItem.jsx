@@ -8,7 +8,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { getAuth } from "firebase/auth";
 import { authenticatedFetch } from "@/utils/authToken";
 
-const TodoDetailItem = ({ tasks, task, id, listId }) => {
+const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   const [editContent, setEditContent] = useState(task.content);
   const dispatch = useTodosDispatch();
   const textareaRef = useRef(null);
@@ -99,7 +99,7 @@ const TodoDetailItem = ({ tasks, task, id, listId }) => {
       textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  }, [editContent]);
+  }, [editContent, magnification]);
 
   // ウィンドウサイズ変更時にも高さを再計算
   useEffect(() => {
@@ -141,7 +141,7 @@ const TodoDetailItem = ({ tasks, task, id, listId }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full mb-1 md:mb-2 border-gray-500 border-0 md:border-0 p-1 md:p-2 rounded-lg bg-white relative ${
+        className={`flex w-full border-gray-500 border-0 md:border-0 p-1 md:p-2 rounded-lg bg-white relative ${
           isDragging ? "z-10" : ""
         }  `}
       >
@@ -161,7 +161,7 @@ const TodoDetailItem = ({ tasks, task, id, listId }) => {
           onChange={toggleCheckBox}
           className={`ml-2 w-6 h-6 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             task.complete
-              ? "bg-green-500 border-green-500 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-0.5 before:flex before:items-center before:justify-center"
+              ? "bg-green-400 border-green-400 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-0.5 before:flex before:items-center before:justify-center"
               : ""
           }`}
         />

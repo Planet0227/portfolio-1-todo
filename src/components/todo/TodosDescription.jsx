@@ -6,27 +6,27 @@ export const TodosDescription = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div onClick={() => setIsExpanded(!isExpanded)} className={`relative p-2 mt-2 mx-2 md:mx-60 bg-white border shadow rounded-xl transition-all duration-600 ease-in-out  ${
-        isExpanded ? 'max-h-96' : 'max-h-20'
+    <div onClick={() => setIsExpanded(!isExpanded)} className={`absolute cursor-pointer -top-2 z-20 right-0 p-1 bg-white  rounded-xl transition-all duration-500 ease-in-out transform  ${
+        isExpanded ? 'max-h-96 w-full md:w-96 scale-100 rotate-0 opacity-95 border-4 border-gray-400' : 'max-h-12 w-32 scale-80'
       }`}>
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-500 md:text-3xl">How to</h2>
+        <h2 className="text-sm font-semibold text-gray-500 md:text-xl">How to</h2>
         <button
           className="p-1 text-gray-600 transition hover:text-gray-900"
         >
-          <FontAwesomeIcon icon={isExpanded ? faAngleUp : faAngleDown} size="lg" />
+          <FontAwesomeIcon icon={isExpanded ? faAngleUp : faAngleDown} size="sm" className="shadow"/>
         </button>
       </div>
 
       <div
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isExpanded ? "opacity-100 scale-100" : "max-h-0 opacity-0 scale-95"
+        className={`transition-all duration-[1s] ease-in-out overflow-hidden ${
+          isExpanded ? "opacity-100 scale-100" : "max-h-0 opacity-0 scale-80"
         }`}
       >
         <div className="flex flex-col gap-2 text-gray-700">
           <section className="border-t ">
             <h3 className="text-base font-semibold md:text-lg">◇ リストの追加</h3>
-            <p className="text-sm">タイトルを入力して + ボタンを押すと、指定されたカテゴリーに新しいリストが作成されます。</p>
+            <p className="text-sm">タイトルを入力して + ボタンを押すと、指定されたカテゴリーに新しいリストが作成されます。追加先はカテゴリーボタンをタップすると変えられます。</p>
           </section>
 
           <section className="border-t">

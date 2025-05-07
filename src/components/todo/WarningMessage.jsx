@@ -24,7 +24,7 @@ const WarningMessage = ({
 
 
   return (
-    <div className="relative p-4 border-l-8 bg-amber-50 border-amber-500 text-amber-700">
+    <div className="relative p-3 border-l-8 bg-amber-50 border-amber-500 text-amber-700">
       <div className="flex items-center mb-1">
         <FontAwesomeIcon
           icon={faTriangleExclamation}
@@ -44,7 +44,7 @@ const WarningMessage = ({
           <p>
             現在、機能お試しモードです。作成されたリストはページのリロードなどで失われます。
           </p>
-          <span className="flex mt-1 text-sm">
+          <span className="flex mt-1 text-xs md:text-sm">
             <p
               className="underline cursor-pointer hover:text-amber-900"
               onClick={handleGuestLogin}
@@ -63,17 +63,16 @@ const WarningMessage = ({
         </>
       ) : (
         <>
-          <p>
+          <p className="text-sm">
             現在ゲストモードです。ブラウザのキャッシュクリアやログアウトでデータが失われます。
           </p>
-          <span className="flex mt-1 text-sm">
+          <span className="flex mt-1 text-xs md:text-sm">
             <p
               className="underline cursor-pointer hover:text-amber-900"
               onClick={() => router.push("/login?mode=register")}
             >
-              新規登録
+              新規登録でデータを引き継げます。
             </p>
-            <p>をすることでデータを永続的に保存することができます。</p>
           </span>
         </>
       )}

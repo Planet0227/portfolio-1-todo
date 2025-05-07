@@ -14,13 +14,16 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "✓Task-Board",
-  description: "タスクを視覚的に管理できるボードアプリ",
+  title: "List-Board",
+  description: "Todoリストを視覚的に管理できるボードアプリ",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="ja">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -33,3 +36,4 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
+

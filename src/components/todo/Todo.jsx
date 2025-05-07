@@ -6,6 +6,9 @@ import { faChevronRight, faLock } from "@fortawesome/free-solid-svg-icons";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { getCategoryInfo } from "@/utils/categories";
+import ProgressBar from "./ProgressBar";
+
+
 
 const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
   const {
@@ -30,6 +33,7 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
   const style = {
     transform: isSorting ? CSS.Translate.toString(transform) : undefined,
     opacity: isDragging ? "0" : "1",
+    touchAction: isDragging ? "none" : "pan-y",
   };
 
   const days = [
@@ -75,7 +79,6 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
         return "text-gray-600 bg-gray-100";
     }
   };
-  
 
   //全部true "毎日"
   if (isEveryday) {
@@ -120,9 +123,11 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
         {...listeners}
         style={{
           ...style,
-          touchAction: 'none'
+          WebkitTouchCallout: "none", // iOS長押しメニュー無効
+          WebkitUserSelect: "none",   // ユーザー選択無効
+          userSelect: "none",
         }}
-        className={`bg-white border-2 relative px-2 md:px-4 py-1 rounded-xl shadow transition-colors duration-200 cursor-pointer min-h-14 max-h-14 md:min-h-20 md:max-h-48 overflow-hidden hover:bg-gray-50 select-none ${
+        className={`bg-white border-2 relative px-2 md:px-4 py-1 rounded-xl shadow-lg shadow-emerald-100 transition-colors duration-200 cursor-pointer min-h-16 max-h-16 md:min-h-20 md:max-h-48 overflow-hidden hover:bg-gray-50 select-none ${
           selectedTodoId === todo.id ? "border-sky-500" : "border-gray-100"
         }`}
       >
@@ -130,22 +135,18 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
           <div className="flex">
             {/* カテゴリーバー */}
             <div
-              className={`${category.styles.baseColor} h-3 md:h-4 flex items-center p-1 rounded-md absolute left-2 top-1  md:top-2 gap-2`}
+              className={`${category.styles.baseColor} w-1 h-3 flex items-center p-1 rounded-md absolute left-2 top-0.5  md:top-2 gap-2`}
             >
-              <FontAwesomeIcon
-                icon={category.icon}
-                className="text-xs text-white drop-shadow-lg"
-              />
             </div>
-            {/* リセット曜日 */}
             {todo.lock && (
               <FontAwesomeIcon
                 icon={faLock}
-                className="absolute flex items-center h-3 gap-2 px-2 text-gray-600 rounded-md md:text-base md:h-4 right-1 top-1 md:top-2"
+                className="absolute flex items-center h-3 gap-2 px-2 text-gray-600 rounded-md md:text-base md:h-4 right-2 top-1 md:top-2"
               />
             )}
+            {/* リセット曜日 */}
             {activeResetDays.length > 0 && (
-              <div className="absolute flex flex-wrap items-center gap-1 top-1 md:top-2 left-10">
+              <div className="absolute flex flex-wrap items-center gap-1 top-1 md:top-2 left-6">
                 {resetLabels.map(({ label, type }) => (
                   <span
                     key={label}
@@ -162,13 +163,15 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
           {/* タイトルと進捗 */}
           <div className="flex items-start justify-between mt-4 md:mt-6">
             <div
-              className={`text-[11px] md:text-base font-semibold ${
+              className={`text-[9px] md:text-base font-semibold truncate ${
                 !todo.title ? "text-gray-400" : "text-gray-800"
               }`}
+              title={todo.title}
             >
               {todo.title || "タイトル未設定"}
             </div>
-            <div className="flex items-center space-x-2">
+
+            <div className="flex items-center space-x-1">
               <div className="px-1 md:px-2 py-0.5 text-[10px] md:text-sm text-gray-500 bg-gray-50 rounded-full">
                 {`${todo.tasks.filter((t) => t.complete).length}/${
                   todo.tasks.length
@@ -180,13 +183,15 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
             </div>
           </div>
 
+          {/* 進捗バー */}
+          <ProgressBar tasks={todo.tasks} />
+
           {/* Todoリスト */}
-          {!isTouchDevice() &&(
+          {!isTouchDevice() && (
             <div className="mt-1">
-            <List todo={todo.tasks} listId={todo.id} />
-          </div>
+              <List todo={todo.tasks} listId={todo.id} />
+            </div>
           )}
-          
         </div>
       </div>
     </div>

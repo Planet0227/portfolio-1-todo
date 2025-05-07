@@ -9,7 +9,13 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import CategoryHeader from "../common/CategoryHeader";
-const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }) => {
+const Form = ({
+  categories,
+  formVisible,
+  formExpanded,
+  dragItem,
+  isTouchDevice,
+}) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -17,6 +23,7 @@ const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }
   const dispatch = useTodosDispatch();
 
   const toggleButtonRef = useRef(null);
+  const inputRef = useRef(null);
 
   // クリックが外部で行われたらオプションを閉じる
   useEffect(() => {
@@ -34,6 +41,30 @@ const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }
       document.removeEventListener("click", handleClickOutside);
     };
   }, [showCategorySelector]);
+
+  useEffect(() => {
+    // フォームが見えて、かつドラッグ中でなければフォーカスを当てる
+    if (formVisible || formExpanded) {
+      // トランジション完了後に遅延してフォーカス
+      const handle = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 350);
+      return () => clearTimeout(handle);
+    }
+  }, [formVisible, formExpanded]);
+
+  useEffect(() => {
+    if (formVisible || formExpanded) {
+      // 表示されたときは遅延して focus
+      const handle = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 350);
+      return () => clearTimeout(handle);
+    } else {
+      // 非表示またはドラッグ中は即時に blur
+      inputRef.current?.blur();
+    }
+  }, [formVisible, formExpanded]);
 
   //　新しいTodoリスト
   const addTodoList = async (e) => {
@@ -108,14 +139,18 @@ const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }
         {(formVisible || formExpanded) && !dragItem ? (
           <>
             <FontAwesomeIcon icon={faCirclePlus} />
-            <span className="text-xs font-bold md:text-sm">Todoリストの新規作成</span>
+            <span className="text-xs font-bold md:text-sm">
+              Todoリストの新規作成
+            </span>
           </>
         ) : !dragItem ? (
           <>
             {isTouchDevice ? (
               <>
                 <FontAwesomeIcon icon={faPlus} />
-                <span className="text-xs md:text-sm">タップでフォームが表示されます</span>
+                <span className="text-xs md:text-sm">
+                  タップでフォームが表示されます
+                </span>
               </>
             ) : (
               <>
@@ -127,62 +162,54 @@ const Form = ({ categories, formVisible, formExpanded, dragItem, isTouchDevice }
             )}
           </>
         ) : (
-          ""
+          <span className="text-xs md:text-sm">ドロップで並べ替え</span>
         )}
       </div>
-      <div className="flex justify-start mt-6 ml-16">
-        {/* relative コンテナ内にポップアップ表示用の span を配置 */}
-        <div className="relative flex">
-          <span
-            className="flex items-center text-sm cursor-pointer select-none md:text-base"
-            onClick={() => setShowCategorySelector((prev) => !prev)}
-          >
-            リストの追加先：
-          </span>
-          <span
-            className={`cursor-pointer`}
-            onClick={() => setShowCategorySelector((prev) => !prev)}
-          >
-            <CategoryHeader category={selectedCategory} className="rounded-md" />
-          </span>
-        </div>
-        {showCategorySelector && (formVisible || formExpanded) && (
+      {/* カテゴリ選択 */}
+  <div className="relative flex justify-start mt-6 ml-16">
+    <span className="flex items-center mr-2 text-sm cursor-pointer select-none md:text-base">
+      追加先：
+    </span>
+    <button
+      ref={toggleButtonRef}
+      onClick={() => setShowCategorySelector(prev => !prev)}
+      className="px-3 py-1 transition"
+    >
+      <CategoryHeader category={selectedCategory} />
+    </button>
+
+    {showCategorySelector && (formVisible || formExpanded) && (
+      <div
+        ref={toggleButtonRef}
+        className="absolute z-10 grid w-full max-w-xs grid-cols-2 gap-2 p-2 mb-2 overflow-auto text-center bg-white border border-gray-300 rounded-md shadow-lg -left-7 bottom-full">
+        {categories.map(cat => (
           <div
-            ref={toggleButtonRef}
-            className="absolute flex bg-white border border-gray-300 rounded-md shadow-md select-none left-3 md:left-24 bottom-20"
+            key={cat}
+            onClick={() => { setSelectedCategory(cat); setShowCategorySelector(false); }}
+            className="py-1 transition rounded cursor-pointer bg-gray-50 hover:bg-gray-100"
           >
-            {categories.map((cat) => {
-              return (
-                <div
-                  key={cat}
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setShowCategorySelector(false);
-                  }}
-                  className={`cursor-pointer`}
-                >
-                  <CategoryHeader category={cat} />
-                </div>
-              );
-            })}
+            <CategoryHeader category={cat} />
           </div>
-        )}
+        ))}
       </div>
-      <form onSubmit={addTodoList} className="flex justify-center">
+    )}
+  </div>
+      <form onSubmit={addTodoList} className="flex justify-center mt-3">
         <button
-          onClick={addTodoList}
-          className="px-3 text-2xl text-zinc-600 bg-white rounded hover:shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]  hover:translate-y-[2px] transition-all duration-200"
+          type="submit"
+          className="flex items-center justify-center text-white transition rounded-full bg-cyan-400 w-7 h-7 hover:bg-cyan-500"
         >
           +
         </button>
         <input
+          ref={inputRef}
           type="text"
           name={"todo-form"}
           maxLength="20"
           placeholder="タイトルを入力"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="text-base md:text-lg border-b border-gray-400 w-[400px] focus:caret-black focus:outline-none"
+          className="text-base md:text-lg border-b ml-2 border-gray-400 w-[400px] focus:caret-black focus:outline-none"
         />
       </form>
     </div>

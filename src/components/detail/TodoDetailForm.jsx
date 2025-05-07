@@ -57,43 +57,40 @@ const TodoDetailForm = ({ listId }) => {
     }
   };
   return (
-    <div className="flex w-full p-2 border-2 border-green-500 rounded-lg">
-      <div className="ml-[32px]"></div>
-      <form onSubmit={addTask} className="flex w-full">
-        <div className="relative">
-          <button
-            onClick={addTask}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            className="flex items-center md:mt-0.5 justify-center flex-shrink-0 w-6 h-6 text-2xl text-white transition-transform duration-200 transform bg-gray-600 rounded-full hover:bg-gray-800 active:scale-75"
-          >
-            +
-          </button>
-          <div
-            className={`absolute z-10 flex flex-col items-center p-1 text-xs text-white transform bg-gray-600 rounded shadow-lg left-[-20px] top-6 transition-all duration-300 ${
-              isHovered
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-90 pointer-events-none"
-            }`}
-          >
-            <div>追加</div>
-            <div>（Enter）</div>
-          </div>
+    <div className="flex w-full p-3 rounded-lg shadow-sm bg-gradient-to-r from-green-100 via-blue-100 to-purple-100">
+    <form onSubmit={addTask} className="flex items-center w-full space-x-2">
+      {/* 追加ボタン */}
+      <div className="relative">
+        <button
+          onClick={addTask}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="flex items-center justify-center w-8 h-8 text-2xl text-white transition rounded-full bg-cyan-400 hover:bg-cyan-500 active:scale-95"
+        >
+          +
+        </button>
+        <div
+          className={`absolute z-10 flex flex-col items-center p-1 text-xs text-gray-700 bg-white rounded-lg shadow-md top-10 left-0 transition-opacity duration-200 ${
+            isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <span>追加</span>
+          <span>(Enter)</span>
         </div>
-        <textarea
-          ref={textareaRef}
-          type="text"
-          name={"todo-DetailForm"}
-          placeholder="タスクを入力"
-          value={inputValue}
-          rows={1}
-          onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="flex-1 w-9/12 ml-2 overflow-hidden break-words whitespace-pre-wrap resize-none text-md md:text-lg focus:outline-none"
-        />
-      </form>
-      <div className="ml-11"></div>
-    </div>
+      </div>
+
+      {/* 入力欄 */}
+      <textarea
+        ref={textareaRef}
+        placeholder="タスクを入力"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onKeyDown={handleKeyDown}
+        rows={1}
+        className="flex-1 p-2 overflow-hidden text-gray-700 placeholder-gray-400 break-words whitespace-pre-wrap transition-all bg-white border border-gray-200 rounded-lg resize-none bg-opacity-80 focus:bg-white focus:outline-none"
+      />
+    </form>
+  </div>
   );
 };
 

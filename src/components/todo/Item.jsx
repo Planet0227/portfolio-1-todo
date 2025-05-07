@@ -12,7 +12,7 @@ const Item = ({ todo }) => {
         onChange={(e) => e.stopPropagation()}
         className={`w-4 h-4 appearance-none relative rounded-full border border-gray-300 ${
           todo.complete
-            ? "bg-green-500 border-green-500 before:absolute before:content-['✓'] before:inset-0 before:top-0.5 before:text-white before:text-xs before:md:text-sm before:flex before:items-center before:justify-center"
+            ? "bg-green-400 border-green-400 before:absolute before:content-['✓'] before:inset-0 before:top-0.5 before:text-white before:text-xs before:md:text-sm before:flex before:items-center before:justify-center"
             : ""
         }`}
       />

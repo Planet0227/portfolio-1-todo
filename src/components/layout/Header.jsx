@@ -8,6 +8,7 @@ import { deleteUserData } from "@/firebase/firebase";
 import AccountSettings from "@/components/auth/AccountSetting";
 import { logout, signInAsGuest } from "@/firebase/auth";
 import {
+  faGear,
   faRightToBracket,
   faSignInAlt,
   faSignOutAlt,
@@ -16,8 +17,9 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useAuth } from "@/context/AuthContext";
 import ConfirmOverlay from "../common/ConfirmOverlay";
+import AppIcon from "../icons/AppIcon";
 
-export const Header = () => {
+export const Header = ({ simple = false }) => {
   const router = useRouter();
   const { user, loading, accountInfo } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -82,8 +84,8 @@ export const Header = () => {
     }
   };
 
-   // ユーザー情報が更新されたタイミングでフォームの初期値を設定
-   useEffect(() => {
+  // ユーザー情報が更新されたタイミングでフォームの初期値を設定
+  useEffect(() => {
     if (!loading && user) {
       setNewDisplayName(
         accountInfo?.displayName ||
@@ -97,100 +99,120 @@ export const Header = () => {
   const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
   return (
-    <header className="sticky top-0 z-30 shadow-md bg-lime-500">
-      <div className="container flex items-center justify-between px-3 py-2 mx-auto md:px-6 md:py-4">
-        <h1
-          className="text-base font-extrabold text-white transition-opacity cursor-pointer md:text-3xl hover:opacity-90"
-          onClick={() => router.push("/")}
-        >
-          ✓ Task-Board
+    <header className="sticky top-0 z-30 shadow-sm bg-gradient-to-r from-green-200 via-blue-200 to-purple-200">
+    <div className="container flex items-center justify-between px-6 py-3 mx-auto">
+      <h1
+        className="flex items-center space-x-2 font-extrabold text-white cursor-pointer text-md md:text-3xl"
+        onClick={() => router.push("/")}
+      >
+        <AppIcon size={30} />
+        <span>List-Board</span>
         </h1>
-
-        {/* 未ログイン */}
-        {!user ? (
-          <div className="flex items-center space-x-4">
-          <button
-            onClick={handleGuestLogin}
-            className="flex items-center px-4 py-2 space-x-2 transition bg-white border border-white rounded-lg hover:bg-white/80"
-          >
-            <FontAwesomeIcon icon={faSignInAlt} />
-            <span className="text-lime-500">ゲストログイン</span>
-          </button>
-          <button
-            onClick={() => router.push("/login")}
-            className="flex items-center px-4 py-2 space-x-2 transition bg-white border border-white rounded-lg hover:bg-white/80"
-          >
-            <FontAwesomeIcon icon={faRightToBracket} />
-            <span className="text-lime-500">ログイン / 新規登録</span>
-          </button>
-        </div>
-        ) : (
-          // ログイン済み
-          <div className="relative">
-            <button
-              onClick={toggleDropdown}
-              className="flex items-center space-x-2 focus:outline-none"
-            >
-              {newIconUrl ? (
-                <img
-                  src={newIconUrl}
-                  alt="ユーザーアイコン"
-                  className="object-cover w-10 h-10 border-2 border-white rounded-full"
-                />
-              ) : (
-                <FontAwesomeIcon
-                  icon={faUser}
-                  className="w-8 h-8 text-white"
-                />
-              )}
-              <span className="font-semibold text-white">{newDisplayName}</span>
-            </button>
-
-            {dropdownOpen && (
-              <div
-                ref={dropDownRef}
-                className="absolute w-32 overflow-hidden bg-white rounded-lg shadow-xl md:w-40 left-2 ring-1 ring-black ring-opacity-5"
-              >
-                {isGuest ? (
-                  <>
-                    <button
-                      onClick={() => router.push("/login?mode=register")}
-                      className="flex items-center w-full px-4 py-2 text-xs transition md:text-sm text-lime-600 hover:bg-lime-50"
-                    >
-                      <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-                      新規登録
-                    </button>
-                    <button
-                      onClick={() => router.push("/login")}
-                      className="flex items-center w-full px-4 py-2 text-xs transition md:text-sm text-sky-500 hover:bg-sky-50 "
-                    >
-                      <FontAwesomeIcon icon={faSignInAlt} className="mr-2" />
-                      ログイン
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => {
-                        setIsAccountModalOpen(true);
-                        setDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-3 text-xs text-left text-gray-700 transition md:text-sm hover:bg-gray-100"
-                    >
-                      アカウント設定
-                    </button>
-                  </>
-                )}
+        {simple ? null : (
+          <>
+            {/* 未ログイン */}
+            {!user ? (
+              <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setIsLogoutConfirmOpen(true)}
-                  className="flex items-center w-full px-4 py-3 text-xs text-red-500 transition md:text-sm hover:bg-red-50"
+                  onClick={handleGuestLogin}
+                  className="flex items-center px-3 py-1 space-x-1 transition bg-white border border-white rounded-lg hover:bg-white/80"
                 >
-                  <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
-                  ログアウト
+                  <FontAwesomeIcon icon={faSignInAlt} />
+                  <span className="text-xs text-lime-500 md:text-base">
+                    ゲスト
+                    <br />
+                    ログイン
+                  </span>
+                </button>
+                <button
+                  onClick={() => router.push("/login")}
+                  className="flex items-center px-3 py-1 space-x-1 transition bg-white border border-white rounded-lg hover:bg-white/80"
+                >
+                  <FontAwesomeIcon icon={faRightToBracket} />
+                  <span className="text-xs text-lime-500 md:text-base">
+                    ログイン / <br />
+                    新規登録
+                  </span>
                 </button>
               </div>
+            ) : (
+              // ログイン済み
+              <div className="relative">
+                <button
+                  onClick={toggleDropdown}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  {newIconUrl ? (
+                    <img
+                      src={newIconUrl}
+                      alt="ユーザーアイコン"
+                      className="object-cover w-10 h-10 border-2 border-white rounded-full"
+                    />
+                  ) : (
+                    <FontAwesomeIcon
+                      icon={faUser}
+                      className="w-8 h-8 text-white"
+                    />
+                  )}
+                  <span className="font-semibold text-white">
+                    {newDisplayName}
+                  </span>
+                </button>
+
+                {dropdownOpen && (
+                  <div
+                    ref={dropDownRef}
+                    className="absolute w-32 overflow-hidden bg-white rounded-lg shadow-xl -right-4 top-9 md:left-0 md:w-40 ring-1 ring-black ring-opacity-5"
+                  >
+                    {isGuest ? (
+                      <>
+                        <button
+                          onClick={() => router.push("/login?mode=register")}
+                          className="flex items-center w-full px-3 py-2 text-xs transition md:text-sm text-lime-600 hover:bg-lime-50"
+                        >
+                          <FontAwesomeIcon
+                            icon={faSignInAlt}
+                            className="mr-2"
+                          />
+                          新規登録
+                        </button>
+                        <button
+                          onClick={() => router.push("/login")}
+                          className="flex items-center w-full px-3 py-2 text-xs transition md:text-sm text-sky-500 hover:bg-sky-50 "
+                        >
+                          <FontAwesomeIcon
+                            icon={faSignInAlt}
+                            className="mr-2"
+                          />
+                          ログイン
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setIsAccountModalOpen(true);
+                            setDropdownOpen(false);
+                          }}
+                          className="flex items-center w-full px-3 py-2 text-xs text-left text-gray-700 transition md:text-sm hover:bg-gray-100"
+                        >
+                          <FontAwesomeIcon icon={faGear} className="mr-2"/>
+                          アカウント
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => setIsLogoutConfirmOpen(true)}
+                      className="flex items-center w-full px-3 py-2 text-xs text-red-500 transition md:text-sm hover:bg-red-50"
+                    >
+                      <FontAwesomeIcon icon={faSignOutAlt} className="mr-2" />
+                      ログアウト
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
@@ -210,7 +232,8 @@ export const Header = () => {
             isGuest ? (
               <>
                 <p>
-                  ゲストアカウントは<span className="text-red-500">再ログインできません。</span>
+                  ゲストアカウントは
+                  <span className="text-red-500">再ログインできません。</span>
                 </p>
                 <p>本当にログアウトしますか？</p>
               </>

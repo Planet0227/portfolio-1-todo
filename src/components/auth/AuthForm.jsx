@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { getAuth, updateProfile } from "firebase/auth";
 import { useAuth } from "@/context/AuthContext";
+import { Header } from "../layout/Header";
 
 const AuthForm = () => {
   const searchParams = useSearchParams();
@@ -23,6 +24,7 @@ const AuthForm = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isShowPassword, setIsShowPassword] = useState(false);
+
   const router = useRouter();
 
   // メールでログイン
@@ -87,14 +89,7 @@ const AuthForm = () => {
 
   return (
     <div className="select-none">
-      <header className="sticky top-0 z-30 flex items-center justify-between w-full p-1 px-10 py-3 text-white bg-lime-500">
-        <h1
-          className="text-3xl font-extrabold text-white transition-opacity cursor-pointer hover:opacity-90"
-          onClick={() => router.push("/")}
-        >
-          ✓Task-Board
-        </h1>
-      </header>
+      <Header simple />
       <div
         className={`flex items-center justify-center min-h-screen bg-gradient-to-br ${
           isRegister ? "from-green-400" : "from-blue-400"

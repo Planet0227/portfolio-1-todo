@@ -175,15 +175,10 @@ export default function TodoDetail({
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
     setEditTitle(updatedTitle);
-    dispatch({ type: "todo/updateList", payload: { listId, updatedTitle } });
+    dispatch({ type: "todo/updateListTitle", payload: { listId, updatedTitle } });
   };
 
   const handleTitleBlur = async () => {
-    // if (editTitle === cachedList.title) return;
-    dispatch({
-      type: "todo/updateListTitle",
-      payload: { listId, updatedTitle: editTitle },
-    });
     try {
       await authenticatedFetch("/api/todos", {
         method: "PATCH",
@@ -302,7 +297,7 @@ export default function TodoDetail({
       {/* 不透明度の変更に0.5秒かける */}
       {toastMounted && (
         <div
-          className={`fixed z-50 md:px-4 md:py-2 text-white transform -translate-x-1/2 rounded shadow-lg top-5 
+          className={`fixed z-50 px-4 py-2 text-white transform -translate-x-1/2 rounded shadow-lg top-5 
             bg-lime-500 left-1/2 transition-opacity duration-500 
             ${showToast ? "opacity-100" : "opacity-0"}`}
         >
@@ -311,10 +306,10 @@ export default function TodoDetail({
       )}
       {/* ヘッダー */}
       <div className="sticky top-0 z-20 bg-white">
-        <div className="relative flex items-center justify-between px-3 py-3 border-b md:px-4">
+        <div className="relative flex items-center justify-between px-3 py-3 border-b shadow-sm md:px-4 bg-gradient-to-r from-green-200 via-blue-200 to-purple-200">
           <div>
             <button
-              className="mx-2 text-xl text-gray-300 hover:text-gray-500"
+              className="mx-2 text-xl text-white hover:text-gray-500"
               onClick={onClose}
               onMouseEnter={() => setIsHoveredExit(true)}
               onMouseLeave={() => setIsHoveredExit(false)}
@@ -333,7 +328,7 @@ export default function TodoDetail({
             </div>
 
             <button
-              className="hidden mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
+              className="hidden mx-2 ml-5 text-xl text-white hover:text-gray-500 md:inline"
               onClick={() => setMagnification((prev) => !prev)}
               onMouseEnter={() => setIsHoveredMg(true)}
               onMouseLeave={() => setIsHoveredMg(false)}
@@ -359,7 +354,7 @@ export default function TodoDetail({
 
             {/* コピー */}
             <button
-              className="mx-2 ml-5 text-xl text-gray-300 hover:text-gray-500 md:inline"
+              className="mx-2 ml-5 text-xl text-white hover:text-gray-500 md:inline"
               onClick={handleCopy}
               onMouseEnter={() => setIsHoveredCopy(true)}
               onMouseLeave={() => setIsHoveredCopy(false)}
@@ -367,7 +362,7 @@ export default function TodoDetail({
               <FontAwesomeIcon icon={faCopy} />
             </button>
             <div
-              className={`absolute z-10 flex flex-col items-center px-2 py-1 text-xs text-white bg-gray-600 rounded shadow-lg left-[98px] transition-all duration-300 ${
+              className={`absolute z-10 flex flex-col items-center px-2 py-1 text-xs text-white bg-gray-600 rounded shadow-lg  md:left-24 transition-all duration-300 ${
                 isHoveredCopy
                   ? "opacity-100 scale-100"
                   : "opacity-0 scale-90 pointer-events-none"
@@ -419,7 +414,7 @@ export default function TodoDetail({
           <input
             type="text"
             name={`todo-${listId}-input`}
-            maxLength="20"
+            maxLength="14"
             placeholder="タイトルを入力"
             value={editTitle}
             onChange={handleTitleChange}
@@ -482,7 +477,7 @@ export default function TodoDetail({
               className="inline-flex px-1 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"
               onClick={resetComplete}
             >
-              <p className="w-4 h-4 md:w-5 md:h-5 mt-0.5 rounded-full border-2 bg-green-500 border-white before:content-['✓'] before:text-xs before:text-white md:before:text-sm before:flex before:items-center before:justify-center"></p>
+              <p className="w-4 h-4 md:w-5 md:h-5 mt-0.5 rounded-full border-2 bg-green-400 border-white before:content-['✓'] before:text-xs before:text-white md:before:text-sm before:flex before:items-center before:justify-center"></p>
               <span className="text-xs text-gray-500 group-hover:text-white md:text-base">
                 をすべて外す
               </span>
@@ -494,6 +489,7 @@ export default function TodoDetail({
 
       {/* メイン */}
       <div className="relative mx-4 md:mx-14">
+      <TodoDetailForm listId={listId} />
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -513,12 +509,13 @@ export default function TodoDetail({
                   task={task}
                   tasks={sortedTasks}
                   listId={listId}
+                  magnification={magnification}
                 />
               ))}
             </SortableContext>
           </div>
         </DndContext>
-        <TodoDetailForm listId={listId} />
+        
       </div>
     </div>
   );

@@ -43,22 +43,11 @@ const Form = ({
   }, [showCategorySelector]);
 
   useEffect(() => {
-    // フォームが見えて、かつドラッグ中でなければフォーカスを当てる
-    if (formVisible || formExpanded) {
-      // トランジション完了後に遅延してフォーカス
-      const handle = setTimeout(() => {
-        inputRef.current?.focus();
-      }, 350);
-      return () => clearTimeout(handle);
-    }
-  }, [formVisible, formExpanded]);
-
-  useEffect(() => {
     if (formVisible || formExpanded) {
       // 表示されたときは遅延して focus
       const handle = setTimeout(() => {
         inputRef.current?.focus();
-      }, 500);
+      }, 450);
       return () => clearTimeout(handle);
     } else {
       // 非表示またはドラッグ中は即時に blur
@@ -205,8 +194,8 @@ const Form = ({
           ref={inputRef}
           type="text"
           name={"todo-form"}
-          maxLength="20"
-          placeholder="タイトルを入力"
+          maxLength="14"
+          placeholder="タイトルを入力（14文字まで）"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           className="text-base md:text-lg border-b ml-2 border-gray-400 w-[400px] focus:caret-black focus:outline-none"

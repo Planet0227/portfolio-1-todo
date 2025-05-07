@@ -365,7 +365,7 @@ export default function TodoDetail({
               <FontAwesomeIcon icon={faCopy} />
             </button>
             <div
-              className={`absolute z-10 flex flex-col items-center px-2 py-1 text-xs text-white bg-gray-600 rounded shadow-lg  md:left-24 transition-all duration-300 ${
+              className={`absolute z-10 flex flex-col items-center px-2 py-1 text-xs text-white bg-gray-600 rounded shadow-lg left-9 md:left-24 transition-all duration-300 ${
                 isHoveredCopy
                   ? "opacity-100 scale-100"
                   : "opacity-0 scale-90 pointer-events-none"

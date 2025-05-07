@@ -149,6 +149,12 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           ref={setActivatorNodeRef}
           {...attributes}
           {...listeners}
+          style={{
+            ...style,
+            WebkitTouchCallout: "none", // iOS長押しメニュー無効
+            WebkitUserSelect: "none",   // ユーザー選択無効
+            userSelect: "none",
+          }}
           className="text-lg text-gray-400 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"
         >
           <FontAwesomeIcon icon={faGripLines} size="xl" />

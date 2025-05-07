@@ -486,12 +486,12 @@ export default function TodoDetail({
               </span>
             </button>
           </div>
-          <div className="mt-2"></div>
+          <div className="relative mt-2">
+            <TodoDetailForm listId={listId} />
+          </div>
         </div>
       </div>
-      <div className="relative mx-4 md:mx-14">
-        <TodoDetailForm listId={listId} />
-      </div>
+
       {/* メイン */}
       <div className="relative mx-4 md:mx-14">
         <DndContext

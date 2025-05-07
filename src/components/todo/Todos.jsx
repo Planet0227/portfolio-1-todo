@@ -221,14 +221,14 @@ const Todos = () => {
       {!isModalOpen && (
         <div
           id="todo-form"
-          className={`fixed left-0 right-0 bottom-80 md:bottom-0 transition-transform duration-300 pointer-events-none ${
+          className={`fixed left-0 right-0 bottom-0 transition-transform duration-300 pointer-events-none ${
             !isTouch
               ? formVisible && !dragItem
                 ? "translate-y-0 pointer-events-auto"
                 : "translate-y-24"
               : formExpanded
               ? "translate-y-0 pointer-events-auto"
-              : "translate-y-[410px]"
+              : "translate-y-24"
           }`}
         >
           <Form

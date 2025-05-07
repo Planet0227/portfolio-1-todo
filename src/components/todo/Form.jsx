@@ -58,7 +58,7 @@ const Form = ({
       // 表示されたときは遅延して focus
       const handle = setTimeout(() => {
         inputRef.current?.focus();
-      }, 350);
+      }, 500);
       return () => clearTimeout(handle);
     } else {
       // 非表示またはドラッグ中は即時に blur
@@ -197,7 +197,7 @@ const Form = ({
       <form onSubmit={addTodoList} className="flex justify-center mt-3">
         <button
           type="submit"
-          className="flex items-center justify-center text-white transition rounded-full bg-cyan-400 w-7 h-7 hover:bg-cyan-500"
+          className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-white transition rounded-full bg-cyan-400 hover:bg-cyan-500"
         >
           +
         </button>

@@ -150,7 +150,6 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           {...attributes}
           {...listeners}
           style={{
-            ...style,
             WebkitTouchCallout: "none", // iOS長押しメニュー無効
             WebkitUserSelect: "none",   // ユーザー選択無効
             userSelect: "none",

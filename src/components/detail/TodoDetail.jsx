@@ -175,7 +175,10 @@ export default function TodoDetail({
   const handleTitleChange = (e) => {
     const updatedTitle = e.target.value;
     setEditTitle(updatedTitle);
-    dispatch({ type: "todo/updateListTitle", payload: { listId, updatedTitle } });
+    dispatch({
+      type: "todo/updateListTitle",
+      payload: { listId, updatedTitle },
+    });
   };
 
   const handleTitleBlur = async () => {
@@ -415,7 +418,7 @@ export default function TodoDetail({
             type="text"
             name={`todo-${listId}-input`}
             maxLength="14"
-            placeholder="タイトルを入力"
+            placeholder="タイトルを入力（14文字まで）"
             value={editTitle}
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
@@ -486,10 +489,11 @@ export default function TodoDetail({
           <div className="mt-2"></div>
         </div>
       </div>
-
+      <div className="relative mx-4 md:mx-14">
+        <TodoDetailForm listId={listId} />
+      </div>
       {/* メイン */}
       <div className="relative mx-4 md:mx-14">
-      <TodoDetailForm listId={listId} />
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -515,7 +519,6 @@ export default function TodoDetail({
             </SortableContext>
           </div>
         </DndContext>
-        
       </div>
     </div>
   );

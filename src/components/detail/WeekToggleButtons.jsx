@@ -65,7 +65,7 @@ const WeekToggleButtons = ({
         <button
           key={day.key}
           onClick={() => updateResetDays(day.key)}
-          className={`px-2 md:px-3 py-1 text-sm md:text-base rounded-md ${
+          className={`px-2.5 md:px-3 py-1 text-sm md:text-base rounded-md ${
             resetDays[day.key]
               ? day.key === "sun"
                 ? "bg-red-500 text-white hover:bg-red-600"

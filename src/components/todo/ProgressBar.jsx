@@ -7,10 +7,10 @@ const ProgressBar = ({ tasks }) => {
   let barColorClass;
   if (ratio === 0) {
     barColorClass = "bg-gray-300";
-  } else if (ratio < 0.33) {
+  } else if (ratio < 0.66) {
     barColorClass = "bg-yellow-400";
   } else if (ratio < 1) {
-    barColorClass = "bg-cyan-400";
+    barColorClass = "bg-orange-400";
   } else {
     barColorClass = "bg-green-300";
   }

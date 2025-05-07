@@ -41,7 +41,7 @@ const Todos = () => {
   // タッチデバイス判定
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsTouch("ontouchstart" in window || navigator.maxTouchPoints > 0);
+      setIsTouch(navigator.maxTouchPoints > 0);
     }
   }, []);
 
@@ -221,14 +221,14 @@ const Todos = () => {
       {!isModalOpen && (
         <div
           id="todo-form"
-          className={`fixed left-0 right-0 md:bottom-0 transition-transform duration-300 pointer-events-none ${
+          className={`fixed left-0 right-0 bottom-80 md:bottom-0 transition-transform duration-300 pointer-events-none ${
             !isTouch
               ? formVisible && !dragItem
                 ? "translate-y-0 pointer-events-auto"
                 : "translate-y-24"
               : formExpanded
-              ? "translate-y-0 pointer-events-auto top-96"
-              : "translate-y-[410px] top-96"
+              ? "translate-y-0 pointer-events-auto"
+              : "translate-y-[410px]"
           }`}
         >
           <Form

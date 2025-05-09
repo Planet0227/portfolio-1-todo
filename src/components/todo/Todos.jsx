@@ -18,6 +18,7 @@ import {
   MouseSensor,
   useSensor,
   useSensors,
+  rectIntersection,
 } from "@dnd-kit/core";
 
 import { CATEGORY_LIST } from "@/utils/categories";

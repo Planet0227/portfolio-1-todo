@@ -9,7 +9,8 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import CategoryHeader from "../common/CategoryHeader";
 
 const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
-  const { setNodeRef } = useDroppable({ id: category });
+  // Step 1: カラム自体を Droppable にする
+  const { setNodeRef, isOver } = useDroppable({ id: category });
 
   const isMobile = useMediaQuery("(max-width: 768px)");
   const strategy = isMobile ? rectSortingStrategy : verticalListSortingStrategy;
@@ -24,11 +25,13 @@ const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
           <span className="ml-3 text-sm text-gray-500 md:text-base">{todoList.length}</span>
         </div>
       </div>
-      <SortableContext id={category} items={todoList} strategy={strategy}>
-        {/* gapがあるとちらつく&無限ループエラー */}
+      <SortableContext items={todoList} strategy={strategy}>
+        {/* カラムエリアを Droppable 圏内としてマーク */}
         <div
           ref={setNodeRef}
-          className="grid grid-cols-2 p-2 bg-gray-100 bg-opacity-50 rounded-lg min-h-16 md:min-h-screen auto-rows-auto md:flex md:flex-col"
+          className={`grid grid-cols-2 p-2 bg-gray-100 bg-opacity-50 rounded-lg min-h-16 md:min-h-screen auto-rows-auto md:flex md:flex-col transition-background duration-200 ${
+            isOver ? "bg-blue-100 bg-opacity-75" : ""
+          }`}
         >
           {todoList.map((todo) => (
             <Todo

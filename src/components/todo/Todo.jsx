@@ -19,6 +19,7 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
     isSorting,
     setNodeRef,
     transform,
+    transiton,
     setActivatorNodeRef,
     attributes,
     listeners,
@@ -31,9 +32,10 @@ const Todo = ({ openModal, selectedTodoId, todo, isOverlay }) => {
   };
 
   const style = {
-    transform: isSorting ? CSS.Translate.toString(transform) : undefined,
-    opacity: isDragging ? "0" : "1",
+    // transform: isSorting ? CSS.Translate.toString(transform) : undefined,
+    opacity: isDragging ? "0.7" : "1",
     touchAction: isDragging ? "none" : "pan-y",
+    transiton
   };
 
   const days = [

@@ -168,6 +168,8 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           name={`todo-${task.id}-checkBox`}
           checked={task.complete}
           onChange={e => toggleCheckBox(e)}
+          onTouchStart={e => e.stopPropagation()}
+ onPointerDown={e => e.stopPropagation()}
           className={`ml-2 w-8 h-8 mt-0.5  appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             task.complete
               ? "bg-green-400 border-green-400 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-1 before:flex before:items-center before:justify-center"

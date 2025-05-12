@@ -35,12 +35,12 @@ const Modal = ({ isOpen, onClose, magnification, children }) => {
   return (
     <div
     ref={modalRef}
-      className={`fixed w-full ${magnification ? "md:w-full"  : "md:w-2/5"} top-0 bottom-0 z-50 right-0 flex  transition-opacity duration-200 ${
+      className={`fixed w-full ${magnification ? "md:w-full"  : "md:w-2/5"} top-0 bottom-0 z-50 right-0 flex transition-opacity duration-200 ${
         isOpen || isAnimating ? "opacity-100 visible" : "opacity-0 invisible"
       }`}
     >
       <div
-        className={`absolute w-full h-full transform transition-transform duration-200 bg-white shadow-lg  overflow-y-auto ${
+        className={`absolute w-full h-full transform transition-transform duration-200 bg-white shadow-2xl   overflow-y-auto ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         

@@ -33,7 +33,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   const style = {
     transform: isSorting ? CSS.Translate.toString(transform) : undefined, //CSS.Translateに変更(歪み防止)
     transition,
-    opacity: !isDragging && isSorting ? "0.6" : "",
+    opacity: isDragging ? "0.6" : "",
   };
 
   // const sortDirection =
@@ -141,7 +141,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full border-gray-500 border-0 md:border-0 p-1 md:p-2 rounded-lg bg-white relative ${
+        className={`flex w-full p-1 md:p-2 rounded-lg relative bg-opacity-0 ${
           isDragging ? "z-10" : ""
         }  `}
       >

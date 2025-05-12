@@ -18,7 +18,7 @@ const ProgressBar = ({ tasks }) => {
   const widthPercent = `${Math.round(ratio * 100)}%`;
 
   return (
-    <div className="w-full bg-gray-200 rounded-full h-1.5 my-1  overflow-hidden">
+    <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
       <div
         className={`h-full transition-width duration-300 ${barColorClass}`}
         style={{ width: widthPercent }}

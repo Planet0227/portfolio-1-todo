@@ -1,6 +1,6 @@
 "use client";
 
-import Todos from "@/components/todo/Todos";
+import Todos from "@/components/todos/Todos";
 import { useAuth } from "@/context/AuthContext";
 import { useTodosLoading } from "@/context/TodoContext";
 import Loading from "../common/Loading";

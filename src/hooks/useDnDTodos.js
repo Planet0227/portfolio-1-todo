@@ -1,148 +1,134 @@
 "use client";
 import { CATEGORY_LIST } from "@/utils/categories";
 import { arrayMove } from "@dnd-kit/sortable";
-import { closestCenter, MouseSensor, pointerWithin, rectIntersection, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useCallback, useState } from "react";
 import { authenticatedFetch } from "@/utils/authToken";
 
 export const useDnDTodos = (todosList, setTodosList, dispatch) => {
+
   const [dragItem, setDragItem] = useState(null);
 
-  // 5px 動かすとドラッグ開始
+  //5px動かすとドラッグと判定する。
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 5 },
+      activationConstraint: { delay: 250, tolerance: 5 },
     })
   );
 
-  const categoryIds = CATEGORY_LIST.map((c) => c.id);
-  // id から所属カラムを返す（todosList をクロージャから参照）
   const findColumn = (id) => {
-    if (categoryIds.includes(id)) return id;
-    const todo = todosList.find((t) => t.id === id);
-    return todo ? todo.category : null;
+    if (!id) {
+      return null;
+    }
+    // カテゴリーのIDリストを作成
+    const categoryIds = CATEGORY_LIST.map((cat) => cat.id);
+    // カテゴリーIDが直接渡された場合はそのまま返す
+    if (categoryIds.includes(id)) {
+      return id;
+    }
+    // itemのidが渡された場合、そのitemが属するカラムのidを返す
+    return todosList.find((todo) => todo.id === id)?.category;
   };
 
-  const collisionDetection = useCallback(
-    (args) => {
-      const { droppableContainers } = args;
-      const ids = CATEGORY_LIST.map((c) => c.id);
-
-      // 1) Column detection via pointerWithin
-      const columns = droppableContainers.filter((c) => ids.includes(c.id));
-      const columnHits = pointerWithin({ ...args, droppableContainers: columns });
-      if (columnHits.length) return columnHits;
-
-      // 2) Item detection via closestCenter
-      const items = droppableContainers.filter((c) => !ids.includes(c.id));
-      const collision = closestCenter({ ...args, droppableContainers: items });
-      if (collision.length) return collision;
-
-      // 3) Fallback rectIntersection
-      const rects = rectIntersection(args);
-      if (rects.length) return rects;
-
-      return [];
-    },
-    [todosList]
-  );
-
   const handleDragStart = useCallback((event) => {
-    const { active } = event;
+    const { active, over } = event;
     if (!active) return;
     setDragItem(active.id);
-  }, []);
+  },[]);
 
-  const handleDragOver = ({ active, over }) => {
-    if (!over || active.id === over.id) return;
-
-    const activeId = String(active.id);
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
     const overId = String(over.id);
-    const sourceCol = findColumn(activeId);
-    const targetCol = findColumn(overId);
+    const activeId = String(active.id);
+    const overColumn = findColumn(overId);
+    const activeColumn = findColumn(activeId);
+    let updatedTodos = [...todosList];
 
-    setTodosList((list) => {
-      let updated = [...list];
-      const movingItem = updated.find((t) => t.id === activeId);
+    // ドラッグ元とターゲットが異なるカラムの場合
+    if (activeColumn !== overColumn) {
+      // まずはカテゴリー変更
+      updatedTodos = updatedTodos.map((todo) =>
+        todo.id === activeId ? { ...todo, category: overColumn } : todo
+      );
 
-      // 1) カラムそのものへのドロップ → 末尾追加
+      // カテゴリーIDのリストを取得
+      const categoryIds = CATEGORY_LIST.map((cat) => cat.id);
+
+      // もし over.id がカラム自体を示している場合（＝個々のアイテムと衝突していない場合）
       if (categoryIds.includes(overId)) {
-        updated = updated.map((t) =>
-          t.id === activeId
-            ? {
-                ...t,
-                category: overId,
-                order:
-                  Math.max(
-                    0,
-                    ...list.filter((x) => x.category === overId).map((x) => x.order)
-                  ) + 1,
-              }
-            : t
-        );
-        return updated;
-      }
-
-      // 2) 別カラム内のアイテム上ドロップ → 中間挿入
-      if (sourceCol && targetCol && sourceCol !== targetCol && movingItem) {
-        // カテゴリ切替
-        updated = updated.map((t) =>
-          t.id === activeId ? { ...t, category: targetCol } : t
-        );
-
-        // ターゲット列のアイテムを抽出し order 順にソート
-        const targetItems = updated
-          .filter((t) => t.category === targetCol && t.id !== activeId)
+        // ターゲットカラム内のアイテム（ドラッグ中のものを除く）を取得
+        const targetItems = updatedTodos
+          .filter(
+            (todo) => todo.category === overColumn && todo.id !== activeId
+          )
           .sort((a, b) => a.order - b.order);
-
-        // overId の index を取得
-        const overIndex = targetItems.findIndex((t) => t.id === overId);
-        const insertAt = overIndex < 0 ? targetItems.length : overIndex;
-
-        // 新しい並びの配列を作成し order を再設定
-        const reorderedTarget = [
-          ...targetItems.slice(0, insertAt),
-          { ...movingItem, category: targetCol },
-          ...targetItems.slice(insertAt),
-        ].map((t, idx) => ({ ...t, order: idx + 1 }));
-
-        // 他列はそのまま
-        const otherItems = updated.filter((t) => t.category !== targetCol);
-        return [...otherItems, ...reorderedTarget];
+        // 新規追加先は末尾とする（空なら先頭）
+        const newOrder = targetItems.length + 1;
+        updatedTodos = updatedTodos.map((todo) =>
+          todo.id === activeId ? { ...todo, order: newOrder } : todo
+        );
       }
-
-      // 3) 同一カラム内ソート
-      if (sourceCol && sourceCol === targetCol) {
-        // 同じカラムのアイテムだけ抽出
-        const sameItems = list.filter((t) => t.category === sourceCol);
-        const oldIndex = sameItems.findIndex((t) => t.id === activeId);
-        const newIndex = sameItems.findIndex((t) => t.id === overId);
-        const moved = arrayMove(sameItems, oldIndex, newIndex);
-
-        const reordered = moved.map((t, idx) => ({ ...t, order: idx + 1 }));
-        const others = list.filter((t) => t.category !== sourceCol);
-        return [...others, ...reordered];
-      }
-
-      return list;
-    });
+      setTodosList(updatedTodos);
+    }
   };
 
   const handleDragEnd = async (event) => {
     setDragItem(null);
+    const { active, over } = event;
 
-    // サーバーへ最終更新
-    dispatch({ type: "todo/sort", payload: { updatedTodos: todosList } });
-    try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ updatedTodos: todosList }),
+    const overId = String(over?.id);
+    const activeId = String(active.id);
+    const overColumn = findColumn(overId);
+    const activeColumn = findColumn(activeId);
+
+    let updatedTodos = [...todosList];
+
+    if (activeColumn === overColumn) {
+      const oldIndex = todosList.findIndex((t) => t.id === active.id);
+      const newIndex = todosList.findIndex((t) => t.id === over.id);
+      
+      // active.idからtodoを特定しstatusをcolumnのidに変更する
+      updatedTodos = arrayMove(todosList, oldIndex, newIndex);
+
+      updatedTodos = updatedTodos.map((todo, index) => ({
+        ...todo,
+        order: index + 1, // 1から順に振り直す
+      }));
+
+      CATEGORY_LIST.forEach((cat) => {
+        const itemsInCat = updatedTodos.filter(
+          (todo) => todo.category === cat.id
+        );
+        itemsInCat.forEach((item, index) => {
+          const idx = updatedTodos.findIndex((todo) => todo.id === item.id);
+          if (idx !== -1) {
+            updatedTodos[idx] = { ...updatedTodos[idx], order: index + 1 };
+          }
+        });
       });
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+      
+      setTodosList(updatedTodos);
+
+      // 状態更新
+      dispatch({
+        type: "todo/sort",
+        payload: { updatedTodos },
+      });
+
+      try {
+        await authenticatedFetch("/api/todos", {
+          method: "PATCH",
+          body: JSON.stringify({ updatedTodos }),
+        });
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 
-  return { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd, collisionDetection };
+  return { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd };
 };

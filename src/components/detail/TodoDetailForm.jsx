@@ -57,7 +57,7 @@ const TodoDetailForm = ({ listId }) => {
     }
   };
   return (
-    <div className="flex w-full p-2 rounded-lg shadow-sm bg-gradient-to-r from-green-100 via-blue-100 to-purple-100">
+    <div className="flex w-full p-1 rounded-lg shadow-sm bg-gradient-to-r from-green-100 via-blue-100 to-purple-100">
     <form onSubmit={addTask} className="flex items-center w-full space-x-2">
       {/* 追加ボタン */}
       <div className="relative">

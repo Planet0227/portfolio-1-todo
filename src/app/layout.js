@@ -16,6 +16,9 @@ const geistMono = localFont({
 export const metadata = {
   title: "List-Board",
   description: "Todoリストを視覚的に管理できるボードアプリ",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }) {

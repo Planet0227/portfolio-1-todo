@@ -5,20 +5,18 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Todo from "./Todo";
-import useMediaQuery from "@/hooks/useMediaQuery";
 import CategoryHeader from "../common/CategoryHeader";
 
-const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
+const TodoColumn = ({ category, todoList, openModal, selectedTodoId, isTouch }) => {
   // Step 1: カラム自体を Droppable にする
   const { setNodeRef, isOver } = useDroppable({ id: category });
 
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const strategy = isMobile ? rectSortingStrategy : verticalListSortingStrategy;
+  const strategy = isTouch ? rectSortingStrategy : verticalListSortingStrategy;
 
   return (
     <>
       <div
-        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-2 md:mb-3 bg-white `}
+        className={`z-20 w-full pb-1 md:pt-7 border-b-2 border-gray-400 mb-2 bg-white `}
       >
         <div className="flex items-center rounded-md">
           <CategoryHeader category={category} className="rounded-md" disableHover={true} />
@@ -29,7 +27,7 @@ const TodoColumn = ({ category, todoList, openModal, selectedTodoId }) => {
         {/* カラムエリアを Droppable 圏内としてマーク */}
         <div
           ref={setNodeRef}
-          className={`grid grid-cols-2 p-2 bg-gray-100 bg-opacity-50 rounded-lg min-h-16 md:min-h-screen auto-rows-auto md:flex md:flex-col transition-background duration-200 ${
+          className={`grid grid-cols-2 p-2 md:pb-16 md:gap-2 bg-gray-100 bg-opacity-50 rounded-lg min-h-16 md:min-h-[500px] md:h-full auto-rows-auto md:flex md:flex-col transition-background duration-200 ${
             isOver ? "bg-blue-100 bg-opacity-75" : ""
           }`}
         >

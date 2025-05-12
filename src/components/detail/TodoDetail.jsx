@@ -26,7 +26,6 @@ import {
   MouseSensor,
   TouchSensor,
   closestCorners,
-  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -36,7 +35,6 @@ import {
 } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
 import {
-  restrictToParentElement,
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
 
@@ -143,8 +141,8 @@ export default function TodoDetail({
     // コピー用テキストを組み立て
     const lines = [`タイトル: ${cachedList.title}`, "", "タスク一覧："];
     sortedTasks.forEach((task) => {
-      const checkbox = task.complete ? "✓" : " ";
-      lines.push(`・ [${checkbox}] ${task.content}`);
+      const checkbox = task.complete ? "✓" : "";
+      lines.push(`[${checkbox}] ${task.content}`);
     });
     const textToCopy = lines.join("\n");
     // クリップボードに書き込み
@@ -497,7 +495,7 @@ export default function TodoDetail({
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
-          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          modifiers={[restrictToVerticalAxis]}
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}

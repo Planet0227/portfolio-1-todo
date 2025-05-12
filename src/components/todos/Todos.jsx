@@ -1,8 +1,8 @@
 "use client";
 
 import Todo from "./Todo";
-import Form from "./Form";
-import TodoColmun from "./TodoColumn";
+import Form from "../todos/Form";
+import TodoColmun from "../todos/TodoColumn";
 import TodoDetail from "@/components/detail/TodoDetail";
 import { useTodos, useTodosDispatch } from "../../context/TodoContext";
 import { useEffect, useState, useRef } from "react";
@@ -14,11 +14,6 @@ import {
   DndContext,
   DragOverlay,
   pointerWithin,
-  TouchSensor,
-  MouseSensor,
-  useSensor,
-  useSensors,
-  rectIntersection,
 } from "@dnd-kit/core";
 
 import { CATEGORY_LIST } from "@/utils/categories";
@@ -59,25 +54,8 @@ const Todos = () => {
   // 初回リセットチェック
   const [initialCheckDone, setInitialCheckDone] = useState(false);
 
-  // カスタムセンサーの設定
-  const sensors = useSensors(
-    useSensor(TouchSensor, {
-      // タッチの検出を遅延させて、スクロールを優先
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
-    }),
-    useSensor(MouseSensor, {
-      // マウスの検出は即時
-      activationConstraint: {
-        distance: 0,
-      },
-    })
-  );
-
   // DnD
-  const { dragItem, handleDragStart, handleDragOver, handleDragEnd } =
+  const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =
     useDnDTodos(todosList, setTodosList, dispatch);
 
   // 初回マウント時に一回だけ実行
@@ -108,36 +86,27 @@ const Todos = () => {
     }
   }, [isTouch]);
 
-  // モバイル: タップ時にフォーム展開
+  // モバイル: タップ時にフォーム開閉
   useEffect(() => {
-    if (isTouch && containerRef.current) {
-      const handleTap = (e) => {
-        if (!formExpanded) {
-          // フォーム領域内タップで展開
-          const formEl = document.getElementById("todo-form");
-          if (formEl && formEl.contains(e.target)) {
-            setFormExpanded(true);
-          }
-        }
-      };
-      document.addEventListener("touchstart", handleTap);
-      return () => document.removeEventListener("touchstart", handleTap);
-    }
+    if (!isTouch || !containerRef.current) return;
+  
+    const handleTouch = (e) => {
+      const formEl = document.getElementById("todo-form");
+      if (!formEl) return;
+  
+      if (!formExpanded && formEl.contains(e.target)) {
+        // 未展開時：フォーム内タップで展開
+        setFormExpanded(true);
+      } else if (formExpanded && !formEl.contains(e.target)) {
+        // 展開中：フォーム外タップで閉じる
+        setFormExpanded(false);
+      }
+    };
+  
+    document.addEventListener("touchstart", handleTouch);
+    return () => document.removeEventListener("touchstart", handleTouch);
   }, [isTouch, formExpanded]);
-
-  // モバイル: 展開中にフォーム外タップで閉じる
-  useEffect(() => {
-    if (isTouch && formExpanded) {
-      const handleOutside = (e) => {
-        const formEl = document.getElementById("todo-form");
-        if (formEl && !formEl.contains(e.target)) {
-          setFormExpanded(false);
-        }
-      };
-      document.addEventListener("touchstart", handleOutside);
-      return () => document.removeEventListener("touchstart", handleOutside);
-    }
-  }, [isTouch, formExpanded]);
+  
 
   const openModal = (id) => {
     setSelectedTodoId(id);
@@ -162,6 +131,8 @@ const Todos = () => {
     };
   }, [isModalOpen]);
 
+  
+
   return (
     <div ref={containerRef}>
       {isGuestOrNotLoggedIn() && isShowWarning && (
@@ -182,12 +153,13 @@ const Todos = () => {
           {CATEGORY_LIST.map((cat) => {
             const list = todosList.filter((t) => t.category === cat.id);
             return (
-              <div key={cat.id} className="flex-none w-full p-2 md:w-80">
+              <div key={cat.id} className="flex-none w-full px-2 pt-2 md:w-72">
                 <TodoColmun
                   category={cat.id}
                   todoList={list}
                   selectedTodoId={selectedTodoId}
                   openModal={openModal}
+                  isTouch={isTouch}
                 />
               </div>
             );

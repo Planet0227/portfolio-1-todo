@@ -59,7 +59,7 @@ const WeekToggleButtons = ({
   ];
 
   return (
-    <div className="flex items-center gap-2 mt-2">
+    <div className="flex items-center gap-2 mt-1 md:mt-2">
       <p className="text-xs text-gray-500 md:text-base">繰り返し：</p>
       {days.map((day) => (
         <button

@@ -379,7 +379,7 @@ export default function TodoDetail({
         </div>
         {/* main*/}
         <div className="pt-2 mx-4 md:mx-14">
-          <div className="flex justify-between gap-4 mb-3">
+          <div className="flex justify-between gap-4 mb-1 md:mb-3">
             <div className="flex">
               <button
                 className="text-xl md:text-3xl"
@@ -422,7 +422,7 @@ export default function TodoDetail({
             onBlur={handleTitleBlur}
             className="w-full mb-1 text-xl font-bold md:text-2xl focus:outline-none"
           />
-          <div className="relative flex items-center mt-2">
+          <div className="relative flex items-center mt-1 md:mt-2">
             <span className="text-sm text-gray-500 md:text-base">進捗：</span>
             <span
               className={`cursor-pointer`}
@@ -459,7 +459,7 @@ export default function TodoDetail({
             </div>
           )}
 
-          <div className="mt-2 text-gray-500 border-gray-400">
+          <div className="mt-1 text-gray-500 border-gray-400 md:mt-2">
             <span className="text-sm md:text-base">作成日： </span>
             <span className="ml-1 text-sm md:ml-2 md:text-base">
               {cachedList.date}
@@ -472,7 +472,7 @@ export default function TodoDetail({
             initialResetDays={cachedList?.resetDays}
             onResetDaysUpdated={onResetDaysUpdated}
           />
-          <div className="flex items-center mt-2">
+          <div className="flex items-center mt-1 md:mt-2">
             <p className="text-sm text-gray-500 md:text-base">リセット：</p>
             <button
               className="inline-flex px-1 py-1 ml-2 transition-colors bg-white border-2 rounded-md border-sky-500 hover:bg-sky-500 hover:border-sky-500 group"

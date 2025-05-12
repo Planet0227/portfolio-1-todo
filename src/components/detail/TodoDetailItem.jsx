@@ -77,7 +77,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   };
 
   // チェックボックス更新
-  const toggleCheckBox = async (e) => {
+  const toggleCheckBox = async () => {
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, complete: !task.complete } : _todo
     );
@@ -89,10 +89,6 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
       });
     } catch (error) {
       console.error("タスク更新エラー:", error);
-    }
-
-    if (e && e.target && typeof e.target.blur === "function") {
-      e.target.blur();
     }
   };
 
@@ -155,7 +151,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           {...listeners}
           style={{
             WebkitTouchCallout: "none", // iOS長押しメニュー無効
-            WebkitUserSelect: "none", // ユーザー選択無効
+            WebkitUserSelect: "none",   // ユーザー選択無効
             userSelect: "none",
           }}
           className="mt-1 text-lg text-gray-400 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"
@@ -167,9 +163,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           type="checkbox"
           name={`todo-${task.id}-checkBox`}
           checked={task.complete}
-          onChange={e => toggleCheckBox(e)}
-          onTouchStart={e => e.stopPropagation()}
- onPointerDown={e => e.stopPropagation()}
+          onChange={toggleCheckBox}
           className={`ml-2 w-8 h-8 mt-0.5  appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             task.complete
               ? "bg-green-400 border-green-400 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-1 before:flex before:items-center before:justify-center"

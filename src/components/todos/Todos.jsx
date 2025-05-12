@@ -70,6 +70,7 @@ const Todos = () => {
   useEffect(() => {
     const sorted = [...todos].sort((a, b) => a.order - b.order);
     setTodosList(sorted);
+    console.log(sorted);
   }, [todos]);
 
   // デスクトップ: マウス位置でフォーム表示

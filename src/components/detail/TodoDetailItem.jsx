@@ -141,7 +141,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full p-1 md:p-2 rounded-lg relative bg-opacity-0 ${
+        className={`flex w-full p-2 md:p-2 rounded-lg relative bg-opacity-0 ${
           isDragging ? "z-10" : ""
         }  `}
       >
@@ -154,7 +154,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
             WebkitUserSelect: "none",   // ユーザー選択無効
             userSelect: "none",
           }}
-          className="text-lg text-gray-400 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"
+          className="text-lg text-gray-400 mt-0.5 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"
         >
           <FontAwesomeIcon icon={faGripLines} size="xl" />
         </div>
@@ -164,7 +164,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           name={`todo-${task.id}-checkBox`}
           checked={task.complete}
           onChange={toggleCheckBox}
-          className={`ml-2 w-6 h-6 mt-0.5 appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
+          className={`ml-2 w-7 h-7 mt-0.5  appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             task.complete
               ? "bg-green-400 border-green-400 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-0.5 before:flex before:items-center before:justify-center"
               : ""

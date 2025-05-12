@@ -16,13 +16,13 @@
       Q31 7, 32 6
       Z"
       fill="none"
-      stroke="#FFFFFF"
+      stroke="#000000"
       strokeWidth="6"
     />
     <path
       d="M26 18 L26 48 L58 48"
       fill="none"
-      stroke="#FFFFFF"
+      stroke="#000000"
       strokeWidth="6"
       strokeLinecap="square"
       strokeLinejoin="miter"

@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# List-Board
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat\&logo=next.js\&logoColor=white)](https://nextjs.org) [![React](https://img.shields.io/badge/React-20232A?style=flat\&logo=react\&logoColor=61DAFB)](https://reactjs.org) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat\&logo=tailwind-css\&logoColor=white)](https://tailwindcss.com) [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat\&logo=firebase\&logoColor=black)](https://firebase.google.com) [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat\&logo=vercel\&logoColor=white)](https://vercel.com)
 
-First, run the development server:
+## 概要
+
+このアプリは、日々のタスクを効率的に管理できるタスク管理アプリです。
+就職活動用のポートフォリオとして、React・Next.js・Firebase を用いて開発しました。
+
+## 特徴
+
+* Firebase Authentication によるユーザー認証
+* Firestore でのデータ保存
+* タスクとリストのドラッグ＆ドロップによる並び替え
+* リストをテキストでコピーし、メールやLINE等で共有
+* スマホ・PC対応のレスポンシブデザイン
+* 匿名ユーザーでの使用も可能（ログインしなくても利用可）
+* 未ログイン,ゲストログイン,ログインの３モード
+
+## 技術スタック
+
+* **フロントエンド**：Next.js (App Router), React
+* **スタイリング**：Tailwind CSS
+* **バックエンド**：Firebase（Authentication / Firestore）
+* **デプロイ**：Vercel
+
+## デモサイト
+
+🔗 [List-Borad](https://portfolio-1-todo-6f2i.vercel.app/)
+
+## 画面イメージ
+
+### PC 操作画面
+
+![PC 操作画面1](./public/images/demo-pc-1.png) ![PC 操作画面2](./public/images/demo-pc-2.png) ![PC 操作画面3](./public/images/demo-pc-3.png)
+
+![PC 操作デモ GIF](./public/images/demo-pc-1.gif)
+
+### スマホ操作画面
+
+![スマホ操作画面1](./public/images/demo-sp-1.png) ![スマホ操作画面2](./public/images/demo-sp-2.png) ![スマホ操作画面3](./public/images/demo-sp-3.png) ![スマホ操作画面4](./public/images/demo-sp-4.png)
+
+![スマホ操作デモ GIF](./public/images/demo-sp-1.gif)
+
+## 機能一覧
+
+* ユーザー登録・ログイン（メールアドレス / 匿名ログイン）
+* ゲスト利用モード（ログイン不要）
+* 入力フォームの展開
+* 詳細ページのモーダル表示
+* タスクの追加・編集・削除
+* チェックボックスでの進捗管理
+* タスクリストの並び替え（ドラッグ＆ドロップ）
+* リストのロック機能で誤削除を防止
+* 希望の曜日にタスクの進捗をリセットする機能
+* テキスト形式でリストをコピー
+* リアルタイムでのデータ反映（Firestore）
+* アカウント名,アイコンの編集
+
+## 使用方法（ローカル実行）
 
 ```bash
+git clone https://github.com/Planet0227/portfolio-1-todo
+cd nextjs-todo
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 使い方
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+* アプリの起動後は未ログイン状態です。この状態で作成したリストはfirebaseに保存されず、リロードなどで消えてしまいます。
+* 画面上部からゲストログインかログイン/新規登録のボタンからログインや登録が出来ます。
+* ゲストログイン状態では作成したデータが保存されます。ログアウトをするとアカウントごとデータが削除されます。
+* ゲストログイン中に新規登録するとゲスト状態で作成したデータが新規アカウントに引き継がれます。
+* ログイン状態ではリストデータの保存に加え、アカウント名やアイコンを編集出来ます。また、同じアカウントでログインすることで、別のデバイスでも使用できます。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

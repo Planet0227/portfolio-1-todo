@@ -34,13 +34,22 @@
 
 ![PC 操作画面1](./public/images/demo-pc-1.png) ![PC 操作画面2](./public/images/demo-pc-2.png) ![PC 操作画面3](./public/images/demo-pc-3.png)
 
-![PC 操作デモ GIF](./public/images/demo-pc-1.gif)
+![PC 操作デモ GIF](./public/images/demo-pc-dnd.gif)
 
 ### スマホ操作画面
 
-![スマホ操作画面1](./public/images/demo-sp-1.jpg) ![スマホ操作画面2](./public/images/demo-sp-2.jpg) ![スマホ操作画面3](./public/images/demo-sp-3.jpg) ![スマホ操作画面4](./public/images/demo-sp-4.jpg)
+<p>
+  <img src="./public/images/demo-sp-1.jpg" alt="スマホ操作画面1" width="200" />
+  <img src="./public/images/demo-sp-2.jpg" alt="スマホ操作画面2" width="200" />
+</p>
+<p>
+  <img src="./public/images/demo-sp-3.jpg" alt="スマホ操作画面3" width="200" />
+  <img src="./public/images/demo-sp-4.jpg" alt="スマホ操作画面4" width="200" />
+</p>
+<p>
+  <img src="./public/images/demo-sp-1.gif" alt="スマホ操作デモ GIF" width="200" />
+</p>
 
-![スマホ操作デモ GIF](./public/images/demo-sp-1.gif)
 
 ## 機能一覧
 

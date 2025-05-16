@@ -7,15 +7,17 @@ import {
   useState,
 } from "react";
 import { authenticatedFetch } from "@/utils/authToken";
+import { useAuth } from "./AuthContext";
+import { resetTasksIfNeeded } from "@/utils/resetTasks";
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
 
 const todoReducer = (state, { type, payload }) => {
   switch (type) {
     case "todo/init":
-      return  [...payload]
+      return [...payload].sort((a, b) => a.order - b.order);
     case "todo/addList":
-      return [...state, payload]
+      return [...state, payload].sort((a, b) => a.order - b.order);
     case "todo/add":
       return state.map((todoList) =>
         todoList.id === payload.id
@@ -68,13 +70,17 @@ const todoReducer = (state, { type, payload }) => {
           : todoList
       );
     case "todo/deleteList":
-      return state.filter((todoList) => todoList.id !== payload.listId).sort((a, b) => a.order - b.order);
+      return state
+        .filter((todoList) => todoList.id !== payload.listId)
+        .sort((a, b) => a.order - b.order);
     case "todo/delete":
       return state.map((todoList) => {
         if (todoList.id === payload.listId) {
           return {
             ...todoList,
-            tasks: todoList.tasks.filter((task) => task.id !== payload.taskId).sort((a, b) => a.order - b.order),
+            tasks: todoList.tasks
+              .filter((task) => task.id !== payload.taskId)
+              .sort((a, b) => a.order - b.order),
           };
         }
         return todoList;
@@ -89,17 +95,51 @@ const todoReducer = (state, { type, payload }) => {
 
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []);
-  const [isTodosLoading, setisTodosLoading] = useState(true);
+  const [isTodosLoading, setIsTodosLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+
   useEffect(() => {
-    const getTodos = async () => {
-      const todos = await authenticatedFetch("/api/todos", {
-        method: "GET",
-      }).then((res) => res.json());
-      dispatch({ type: "todo/init", payload: todos });
-      setisTodosLoading(false);
+    if (authLoading) return;
+
+    const initTodos = async () => {
+      // 未ログイン時はすぐ空配列で初期化
+      if (!user) {
+        dispatch({ type: "todo/init", payload: [] });
+        setIsTodosLoading(false);
+        return;
+      }
+
+      try {
+        const res = await authenticatedFetch("/api/todos", { method: "GET" });
+
+        // HTTP レスポンス判定を自前で
+        if (res.status === 401) {
+          console.warn("認証されていません。ゲストモードで動作します。");
+          dispatch({ type: "todo/init", payload: [] });
+          return;
+        }
+        if (!res.ok) {
+          throw new Error(`Todo の取得に失敗しました: ${res.status}`);
+        }
+
+        let todos = await res.json();
+
+        // fetch 直後にリセットロジックを通す
+        todos = await resetTasksIfNeeded(todos);
+
+        // ローカルステート初期化
+        dispatch({ type: "todo/init", payload: todos });
+      } catch (error) {
+        console.error(error);
+        // エラー時も空配列で安全に初期化
+        dispatch({ type: "todo/init", payload: [] });
+      } finally {
+        setIsTodosLoading(false);
+      }
     };
-    getTodos();
-  }, []);
+
+    initTodos();
+  }, [user, authLoading]);
 
   return (
     <TodoContext.Provider value={{ todos: state, isTodosLoading }}>
@@ -110,15 +150,8 @@ const TodoProvider = ({ children }) => {
   );
 };
 
-const useTodos = () => {
-  const context = useContext(TodoContext);
-  return context.todos;
-};
-
-const useTodosLoading = () => {
-  const context = useContext(TodoContext);
-  return context.isTodosLoading;
-};
+const useTodos = () => useContext(TodoContext).todos;
+const useTodosLoading = () => useContext(TodoContext).isTodosLoading;
 const useTodosDispatch = () => useContext(TodoContextDispatch);
 
 export { TodoProvider, useTodos, useTodosDispatch, useTodosLoading };

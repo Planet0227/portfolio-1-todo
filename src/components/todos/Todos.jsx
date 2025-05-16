@@ -51,20 +51,9 @@ const Todos = () => {
 
   const [todosList, setTodosList] = useState(todos);
 
-  // 初回リセットチェック
-  const [initialCheckDone, setInitialCheckDone] = useState(false);
-
   // DnD
   const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =
     useDnDTodos(todosList, setTodosList, dispatch);
-
-  // 初回マウント時に一回だけ実行
-  useEffect(() => {
-    if (!initialCheckDone && todos && todos.length > 0) {
-      checkAndResetTasks(todos, dispatch);
-      setInitialCheckDone(true);
-    }
-  }, [todos, dispatch, initialCheckDone]);
 
   // ソート反映
   useEffect(() => {

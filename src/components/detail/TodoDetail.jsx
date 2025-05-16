@@ -139,9 +139,9 @@ export default function TodoDetail({
     // タスクは order 順にソート
     const sortedTasks = [...cachedList.tasks].sort((a, b) => a.order - b.order);
     // コピー用テキストを組み立て
-    const lines = [`タイトル: ${cachedList.title}`, "", "タスク一覧："];
+    const lines = [`-${cachedList.title}-`, ""];
     sortedTasks.forEach((task) => {
-      const checkbox = task.complete ? "✓" : "";
+      const checkbox = task.complete ? "✓" : " ";
       lines.push(`[${checkbox}] ${task.content}`);
     });
     const textToCopy = lines.join("\n");

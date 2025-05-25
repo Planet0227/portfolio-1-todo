@@ -2,6 +2,31 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat&logo=next.js&logoColor=white)](https://nextjs.org) [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org) [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com) [![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)](https://firebase.google.com) [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://vercel.com)
 
+## 目次
+
+- [概要](#概要)
+- [特徴](#特徴)
+- [技術スタック](#技術スタック)
+- [デモサイト](#デモサイト)
+## 目次
+
+- [画面イメージ](#画面イメージ)
+  - [PC 操作画面](#pc-操作画面)
+  - [スマホ操作画面](#スマホ操作画面)
+- [機能一覧](#機能一覧)
+- [使用方法（ローカル実行）](#使用方法ローカル実行)
+  - [使い方](#使い方)
+- [要件定義](#要件定義)
+  - [1. システム概要](#1-システム概要)
+  - [2. 利用者](#2-利用者)
+  - [3. 機能要件](#3-機能要件)
+  - [4.非機能要件](#4-非機能要件)
+  - [5.技術要件](#5-技術要件)
+    - [5-1.開発言語等](#5-1-開発言語等)
+    - [5-2.firestore-コレクション構造](#5-2-firestore-コレクション構造)
+    - [ER 図](#er図)
+- [画面遷移図](#画面遷移図)
+
 ## 概要
 
 このアプリは、日々のタスクを効率的に管理できるタスク管理アプリです。
@@ -74,7 +99,7 @@ npm install
 npm run dev
 ```
 
-## 使い方
+### 使い方
 
 - アプリの起動後は未ログイン状態です。この状態で作成したリストは firebase に保存されず、リロードなどで消えてしまいます。
 - 画面上部からゲストログインかログイン/新規登録のボタンからログインや登録が出来ます。
@@ -158,7 +183,7 @@ npm run dev
 パス：`users/{uid}/lists/{listId}`
 | フィールド名 | 型 | 説明 | 実装状況 |
 | -------- | ------- | ------------------------ | :---: |
-| category | string | 所属カテゴリー | 済 |
+| category | string | 所属カテゴリー。初期値は４つ、今後はユーザーの任意のカテゴリーを追加できる機能を実装予定 | 一部済 |
 | date | string | リストの作成日 | 済 |
 | scheduledDate | string | リストの期限。リマインダー等で使用。 | 未実装 |
 | locked | boolean | リストのロック状態（true で削除不可） | 済 |
@@ -175,3 +200,58 @@ npm run dev
 | order | number | タスクの並び順 | 済 |
 | url | string | 商品ページ等のURL | 未実装 |
 
+#### ER図
+
+```mermaid
+erDiagram
+    USERS {
+        string uid PK "ドキュメントID"
+        string displayName     "表示名 (必須)"
+        string iconDataUrl     "アイコン（Base64）"
+    }
+    TODOLIST {
+        string listId PK       "ドキュメントID"
+        string category        "所属カテゴリー (必須)"
+        string date            "作成日 (必須)"
+        string scheduledDate    "期限 (未実装)"
+        boolean locked         "ロック状態 (必須)"
+        number order           "並び順 (必須)"
+        string resetDay        "曜日ごとのリセット設定(必須)"
+        string title           "タイトル (必須)"
+    }
+    TASK {
+        string taskId PK       "ドキュメントID"
+        string content         "内容 (必須)"
+        boolean complete       "完了フラグ (必須)"
+        number order           "並び順 (必須)"
+        string url             "リンク (未実装)"
+    }
+    USERS ||--o{ TODOLIST : "1人のユーザーは0個以上のリストを持つ"
+    TODOLIST ||--o{ TASK    : "1つのリストは0個以上のタスクを持つ"
+```
+---
+## 画面遷移図
+
+[Figmaで遷移図を確認する](https://www.figma.com/design/9AIZESKqn1r0VWOasLWx2T/List-Board?node-id=0-1&t=1sjHLcAgsRgLSr7r-1)
+
+
+### 1.
+<img src="./public/images/figma/login_logout.png" alt="ログイン・ログアウトフロー" />
+
+### 2.
+<img src="./public/images/figma/accountSetting.png" alt="アカウント設定" />
+
+### 3.
+<img src="./public/images/figma/addList_deleteList_modal.png" alt="リスト追加・削除　モーダルの表示・非表示" />
+
+### 4.
+<img src="./public/images/figma/changeCategory.png" alt="カテゴリー変更" />
+
+### 5.
+<img src="./public/images/figma/addTask_deleteTask.png" alt="タスク追加・削除" />
+
+### 6.
+<img src="./public/images/figma/updateTitle_Task.png" alt="タイトル・タスク更新" />
+
+### 7.
+<img src="./public/images/figma/detailPageFunction.png" alt="詳細ページ機能" />

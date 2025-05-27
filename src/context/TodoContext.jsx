@@ -129,6 +129,7 @@ const TodoProvider = ({ children }) => {
 
         // ローカルステート初期化
         dispatch({ type: "todo/init", payload: todos });
+        console.log(todos);
       } catch (error) {
         console.error(error);
         // エラー時も空配列で安全に初期化

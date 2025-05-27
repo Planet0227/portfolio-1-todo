@@ -1,22 +1,30 @@
 import admin from "firebase-admin";
-// import serviceAccount from "../../../../firebase-adminsdk.json";
-// Firebase Admin 初期化 ホスティング
+import { readFileSync } from "fs";
+import { join } from "path";
+
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
+  let credential;
+  if (
+    process.env.FIREBASE_PROJECT_ID &&
+    process.env.FIREBASE_CLIENT_EMAIL &&
+    process.env.FIREBASE_PRIVATE_KEY
+  ) {
+    // 本番 or 環境変数が設定されているとき
+    credential = admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
-}
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+    });
+  } else {
+    // ローカル開発環境用 JSON を使う
+    const serviceAccount = JSON.parse(
+      readFileSync(join(process.cwd(), "firebase-adminsdk.json"), "utf8")
+    );
+    credential = admin.credential.cert(serviceAccount);
+  }
 
-// Firebase Admin SDK の初期化（すでに初期化済みの場合はスキップ）
-// if (!admin.apps.length) {
-//   admin.initializeApp({
-//     credential: admin.credential.cert(serviceAccount),
-//   });
-// }
+  admin.initializeApp({ credential });
+}
 
 const db = admin.firestore();
 

@@ -7,7 +7,6 @@ import TodoDetail from "@/components/detail/TodoDetail";
 import { useTodos, useTodosDispatch } from "../../context/TodoContext";
 import { useEffect, useState, useRef } from "react";
 import Modal from "../common/Modal";
-import { checkAndResetTasks } from "@/utils/resetTasks";
 
 // dnd
 import {
@@ -49,17 +48,18 @@ const Todos = () => {
   const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
   const [isShowWarning, setIsShowWarning] = useState(true);
 
-  const [todosList, setTodosList] = useState(todos);
+  const [todosList, setTodosList] = useState([]);
 
   // DnD
   const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =
-    useDnDTodos(todosList, setTodosList, dispatch);
+    useDnDTodos(todosList, setTodosList, dispatch, user?.uid);
 
   // ソート反映
   useEffect(() => {
-    const sorted = [...todos].sort((a, b) => a.order - b.order);
-    setTodosList(sorted);
-    console.log(sorted);
+    if (Array.isArray(todos)) {
+      const sorted = [...todos].sort((a, b) => a.order - b.order);
+      setTodosList(sorted);
+    }
   }, [todos]);
 
   // デスクトップ: マウス位置でフォーム表示
@@ -143,7 +143,7 @@ const Todos = () => {
           {CATEGORY_LIST.map((cat) => {
             const list = todosList.filter((t) => t.category === cat.id);
             return (
-              <div key={cat.id} className="flex-none w-full px-2 pt-2 md:w-72">
+              <div key={cat.id} className="flex-none w-full px-2 pt-2 md:w-80">
                 <TodoColmun
                   category={cat.id}
                   todoList={list}

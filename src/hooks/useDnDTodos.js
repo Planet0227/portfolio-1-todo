@@ -3,10 +3,9 @@ import { CATEGORY_LIST } from "@/utils/categories";
 import { arrayMove } from "@dnd-kit/sortable";
 import { MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useCallback, useState } from "react";
-import { authenticatedFetch } from "@/utils/authToken";
+import { sortTodoList } from "@/firebase/todos";
 
-export const useDnDTodos = (todosList, setTodosList, dispatch) => {
-
+export const useDnDTodos = (todosList, setTodosList, dispatch, userId) => {
   const [dragItem, setDragItem] = useState(null);
 
   //5px動かすとドラッグと判定する。
@@ -35,7 +34,7 @@ export const useDnDTodos = (todosList, setTodosList, dispatch) => {
     const { active, over } = event;
     if (!active) return;
     setDragItem(active.id);
-  },[]);
+  }, []);
 
   const handleDragOver = (event) => {
     const { active, over } = event;
@@ -90,7 +89,7 @@ export const useDnDTodos = (todosList, setTodosList, dispatch) => {
     if (activeColumn === overColumn) {
       const oldIndex = todosList.findIndex((t) => t.id === active.id);
       const newIndex = todosList.findIndex((t) => t.id === over.id);
-      
+
       // active.idからtodoを特定しstatusをcolumnのidに変更する
       updatedTodos = arrayMove(todosList, oldIndex, newIndex);
 
@@ -110,23 +109,16 @@ export const useDnDTodos = (todosList, setTodosList, dispatch) => {
           }
         });
       });
-      
+
       setTodosList(updatedTodos);
 
+      
       // 状態更新
       dispatch({
         type: "todo/sort",
         payload: { updatedTodos },
       });
-
-      try {
-        await authenticatedFetch("/api/todos", {
-          method: "PATCH",
-          body: JSON.stringify({ updatedTodos }),
-        });
-      } catch (error) {
-        console.error("タスク更新エラー:", error);
-      }
+      const sortedTodos = await sortTodoList(userId, updatedTodos);
     }
   };
 

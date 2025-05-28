@@ -1,8 +1,7 @@
 "use client";
 
 import { MainPage } from "@/components/layout/MainPage";
-import Loading from "@/components/common/Loading";
-import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { AuthProvider } from "@/context/AuthContext";
 import { TodoProvider } from "@/context/TodoContext";
 
 

@@ -1,4 +1,3 @@
-// src/components/CategoryHeader.jsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getCategoryInfo } from "@/utils/categories";
 

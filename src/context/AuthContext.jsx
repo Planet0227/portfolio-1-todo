@@ -2,35 +2,35 @@
 
 import React, { createContext, useContext, useEffect, useReducer } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/authToken";
 import { app } from "../firebase/firebaseConfig";
+import { fetchAccountInfo } from "@/firebase/account";
 
 const auth = getAuth(app);
 
-// 1. State と Dispatch 用の Context
+// State と Dispatch 用の Context
 const AuthStateContext = createContext();
 const AuthDispatchContext = createContext();
 
 const initialState = {
   user: null,
   accountInfo: null,
-  loading: true,
+  isAuthLoading: true,
 };
 
 const authReducer = (state, { type, payload }) => {
   switch (type) {
     case "SET_LOADING":
-      return { ...state, loading: payload };
+      return { ...state, isAuthLoading: payload };
     case "SET_USER":
-      return { ...state, user: payload, loading: false };
+      return { ...state, user: payload, isAuthLoading: false };
     case "SET_ACCOUNT_INFO":
-      return { ...state, accountInfo: payload, loading: false };
+      return { ...state, accountInfo: payload, isAuthLoading: false };
     default:
       throw new Error(`アクションに失敗しました。: ${type}`);
   }
 };
 
-// 4. Provider コンポーネント
+//  Provider コンポーネント
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -39,9 +39,8 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: "SET_USER", payload: currentUser });
       if (currentUser) {
         try {
-          const res = await authenticatedFetch("/api/account", { method: "GET" });
-          const data = res.ok ? await res.json() : null;
-          dispatch({ type: "SET_ACCOUNT_INFO", payload: data });
+          const accountInfo = await fetchAccountInfo(currentUser.uid);
+          dispatch({ type: "SET_ACCOUNT_INFO", payload: accountInfo });
         } catch (err) {
           console.error("Failed to fetch account info:", err);
           dispatch({ type: "SET_LOADING", payload: false });

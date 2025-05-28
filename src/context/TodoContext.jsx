@@ -6,9 +6,10 @@ import {
   useReducer,
   useState,
 } from "react";
-import { authenticatedFetch } from "@/utils/authToken";
 import { useAuth } from "./AuthContext";
 import { resetTasksIfNeeded } from "@/utils/resetTasks";
+import { fetchUserTodos } from "@/firebase/todos";
+
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
 
@@ -96,10 +97,10 @@ const todoReducer = (state, { type, payload }) => {
 const TodoProvider = ({ children }) => {
   const [state, dispatch] = useReducer(todoReducer, []);
   const [isTodosLoading, setIsTodosLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAuthLoading } = useAuth();
 
   useEffect(() => {
-    if (authLoading) return;
+    if (isAuthLoading) return;
 
     const initTodos = async () => {
       // 未ログイン時はすぐ空配列で初期化
@@ -110,28 +111,16 @@ const TodoProvider = ({ children }) => {
       }
 
       try {
-        const res = await authenticatedFetch("/api/todos", { method: "GET" });
-
-        // HTTP レスポンス判定を自前で
-        if (res.status === 401) {
-          console.warn("認証されていません。ゲストモードで動作します。");
-          dispatch({ type: "todo/init", payload: [] });
-          return;
-        }
-        if (!res.ok) {
-          throw new Error(`Todo の取得に失敗しました: ${res.status}`);
-        }
-
-        let todos = await res.json();
+        // クライアントSDKを使用してデータを取得
+        const todos = await fetchUserTodos(user.uid);
 
         // fetch 直後にリセットロジックを通す
-        todos = await resetTasksIfNeeded(todos);
+        const resetTodos = await resetTasksIfNeeded(todos);
 
         // ローカルステート初期化
-        dispatch({ type: "todo/init", payload: todos });
-        console.log(todos);
+        dispatch({ type: "todo/init", payload: resetTodos });
       } catch (error) {
-        console.error(error);
+        console.error("タスクの取得に失敗しました:", error);
         // エラー時も空配列で安全に初期化
         dispatch({ type: "todo/init", payload: [] });
       } finally {
@@ -140,7 +129,7 @@ const TodoProvider = ({ children }) => {
     };
 
     initTodos();
-  }, [user, authLoading]);
+  }, [user, isAuthLoading]);
 
   return (
     <TodoContext.Provider value={{ todos: state, isTodosLoading }}>

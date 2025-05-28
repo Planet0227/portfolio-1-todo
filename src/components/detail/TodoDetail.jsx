@@ -6,7 +6,6 @@ import TodoDetailItem from "./TodoDetailItem";
 import TodoDetailForm from "./TodoDetailForm";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import WeekToggleButtons from "./WeekToggleButtons";
-import { authenticatedFetch } from "@/utils/authToken";
 import { CATEGORY_LIST } from "@/utils/categories";
 import CategoryHeader from "@/components/common/CategoryHeader";
 
@@ -37,6 +36,8 @@ import { arrayMove } from "@dnd-kit/sortable";
 import {
   restrictToVerticalAxis,
 } from "@dnd-kit/modifiers";
+import { useAuth } from "@/context/AuthContext";
+import { changeCategory, deleteTodoList, updateLock, updateTasks, updateTitle } from "@/firebase/todos";
 
 export default function TodoDetail({
   listId,
@@ -51,6 +52,7 @@ export default function TodoDetail({
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastMounted, setToastMounted] = useState(false);
+  const { user } = useAuth();
 
   const toggleButtonRef = useRef(null);
 
@@ -121,14 +123,11 @@ export default function TodoDetail({
     }
   }, [showToast, toastMounted]);
 
-  const updateLock = async () => {
+  const handleUpdateLock = async () => {
     const newLock = !cachedList.lock;
     dispatch({ type: "todo/updateLock", payload: { listId, lock: newLock } });
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedLock: newLock }),
-      });
+      await updateLock(user.uid, listId, newLock);
     } catch (error) {
       console.error("タイトル更新エラー:", error);
     }
@@ -156,18 +155,11 @@ export default function TodoDetail({
       .catch(console.error);
   };
 
-  const deleteTodoList = async () => {
+  const handleDeleteList = async () => {
     dispatch({ type: "todo/deleteList", payload: { listId } });
     setCachedList(null);
     onClose();
-    try {
-      await authenticatedFetch("/api/todos", {
-        method: "DELETE",
-        body: JSON.stringify({ listId }),
-      });
-    } catch (error) {
-      console.error("タイトル更新エラー:", error);
-    }
+    await deleteTodoList(user.uid, listId);
   };
 
   const handleTitleChange = (e) => {
@@ -180,18 +172,16 @@ export default function TodoDetail({
   };
 
   const handleTitleBlur = async () => {
+
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedTitle: editTitle }),
-      });
+      await updateTitle(user.uid, listId, editTitle);
     } catch (error) {
       console.error("タイトル更新エラー:", error);
       setEditTitle(cachedList.title); // エラー時は元のタイトルに戻す
     }
   };
 
-  const changeCategory = async (catId) => {
+  const handleChangeCategory = async (catId) => {
     // グローバルの todos 配列から、指定カテゴリーのリスト件数を取得
     const listsInCategory = todos.filter((list) => list.category === catId);
     const newOrder = listsInCategory.length + 1;
@@ -206,15 +196,9 @@ export default function TodoDetail({
       payload: { listId, updatedCategory: catId, updatedOrder: newOrder },
     });
 
+
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({
-          listId,
-          updatedCategory: catId,
-          updatedOrder: newOrder,
-        }),
-      });
+      await changeCategory(user.uid, listId, catId, newOrder);
     } catch (error) {
       console.error("カテゴリー更新エラー:", error);
     }
@@ -240,10 +224,7 @@ export default function TodoDetail({
     });
 
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedTasks }),
-      });
+      await updateTasks(user.uid, listId, updatedTasks);
     } catch (error) {
       console.error("タスク更新エラー:", error);
     }
@@ -277,10 +258,7 @@ export default function TodoDetail({
 
     // 認証ユーザーの確認と更新処理
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedTasks }),
-      });
+      await updateTasks(user.uid, listId, updatedTasks);
     } catch (error) {
       console.error("タスク更新エラー:", error);
     }
@@ -383,7 +361,7 @@ export default function TodoDetail({
             <div className="flex">
               <button
                 className="text-xl md:text-3xl"
-                onClick={updateLock}
+                onClick={handleUpdateLock}
                 title={cachedList?.lock ? "ロック解除" : "ロックする"}
               >
                 {cachedList.lock ? (
@@ -401,7 +379,7 @@ export default function TodoDetail({
             </div>
 
             <button
-              onClick={deleteTodoList}
+              onClick={handleDeleteList}
               disabled={cachedList?.lock}
               className={`px-3 p-1 md:px-5 md:py-2 text-xs md:text-sm font-medium text-center border rounded-lg focus:ring-4 focus:outline-none me-2 shrink-0 transition-colors duration-300 ${
                 cachedList?.lock
@@ -447,7 +425,7 @@ export default function TodoDetail({
                     key={cat.id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      changeCategory(cat.id);
+                      handleChangeCategory(cat.id);
                       setShowCategorySelector(false);
                     }}
                     className={`cursor-pointer text-sm md:text-base`}

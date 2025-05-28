@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { getAuth } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/authToken";
+import { deleteTask, updateTasks } from "@/firebase/todos";
+import { useAuth } from "@/context/AuthContext";
 
 const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   const [editContent, setEditContent] = useState(task.content);
@@ -15,10 +15,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
 
   //  dnd
   const {
-    isOver,
     isDragging,
-    activeIndex,
-    overIndex,
     isSorting,
     setNodeRef,
     transform,
@@ -29,6 +26,8 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   } = useSortable({
     id,
   });
+  
+  const { user } = useAuth();
 
   const style = {
     transform: isSorting ? CSS.Translate.toString(transform) : undefined, //CSS.Translateに変更(歪み防止)
@@ -36,57 +35,39 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
     opacity: isDragging ? "0.6" : "",
   };
 
-  // const sortDirection =
-  //   activeIndex > overIndex
-  //     ? "before"
-  //     : activeIndex < overIndex
-  //     ? "after"
-  //     : null;
-
-  // const isShowIndicator = isOver && sortDirection != null;
-
   // 削除
-  const deleteTodo = async () => {
+  const handleDeleteTodo = async () => {
     const taskId = task.id;
-    dispatch({ type: "todo/delete", payload: { listId, taskId: taskId } });
+    dispatch({ type: "todo/delete", payload: { listId, taskId } });
 
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "DELETE",
-        body: JSON.stringify({ listId, taskId }),
-      });
+      await deleteTask(user.uid, listId, taskId);
     } catch (error) {
       console.error("タスク更新エラー:", error);
     }
   };
 
   // タスク更新
-  const updateContent = async (newContent) => {
+  const handleUpdateContent = async (newContent) => {
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, content: newContent } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedTasks }),
-      });
+      await updateTasks(user.uid, listId, updatedTasks);
     } catch (error) {
       console.error("タスク更新エラー:", error);
     }
   };
 
   // チェックボックス更新
-  const toggleCheckBox = async () => {
+  const handleToggleCheckBox = async () => {
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, complete: !task.complete } : _todo
     );
     dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedTasks }),
-      });
+      await updateTasks(user.uid, listId, updatedTasks);
     } catch (error) {
       console.error("タスク更新エラー:", error);
     }
@@ -130,9 +111,9 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   };
   // 入力が空なら削除
   const handleContentBlur = () => {
-    updateContent(editContent);
+    handleUpdateContent(editContent);
     if (editContent.trim().length === 0) {
-      deleteTodo();
+      handleDeleteTodo();
     }
   };
 
@@ -163,7 +144,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           type="checkbox"
           name={`todo-${task.id}-checkBox`}
           checked={task.complete}
-          onChange={toggleCheckBox}
+          onChange={handleToggleCheckBox}
           className={`ml-2 w-8 h-8 mt-0.5  appearance-none cursor-pointer rounded-full border hover:bg-gray-100 select-none border-gray-300 ${
             task.complete
               ? "bg-green-400 border-green-400 hover:bg-green-600 before:content-['✓'] before:text-white before:text-sm before:mt-1 before:flex before:items-center before:justify-center"
@@ -186,7 +167,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
 
         <button
           className="self-start px-3 text-xl font-semibold text-red-400 border-l-2 border-gray-300 ml-7 hover:text-red-700"
-          onClick={deleteTodo}
+          onClick={handleDeleteTodo}
         >
           <FontAwesomeIcon icon={faTrashCan} />
         </button>

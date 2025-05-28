@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "@/context/TodoContext";
-import { getAuth } from "firebase/auth";
-import { authenticatedFetch } from "@/utils/authToken";
+import { addTask } from "@/firebase/todos";
+import { useAuth } from "@/context/AuthContext";
 
 const TodoDetailForm = ({ listId }) => {
   const [inputValue, setInputValue] = useState("");
@@ -11,12 +11,14 @@ const TodoDetailForm = ({ listId }) => {
   const dispatch = useTodosDispatch();
   const todos = useTodos();
   const textareaRef = useRef(null);
+  const {user} = useAuth();
 
-  const addTask = async (e) => {
+  const handleAddTask = async (e) => {
     e.preventDefault();
-    if (inputValue === "") {
+    if (inputValue === "" || !user) {
       return;
     }
+
     const targetListTasks =
       todos.filter((todo) => todo.id === listId).map((todo) => todo.tasks)[0] ||
       [];
@@ -29,18 +31,22 @@ const TodoDetailForm = ({ listId }) => {
       order: order,
     };
 
-    dispatch({ type: "todo/add", payload: { id: listId, newTask } });
-    setInputValue("");
-
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "POST",
-        body: JSON.stringify({ listId, newTask }),
+      // クライアントSDKを使用してタスクを追加
+      const updatedTasks = await addTask(user.uid, listId, newTask);
+      
+      // ローカルステートをタスク一覧で更新
+      dispatch({ 
+        type: "todo/update", 
+        payload: { listId, updatedTasks } 
       });
+      
+      setInputValue("");
     } catch (error) {
-      console.error("タスク更新エラー:", error);
+      console.error("タスクの追加に失敗しました:", error);
     }
   };
+
   // textareaの高さの調整
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -53,44 +59,45 @@ const TodoDetailForm = ({ listId }) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault(); // 改行を防止
-      addTask(e); // フォーム送信
+      handleAddTask(e); // フォーム送信
     }
   };
+
   return (
     <div className="flex w-full p-1 rounded-lg shadow-sm bg-gradient-to-r from-green-100 via-blue-100 to-purple-100">
-    <form onSubmit={addTask} className="flex items-center w-full space-x-2">
-      {/* 追加ボタン */}
-      <div className="relative">
-        <button
-          onClick={addTask}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className="flex items-center justify-center w-8 h-8 text-2xl text-white transition rounded-full bg-cyan-400 hover:bg-cyan-500 active:scale-95"
-        >
-          +
-        </button>
-        <div
-          className={`absolute z-10 flex flex-col items-center p-1 text-xs text-gray-700 bg-white rounded-lg shadow-md top-10 left-0 transition-opacity duration-200 ${
-            isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-        >
-          <span>追加</span>
-          <span>(Enter)</span>
+      <form onSubmit={handleAddTask} className="flex items-center w-full space-x-2">
+        {/* 追加ボタン */}
+        <div className="relative">
+          <button
+            onClick={handleAddTask}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            className="flex items-center justify-center w-8 h-8 text-2xl text-white transition rounded-full bg-cyan-400 hover:bg-cyan-500 active:scale-95"
+          >
+            +
+          </button>
+          <div
+            className={`absolute z-10 flex flex-col items-center p-1 text-xs text-gray-700 bg-white rounded-lg shadow-md top-10 left-0 transition-opacity duration-200 ${
+              isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            <span>追加</span>
+            <span>(Enter)</span>
+          </div>
         </div>
-      </div>
 
-      {/* 入力欄 */}
-      <textarea
-        ref={textareaRef}
-        placeholder="タスクを入力"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        rows={1}
-        className="flex-1 p-2 overflow-hidden text-gray-700 placeholder-gray-400 break-words whitespace-pre-wrap transition-all bg-white border border-gray-200 rounded-lg resize-none bg-opacity-80 focus:bg-white focus:outline-none"
-      />
-    </form>
-  </div>
+        {/* 入力欄 */}
+        <textarea
+          ref={textareaRef}
+          placeholder="タスクを入力"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          className="flex-1 p-2 overflow-hidden text-gray-700 placeholder-gray-400 break-words whitespace-pre-wrap transition-all bg-white border border-gray-200 rounded-lg resize-none bg-opacity-80 focus:bg-white focus:outline-none"
+        />
+      </form>
+    </div>
   );
 };
 

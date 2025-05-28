@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useTodos, useTodosDispatch } from "../../context/TodoContext";
-import { authenticatedFetch } from "@/utils/authToken";
+import { addTodoList } from "@/firebase/todos";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCirclePlus,
@@ -9,6 +9,7 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import CategoryHeader from "../common/CategoryHeader";
+import { useAuth } from "@/context/AuthContext";
 const Form = ({
   categories,
   formVisible,
@@ -21,6 +22,7 @@ const Form = ({
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const todos = useTodos();
   const dispatch = useTodosDispatch();
+  const { user } = useAuth();
 
   const toggleButtonRef = useRef(null);
   const inputRef = useRef(null);
@@ -55,10 +57,10 @@ const Form = ({
     }
   }, [formVisible, formExpanded]);
 
-  //　新しいTodoリスト
-  const addTodoList = async (e) => {
+  // 新しいTodoリスト
+  const handleAddTodoList = async (e) => {
     e.preventDefault();
-    if (inputValue === "") {
+    if (inputValue === "" || !user) {
       return;
     }
 
@@ -66,10 +68,8 @@ const Form = ({
 
     // 年、月、日を取得
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0"); // 月は0から始まるので+1
+    const month = String(now.getMonth() + 1).padStart(2, "0");
     const date = String(now.getDate()).padStart(2, "0");
-
-    // 曜日を配列で定義
     const days = ["日", "月", "火", "水", "木", "金", "土"];
     const day = days[now.getDay()];
 
@@ -105,16 +105,16 @@ const Form = ({
       order: order,
       tasks: [],
     };
-    dispatch({ type: "todo/addList", payload: newTodoList });
-    setInputValue("");
 
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "POST",
-        body: JSON.stringify({ newTodoList }),
-      });
+      // クライアントSDKを使用してリストを追加
+      const createdTodoList = await addTodoList(user.uid, newTodoList);
+      
+      // ローカルステートを更新
+      dispatch({ type: "todo/addList", payload: createdTodoList });
+      setInputValue("");
     } catch (error) {
-      console.error("タスク更新エラー:", error);
+      console.error("リストの追加に失敗しました:", error);
     }
   };
 
@@ -155,35 +155,35 @@ const Form = ({
         )}
       </div>
       {/* カテゴリ選択 */}
-  <div className="relative flex justify-start mt-6 ml-16">
-    <span className="flex items-center mr-2 text-sm cursor-pointer select-none md:text-base">
-      追加先：
-    </span>
-    <button
-      ref={toggleButtonRef}
-      onClick={() => setShowCategorySelector(prev => !prev)}
-      className="px-3 py-1 transition"
-    >
-      <CategoryHeader category={selectedCategory} />
-    </button>
+      <div className="relative flex justify-start mt-6 ml-16">
+        <span className="flex items-center mr-2 text-sm cursor-pointer select-none md:text-base">
+          追加先：
+        </span>
+        <button
+          ref={toggleButtonRef}
+          onClick={() => setShowCategorySelector(prev => !prev)}
+          className="px-3 py-1 transition"
+        >
+          <CategoryHeader category={selectedCategory} />
+        </button>
 
-    {showCategorySelector && (formVisible || formExpanded) && (
-      <div
-        ref={toggleButtonRef}
-        className="absolute z-10 grid w-full max-w-xs grid-cols-2 gap-2 p-2 mb-2 overflow-auto text-center bg-white border border-gray-300 rounded-md shadow-lg -left-7 bottom-full">
-        {categories.map(cat => (
+        {showCategorySelector && (formVisible || formExpanded) && (
           <div
-            key={cat}
-            onClick={() => { setSelectedCategory(cat); setShowCategorySelector(false); }}
-            className="py-1 transition rounded cursor-pointer bg-gray-50 hover:bg-gray-100"
-          >
-            <CategoryHeader category={cat} />
+            ref={toggleButtonRef}
+            className="absolute z-10 grid w-full max-w-xs grid-cols-2 gap-2 p-2 mb-2 overflow-auto text-center bg-white border border-gray-300 rounded-md shadow-lg -left-7 bottom-full">
+            {categories.map(cat => (
+              <div
+                key={cat}
+                onClick={() => { setSelectedCategory(cat); setShowCategorySelector(false); }}
+                className="py-1 transition rounded cursor-pointer bg-gray-50 hover:bg-gray-100"
+              >
+                <CategoryHeader category={cat} />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
-    )}
-  </div>
-      <form onSubmit={addTodoList} className="flex justify-center mt-3">
+      <form onSubmit={handleAddTodoList} className="flex justify-center mt-3">
         <button
           type="submit"
           className="flex items-center justify-center flex-shrink-0 w-6 h-6 text-white transition rounded-full bg-cyan-400 hover:bg-cyan-500"
@@ -204,4 +204,5 @@ const Form = ({
     </div>
   );
 };
+
 export default Form;

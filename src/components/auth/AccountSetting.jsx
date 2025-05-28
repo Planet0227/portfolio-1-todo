@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { updateProfile } from "firebase/auth";
-import { app } from "@/firebase/firebaseConfig";
 import { useAuth } from "@/context/AuthContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronLeft, faUser } from "@fortawesome/free-solid-svg-icons";
-import { authenticatedFetch } from "@/utils/authToken";
+import { updateAccountInfo } from "@/firebase/account";
 
 const AccountSettings = ({ onClose }) => {
   const { user, accountInfo, loading, dispatch } = useAuth();
@@ -85,10 +84,13 @@ const AccountSettings = ({ onClose }) => {
     });
 
     try {
-      await authenticatedFetch("/api/account", {
-        method: "PATCH",
-        body: JSON.stringify({ displayName: newDisplayName,
-          iconDataUrl: newIconUrl, }),
+      // Firebase Auth の displayName を更新（オプション）
+      await updateProfile(user, { displayName: newDisplayName });
+
+      // Firestore のアカウント情報を更新
+      await updateAccountInfo(user.uid, {
+        displayName: newDisplayName,
+        iconDataUrl: newIconUrl,
       });
 
       onClose();

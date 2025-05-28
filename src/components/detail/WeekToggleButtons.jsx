@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getAuth } from "firebase/auth";
 import { useTodosDispatch } from "@/context/TodoContext";
-import { authenticatedFetch } from "@/utils/authToken";
+import { useAuth } from "@/context/AuthContext";
+import { updateResetDays } from "@/firebase/todos";
 
 const WeekToggleButtons = ({
   listId,
@@ -12,6 +12,7 @@ const WeekToggleButtons = ({
 }) => {
   const [resetDays, setResetDays] = useState(initialResetDays);
   const dispatch = useTodosDispatch();
+  const { user } = useAuth();
 
   // 親から初期状態が変更された場合、ローカルstateを更新
   useEffect(() => {
@@ -19,7 +20,7 @@ const WeekToggleButtons = ({
   }, [initialResetDays]);
 
   // 曜日トグルの更新処理
-  const updateResetDays = async (dayKey) => {
+  const handleUpdateResetDays = async (dayKey) => {
     // ローカルstateを更新
     const updatedResetDays = { ...resetDays, [dayKey]: !resetDays[dayKey] };
     setResetDays(updatedResetDays);
@@ -38,10 +39,11 @@ const WeekToggleButtons = ({
     });
 
     try {
-      await authenticatedFetch("/api/todos", {
-        method: "PATCH",
-        body: JSON.stringify({ listId, updatedResetDays }),
-      });
+      await updateResetDays(user.uid, listId, updatedResetDays);
+      // await authenticatedFetch("/api/todos", {
+      //   method: "PATCH",
+      //   body: JSON.stringify({ listId, handleUpdateResetDays }),
+      // });
     } catch (error) {
       console.error("曜日設定更新エラー:", error);
     }
@@ -64,7 +66,7 @@ const WeekToggleButtons = ({
       {days.map((day) => (
         <button
           key={day.key}
-          onClick={() => updateResetDays(day.key)}
+          onClick={() => handleUpdateResetDays(day.key)}
           className={`px-2.5 md:px-3 py-1 text-sm md:text-base rounded-md ${
             resetDays[day.key]
               ? day.key === "sun"

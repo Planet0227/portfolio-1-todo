@@ -60,7 +60,7 @@ const Form = ({
   // 新しいTodoリスト
   const handleAddTodoList = async (e) => {
     e.preventDefault();
-    if (inputValue === "" || !user) {
+    if (inputValue === "") {
       return;
     }
 
@@ -105,17 +105,21 @@ const Form = ({
       order: order,
       tasks: [],
     };
+    
+    
+    if (!user) {
+      dispatch({ type: "todo/addList", payload: newTodoList });
+    } else {
+      try {
+        // クライアントSDKを使用してリストを追加
+        await addTodoList(user.uid, newTodoList);
 
-    try {
-      // クライアントSDKを使用してリストを追加
-      const createdTodoList = await addTodoList(user.uid, newTodoList);
-      
-      // ローカルステートを更新
-      dispatch({ type: "todo/addList", payload: createdTodoList });
-      setInputValue("");
-    } catch (error) {
-      console.error("リストの追加に失敗しました:", error);
+        // ローカルステートを更新
+      } catch (error) {
+        console.error("リストの追加に失敗しました:", error);
+      }
     }
+    setInputValue("");
   };
 
   return (
@@ -161,7 +165,7 @@ const Form = ({
         </span>
         <button
           ref={toggleButtonRef}
-          onClick={() => setShowCategorySelector(prev => !prev)}
+          onClick={() => setShowCategorySelector((prev) => !prev)}
           className="px-3 py-1 transition"
         >
           <CategoryHeader category={selectedCategory} />
@@ -170,11 +174,15 @@ const Form = ({
         {showCategorySelector && (formVisible || formExpanded) && (
           <div
             ref={toggleButtonRef}
-            className="absolute z-10 grid w-full max-w-xs grid-cols-2 gap-2 p-2 mb-2 overflow-auto text-center bg-white border border-gray-300 rounded-md shadow-lg -left-7 bottom-full">
-            {categories.map(cat => (
+            className="absolute z-10 grid w-full max-w-xs grid-cols-2 gap-2 p-2 mb-2 overflow-auto text-center bg-white border border-gray-300 rounded-md shadow-lg -left-7 bottom-full"
+          >
+            {categories.map((cat) => (
               <div
                 key={cat}
-                onClick={() => { setSelectedCategory(cat); setShowCategorySelector(false); }}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setShowCategorySelector(false);
+                }}
                 className="py-1 transition rounded cursor-pointer bg-gray-50 hover:bg-gray-100"
               >
                 <CategoryHeader category={cat} />

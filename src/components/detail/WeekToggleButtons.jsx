@@ -30,20 +30,18 @@ const WeekToggleButtons = ({
       onResetDaysUpdated(updatedResetDays);
     }
 
-    dispatch({
-      type: "todo/updateResetDays",
-      payload: {
-        listId,
-        updatedResetDays,
-      },
-    });
-
+    if (!user) {
+      dispatch({
+        type: "todo/updateResetDays",
+        payload: {
+          listId,
+          updatedResetDays,
+        },
+      });
+    } else {
+    }
     try {
       await updateResetDays(user.uid, listId, updatedResetDays);
-      // await authenticatedFetch("/api/todos", {
-      //   method: "PATCH",
-      //   body: JSON.stringify({ listId, handleUpdateResetDays }),
-      // });
     } catch (error) {
       console.error("曜日設定更新エラー:", error);
     }

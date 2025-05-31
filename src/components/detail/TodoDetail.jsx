@@ -33,11 +33,15 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  restrictToVerticalAxis,
-} from "@dnd-kit/modifiers";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { useAuth } from "@/context/AuthContext";
-import { changeCategory, deleteTodoList, updateLock, updateTasks, updateTitle } from "@/firebase/todos";
+import {
+  changeCategory,
+  deleteTodoList,
+  updateLock,
+  updateTasks,
+  updateTitle,
+} from "@/firebase/todos";
 
 export default function TodoDetail({
   listId,
@@ -125,9 +129,15 @@ export default function TodoDetail({
 
   const handleUpdateLock = async () => {
     const newLock = !cachedList.lock;
-    dispatch({ type: "todo/updateLock", payload: { listId, lock: newLock } });
     try {
-      await updateLock(user.uid, listId, newLock);
+      if (!user) {
+        dispatch({
+          type: "todo/updateLock",
+          payload: { listId, lock: newLock },
+        });
+      } else {
+        await updateLock(user.uid, listId, newLock);
+      }
     } catch (error) {
       console.error("タイトル更新エラー:", error);
     }
@@ -156,10 +166,13 @@ export default function TodoDetail({
   };
 
   const handleDeleteList = async () => {
-    dispatch({ type: "todo/deleteList", payload: { listId } });
+    if (!user) {
+      dispatch({ type: "todo/deleteList", payload: { listId } });
+    } else {
+      await deleteTodoList(user.uid, listId);
+    }
     setCachedList(null);
     onClose();
-    await deleteTodoList(user.uid, listId);
   };
 
   const handleTitleChange = (e) => {
@@ -172,7 +185,6 @@ export default function TodoDetail({
   };
 
   const handleTitleBlur = async () => {
-
     try {
       await updateTitle(user.uid, listId, editTitle);
     } catch (error) {
@@ -190,17 +202,18 @@ export default function TodoDetail({
     const updatedList = { ...cachedList, category: catId, order: newOrder };
     setCachedList(updatedList);
 
-    // グローバル状態も更新 (実装に合わせ、更新内容を直接指定)
-    dispatch({
-      type: "todo/updateList",
-      payload: { listId, updatedCategory: catId, updatedOrder: newOrder },
-    });
-
-
-    try {
-      await changeCategory(user.uid, listId, catId, newOrder);
-    } catch (error) {
-      console.error("カテゴリー更新エラー:", error);
+    if (!user) {
+      // グローバル状態も更新 (実装に合わせ、更新内容を直接指定)
+      dispatch({
+        type: "todo/updateList",
+        payload: { listId, updatedCategory: catId, updatedOrder: newOrder },
+      });
+    } else {
+      try {
+        await changeCategory(user.uid, listId, catId, newOrder);
+      } catch (error) {
+        console.error("カテゴリー更新エラー:", error);
+      }
     }
   };
 
@@ -218,15 +231,17 @@ export default function TodoDetail({
 
     setCachedList({ ...cachedList, tasks: updatedTasks });
 
-    dispatch({
-      type: "todo/update",
-      payload: { listId, updatedTasks },
-    });
-
-    try {
-      await updateTasks(user.uid, listId, updatedTasks);
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+    if (!user) {
+      dispatch({
+        type: "todo/update",
+        payload: { listId, updatedTasks },
+      });
+    } else {
+      try {
+        await updateTasks(user.uid, listId, updatedTasks);
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 
@@ -251,16 +266,17 @@ export default function TodoDetail({
 
     setCachedList({ ...cachedList, tasks: updatedTasks });
 
-    dispatch({
-      type: "todo/update",
-      payload: { listId, updatedTasks },
-    });
-
-    // 認証ユーザーの確認と更新処理
-    try {
-      await updateTasks(user.uid, listId, updatedTasks);
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+    if (!user) {
+      dispatch({
+        type: "todo/update",
+        payload: { listId, updatedTasks },
+      });
+    } else {
+      try {
+        await updateTasks(user.uid, listId, updatedTasks);
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 

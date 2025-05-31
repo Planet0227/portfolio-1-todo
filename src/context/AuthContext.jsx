@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// 5. カスタムフック
+
 export const useAuthState = () => useContext(AuthStateContext);
 export const useAuthDispatch = () => useContext(AuthDispatchContext);
 export const useAuth = () => {

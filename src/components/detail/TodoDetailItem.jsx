@@ -26,7 +26,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   } = useSortable({
     id,
   });
-  
+
   const { user } = useAuth();
 
   const style = {
@@ -38,12 +38,14 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
   // 削除
   const handleDeleteTodo = async () => {
     const taskId = task.id;
-    dispatch({ type: "todo/delete", payload: { listId, taskId } });
-
-    try {
-      await deleteTask(user.uid, listId, taskId);
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+    if (!user) {
+      dispatch({ type: "todo/delete", payload: { listId, taskId } });
+    } else {
+      try {
+        await deleteTask(user.uid, listId, taskId);
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 
@@ -52,11 +54,14 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, content: newContent } : _todo
     );
-    dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
-    try {
-      await updateTasks(user.uid, listId, updatedTasks);
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+    if (!user) {
+      dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
+    } else {
+      try {
+        await updateTasks(user.uid, listId, updatedTasks);
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 
@@ -65,11 +70,14 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, complete: !task.complete } : _todo
     );
-    dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
-    try {
-      await updateTasks(user.uid, listId, updatedTasks);
-    } catch (error) {
-      console.error("タスク更新エラー:", error);
+    if (!user) {
+      dispatch({ type: "todo/update", payload: { listId, updatedTasks } });
+    } else {
+      try {
+        await updateTasks(user.uid, listId, updatedTasks);
+      } catch (error) {
+        console.error("タスク更新エラー:", error);
+      }
     }
   };
 
@@ -132,7 +140,7 @@ const TodoDetailItem = ({ tasks, task, id, listId, magnification }) => {
           {...listeners}
           style={{
             WebkitTouchCallout: "none", // iOS長押しメニュー無効
-            WebkitUserSelect: "none",   // ユーザー選択無効
+            WebkitUserSelect: "none", // ユーザー選択無効
             userSelect: "none",
           }}
           className="mt-1 text-lg text-gray-400 select-none cursor-grab active:cursor-grabbing hover:text-gray-600"

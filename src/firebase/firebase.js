@@ -2,6 +2,7 @@ import { getFirestore, collection, getDocs, deleteDoc, doc } from "firebase/fire
 
 const db = getFirestore();
 
+//ゲストユーザーのログアウト時にデータを削除する関数
 export const deleteUserData = async (userId) => {
   try {
     const todosRef = collection(db, `users/${userId}/todos`);

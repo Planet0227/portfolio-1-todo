@@ -1,3 +1,4 @@
+import { resetTasksIfNeeded } from "@/utils/resetTasks";
 import { db } from "./firebaseConfig";
 import { 
   collection, 
@@ -7,38 +8,82 @@ import {
   doc, 
   setDoc, 
   deleteDoc, 
-  updateDoc 
+  updateDoc, 
+  onSnapshot
 } from "firebase/firestore";
 
 // ---------------------------------------------取得------------------------------------------------
 // ユーザーの全タスクリストを取得
-export const fetchUserTodos = async (userId) => {
-  try {
-    const todosRef = collection(db, `users/${userId}/todos`);
-    const q = query(todosRef, orderBy("order", "asc"));
-    const snapshot = await getDocs(q);
-    
-    // 各todoリストのサブコレクション（tasks）を取得
-    const todos = await Promise.all(
-      snapshot.docs.map(async (doc) => {
-        const tasksRef = collection(db, `users/${userId}/todos/${doc.id}/tasks`);
-        const tasksSnapshot = await getDocs(tasksRef);
-        const tasks = tasksSnapshot.docs.map(taskDoc => ({
-          id: taskDoc.id,
-          ...taskDoc.data()
-        }));
-        
-        return {
-          id: doc.id, ...doc.data(), tasks: tasks};
-      })
-    );
-    
-    return todos;
-  } catch (error) {
-    console.error("リストの取得に失敗しました:", error);
-    throw error;
-  }
-};
+export function subscribeUserTodos(userId, dispatch, setLoading) {
+  // タスク購読解除関数を保存するマップ
+  const tasksUnsubscribes = {};
+
+  // 1) トップレベル todos 購読
+  const todosRef = collection(db, `users/${userId}/todos`);
+  const todosQ = query(todosRef, orderBy("order", "asc"));
+  const unsubscribeTodos = onSnapshot(
+    todosQ,
+    async (snapshot) => {
+      // 【A】リストの初期ロード＋リセット
+      const rawLists = await Promise.all(
+        snapshot.docs.map(async (docSnap) => {
+          const data = { id: docSnap.id, ...docSnap.data() };
+          // 初回タスク一括フェッチ
+          const tasksSnap = await getDocs(
+            collection(db, `users/${userId}/todos/${docSnap.id}/tasks`)
+          );
+          const tasks = tasksSnap.docs
+            .map((td) => ({ id: td.id, ...td.data() }))
+            .sort((a, b) => a.order - b.order);
+          return { ...data, tasks };
+        })
+      );
+      const initTodos = await resetTasksIfNeeded(rawLists);
+      dispatch({ type: "todo/init", payload: initTodos });
+      setLoading(false);
+
+      // 【B】リスト単位でタスク購読の登録／解除 (todosに変更があったときに前回のリストと今回のリストのidを記録)
+      const nextListIds = snapshot.docs.map((d) => d.id); // 取得したリストのidでできた配列
+      const prevListIds = Object.keys(tasksUnsubscribes); // 現在のサブスク対象からidを抜き出して配列化
+
+      // 登録：新しいリストが出たらタスクサブスク開始
+      nextListIds.forEach((listId) => {
+        if (!tasksUnsubscribes[listId]) {
+          const tasksRef = collection(db,`users/${userId}/todos/${listId}/tasks`);
+          const tasksQ = query(tasksRef, orderBy("order", "asc"));
+          tasksUnsubscribes[listId] = onSnapshot(tasksQ, (tasksSnap) => {
+            const tasks = tasksSnap.docs
+              .map((td) => ({ id: td.id, ...td.data() }))
+              .sort((a, b) => a.order - b.order);
+            dispatch({
+              type: "todo/update",
+              payload: { listId, updatedTasks: tasks },
+            });
+          });
+        }
+      });
+
+      // 解除：消えたリストのタスク購読をオフ
+      prevListIds
+        .filter((id) => !nextListIds.includes(id))
+        .forEach((oldId) => {
+          tasksUnsubscribes[oldId](); //削除されたリストidをマーク
+          delete tasksUnsubscribes[oldId];
+        });
+    },
+    (error) => {
+      console.error("subscribeUserTodos error:", error);
+      dispatch({ type: "todo/init", payload: [] });
+      setLoading(false);
+    }
+  );
+
+  // 返り値は「トップ＋全サブスク解除」を行う関数
+  return () => {
+    unsubscribeTodos();
+    Object.values(tasksUnsubscribes).forEach((unsub) => unsub());
+  };
+}
 
 // ---------------------------------------------追加------------------------------------------------
 
@@ -86,7 +131,7 @@ export const updateTitle = async (userId, listId, updatedTitle) => {
     await updateDoc(todoRef, { title: updatedTitle });
   
   } catch (error) {
-    console.error("リストの更新に失敗しました:", error);
+    console.error("リストタイトルの更新に失敗しました:", error);
     throw error;
   }
 };
@@ -97,7 +142,7 @@ export const updateLock = async (userId, listId, updatedLock) => {
     const todoRef = doc(db, `users/${userId}/todos/${listId}`);
     await updateDoc(todoRef, { lock: updatedLock });
   } catch (error) {
-    console.error("リストの更新に失敗しました:", error);
+    console.error("ロックの更新に失敗しました:", error);
     throw error;
   }
 };
@@ -107,7 +152,7 @@ export const updateResetDays = async (userId, listId, updatedResetDays) => {
     const todoRef = doc(db, `users/${userId}/todos/${listId}`);
     await updateDoc(todoRef, { resetDays: updatedResetDays });
   } catch (error) {
-    console.error("リストの更新に失敗しました:", error);
+    console.error("曜日ボタンの更新に失敗しました:", error);
     throw error;
   }
 };

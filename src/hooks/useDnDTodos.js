@@ -2,7 +2,7 @@
 import { CATEGORY_LIST } from "@/utils/categories";
 import { arrayMove } from "@dnd-kit/sortable";
 import { MouseSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { sortTodoList } from "@/firebase/todos";
 
 export const useDnDTodos = (todosList, setTodosList, dispatch, userId) => {
@@ -112,13 +112,14 @@ export const useDnDTodos = (todosList, setTodosList, dispatch, userId) => {
 
       setTodosList(updatedTodos);
 
-      
-      // 状態更新
-      dispatch({
-        type: "todo/sort",
-        payload: { updatedTodos },
-      });
-      const sortedTodos = await sortTodoList(userId, updatedTodos);
+      if (!useId) {
+        dispatch({
+          type: "todo/sort",
+          payload: { updatedTodos },
+        });
+      } else {
+        await sortTodoList(userId, updatedTodos);
+      }
     }
   };
 

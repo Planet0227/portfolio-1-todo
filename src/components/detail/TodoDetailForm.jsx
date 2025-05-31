@@ -11,11 +11,11 @@ const TodoDetailForm = ({ listId }) => {
   const dispatch = useTodosDispatch();
   const todos = useTodos();
   const textareaRef = useRef(null);
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   const handleAddTask = async (e) => {
     e.preventDefault();
-    if (inputValue === "" || !user) {
+    if (inputValue === "") {
       return;
     }
 
@@ -32,15 +32,15 @@ const TodoDetailForm = ({ listId }) => {
     };
 
     try {
-      // クライアントSDKを使用してタスクを追加
-      const updatedTasks = await addTask(user.uid, listId, newTask);
-      
-      // ローカルステートをタスク一覧で更新
-      dispatch({ 
-        type: "todo/update", 
-        payload: { listId, updatedTasks } 
-      });
-      
+      if (!user) {
+        dispatch({
+          type: "todo/add",
+          payload: { id:listId, newTask },
+        });
+      } else {
+        await addTask(user.uid, listId, newTask);
+      }
+
       setInputValue("");
     } catch (error) {
       console.error("タスクの追加に失敗しました:", error);
@@ -65,7 +65,10 @@ const TodoDetailForm = ({ listId }) => {
 
   return (
     <div className="flex w-full p-1 rounded-lg shadow-sm bg-gradient-to-r from-green-100 via-blue-100 to-purple-100">
-      <form onSubmit={handleAddTask} className="flex items-center w-full space-x-2">
+      <form
+        onSubmit={handleAddTask}
+        className="flex items-center w-full space-x-2"
+      >
         {/* 追加ボタン */}
         <div className="relative">
           <button

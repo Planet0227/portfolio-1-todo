@@ -7,8 +7,7 @@ import {
   useState,
 } from "react";
 import { useAuth } from "./AuthContext";
-import { resetTasksIfNeeded } from "@/utils/resetTasks";
-import { fetchUserTodos } from "@/firebase/todos";
+import { subscribeUserTodos } from "@/firebase/todos";
 
 const TodoContext = createContext();
 const TodoContextDispatch = createContext();
@@ -99,36 +98,24 @@ const TodoProvider = ({ children }) => {
   const [isTodosLoading, setIsTodosLoading] = useState(true);
   const { user, isAuthLoading } = useAuth();
 
+  // サブスクリプション解除関数を listId→unsubscribe で保持
+
   useEffect(() => {
     if (isAuthLoading) return;
 
-    const initTodos = async () => {
-      // 未ログイン時はすぐ空配列で初期化
-      if (!user) {
-        dispatch({ type: "todo/init", payload: [] });
-        setIsTodosLoading(false);
-        return;
-      }
+    if (!user) {
+      dispatch({ type: "todo/init", payload: [] });
+      setIsTodosLoading(false);
+      return;
+    }
 
-      try {
-        // クライアントSDKを使用してデータを取得
-        const todos = await fetchUserTodos(user.uid);
-
-        // fetch 直後にリセットロジックを通す
-        const resetTodos = await resetTasksIfNeeded(todos);
-
-        // ローカルステート初期化
-        dispatch({ type: "todo/init", payload: resetTodos });
-      } catch (error) {
-        console.error("タスクの取得に失敗しました:", error);
-        // エラー時も空配列で安全に初期化
-        dispatch({ type: "todo/init", payload: [] });
-      } finally {
-        setIsTodosLoading(false);
-      }
-    };
-
-    initTodos();
+    const unsubscribe = subscribeUserTodos(
+      user.uid,
+      dispatch,
+      setIsTodosLoading
+    );
+  
+    return () => unsubscribe();
   }, [user, isAuthLoading]);
 
   return (

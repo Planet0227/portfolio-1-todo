@@ -40,13 +40,12 @@ export function subscribeUserTodos(userId, dispatch, setLoading) {
       );
       const initTodos = await resetTasksIfNeeded(rawLists);
       dispatch({ type: "todo/init", payload: initTodos });
-      setLoading(false);
+      
 
-      // 【B】リスト単位でタスク購読の登録／解除 (todosに変更があったときに前回のリストと今回のリストのidを記録)
+      // 【B】リスト単位でタスク購読の登録／解除 (todosに変更があったときに今回のリストのidを記録)
       const nextListIds = snapshot.docs.map((d) => d.id); // 取得したリストのidでできた配列
-      const prevListIds = Object.keys(tasksUnsubscribes); // 現在のサブスク対象からidを抜き出して配列化
 
-      // 登録：新しいリストが出たらタスクサブスク開始
+      // 登録：追加されたリストのタスクサブスク開始
       nextListIds.forEach((listId) => {
         if (!tasksUnsubscribes[listId]) {
           const tasksRef = collection(db,`users/${userId}/todos/${listId}/tasks`);
@@ -54,7 +53,6 @@ export function subscribeUserTodos(userId, dispatch, setLoading) {
           tasksUnsubscribes[listId] = onSnapshot(tasksQ, (tasksSnap) => {
             const tasks = tasksSnap.docs
               .map((td) => ({ id: td.id, ...td.data() }))
-              .sort((a, b) => a.order - b.order);
             dispatch({
               type: "todo/update",
               payload: { listId, updatedTasks: tasks },
@@ -64,18 +62,21 @@ export function subscribeUserTodos(userId, dispatch, setLoading) {
       });
 
       // 解除：消えたリストのタスク購読をオフ
-      prevListIds
+      Object.keys(tasksUnsubscribes)
         .filter((id) => !nextListIds.includes(id))
         .forEach((oldId) => {
-          tasksUnsubscribes[oldId](); //削除されたリストidをマーク
-          delete tasksUnsubscribes[oldId];
+          tasksUnsubscribes[oldId](); // 削除されたリストの購読を解除
+          delete tasksUnsubscribes[oldId]; // 解除用関数を格納しているオブジェクトから削除
         });
+        
+        setLoading(false);
     },
     (error) => {
       console.error("subscribeUserTodos error:", error);
       dispatch({ type: "todo/init", payload: [] });
       setLoading(false);
     }
+    
   );
 
   // 返り値は「トップ＋全サブスク解除」を行う関数

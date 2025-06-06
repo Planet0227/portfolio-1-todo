@@ -48,7 +48,7 @@ const Todos = () => {
   const isGuestOrNotLoggedIn = () => !user || user.isAnonymous;
   const [isShowWarning, setIsShowWarning] = useState(true);
 
-  const [todosList, setTodosList] = useState([]);
+  const [todosList, setTodosList] = useState(todos);
 
   // DnD
   const { dragItem, sensors, handleDragStart, handleDragOver, handleDragEnd } =

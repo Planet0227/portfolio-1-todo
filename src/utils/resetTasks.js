@@ -1,4 +1,3 @@
-// utils/resetTasks.js
 import { db } from "@/firebase/firebaseConfig";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";

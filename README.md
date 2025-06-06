@@ -178,9 +178,11 @@ npm run dev
 | ----------- | ------ | --------------- | :---: |
 | displayName | string | ユーザーの表示名 | 済 |
 | iconDataUrl | string | Base64 形式のアイコン画像 | 済 |
+| lastResetDate | string | タスクの進歩を自動でリセットした最終日 | 未実装 |
 
 ■ List（リスト）
 パス：`users/{uid}/todos/{listId}`
+
 | フィールド名 | 型 | 説明 | 実装状況 |
 | -------- | ------- | ------------------------ | :---: |
 | category | string | 所属カテゴリー。初期値は４つ、今後はユーザーの任意のカテゴリーを追加できる機能を実装予定 | 一部済 |
@@ -208,12 +210,14 @@ erDiagram
         string uid PK "ドキュメントID"
         string displayName     "表示名 (必須)"
         string iconDataUrl     "アイコン（Base64）"
+        string lastResetDate   "最終リセット日（任意）"
     }
     TODOLIST {
         string listId PK       "ドキュメントID"
         string category        "所属カテゴリー (必須)"
+
         string date            "作成日 (必須)"
-        string scheduledDate    "期限 (未実装)"
+        string scheduledDate    "期限 (任意)"
         boolean locked         "ロック状態 (必須)"
         number order           "並び順 (必須)"
         string resetDay        "曜日ごとのリセット設定(必須)"
@@ -224,7 +228,7 @@ erDiagram
         string content         "内容 (必須)"
         boolean complete       "完了フラグ (必須)"
         number order           "並び順 (必須)"
-        string url             "リンク (未実装)"
+        string url             "リンク (任意)"
     }
     USERS ||--o{ TODOLIST : "1人のユーザーは0個以上のリストを持つ"
     TODOLIST ||--o{ TASK    : "1つのリストは0個以上のタスクを持つ"

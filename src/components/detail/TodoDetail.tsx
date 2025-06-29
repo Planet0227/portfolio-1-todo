@@ -508,7 +508,7 @@ const TodoDetail: React.FC<TodoDetailProps> = ({
           onDragEnd={handleDragEnd}
         >
           {/* スクロール可能なコンテナ */}
-          <div className="relative box-border max-h-[calc(100vh-400px)] overflow-y-auto mb-2 pt-7 pb-7 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div className="relative max-h-[calc(100vh-400px)] space-y-2 overflow-y-auto mb-2 pt-2 pb-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <SortableContext
               strategy={verticalListSortingStrategy}
               items={sortedTasks.map((task) => task.id)}

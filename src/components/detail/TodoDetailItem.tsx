@@ -138,7 +138,7 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
       <div
         ref={setNodeRef}
         style={style}
-        className={`flex w-full p-1 md:p-2 rounded-lg relative bg-opacity-0 ${isDragging ? "z-10" : ""}`}
+        className={`flex w-full p-1 border-2 border-gray-400 md:p-2 rounded-lg relative bg-opacity-0 ${isDragging ? "z-10" : ""}`}
       >
         <div
           ref={setActivatorNodeRef}
@@ -177,7 +177,7 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
         />
 
         <button
-          className="self-start px-3 ml-7 text-xl font-semibold text-red-400 border-l-2 border-gray-300 hover:text-red-700"
+          className="self-start px-3 ml-7 text-xl font-semibold text-red-300 border-l-2 border-gray-300 hover:text-red-700"
           onClick={handleDeleteTodo}
         >
           <FontAwesomeIcon icon={faTrashCan} />

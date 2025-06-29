@@ -14,10 +14,10 @@ interface UseDnDTodosProps {
 }
 
 interface UseDnDTodosResult {
-  dragItem: string | null; 
-  sensors: ReturnType<typeof useSensors>; 
-  handleDragStart: (event: DragStartEvent) => void; 
-  handleDragOver: (event: DragOverEvent) => void; 
+  dragItem: string | null;
+  sensors: ReturnType<typeof useSensors>;
+  handleDragStart: (event: DragStartEvent) => void;
+  handleDragOver: (event: DragOverEvent) => void;
   handleDragEnd: (event: DragEndEvent) => void;
 }
 
@@ -40,7 +40,7 @@ export function useDnDTodos({ todosList, setTodosList, dispatch, userId }: UseDn
     const category = todosList.find((todo) => todo.id === id)?.category;
     return category ?? ""; // 必ず string を返すようにする
   };
-  
+
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
@@ -94,7 +94,7 @@ export function useDnDTodos({ todosList, setTodosList, dispatch, userId }: UseDn
     // if (!over || active.id === over.id) {
     //   return;
     // }
-    
+
     const overId = String(over?.id);
     const activeId = String(active.id);
     const overColumn = findColumn(overId);
@@ -134,7 +134,9 @@ export function useDnDTodos({ todosList, setTodosList, dispatch, userId }: UseDn
           payload: { updatedTodos },
         });
       } else {
-        await sortTodoList(userId, updatedTodos);
+        if (userId) {
+          await sortTodoList(userId, updatedTodos);
+        }
       }
     }
   };

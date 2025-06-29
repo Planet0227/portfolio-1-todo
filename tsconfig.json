@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "strictBindCallApply": true,           // call/apply/bind の引数チェックを厳密化
+    "strictFunctionTypes": true,           // 関数間のパラメータ変換を共変／反変で厳密に
+    "exactOptionalPropertyTypes": true,    // オプショナルプロパティ型を正確に (undefined と区別)
+    "noUncheckedIndexedAccess": true,      // `foo[x]` に対して常に可能性として undefined を返す
+    "noUnusedLocals": true,                // 未使用のローカル変数をエラー化
+    "noUnusedParameters": true,            // 未使用の関数パラメータをエラー化
+    "noImplicitReturns": true,             //暗黙のreturnをエラー化
+    "noImplicitOverride": true,            // override キーワードを必須化 (TS 4.3+)
+    "noFallthroughCasesInSwitch": true,    // switch の case フォールスルーを禁止
+    "useUnknownInCatchVariables": true, 
+    "forceConsistentCasingInFileNames": true,    // catch 節の err を unknown 扱いに
+    "jsx": "preserve",
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx"
+, "src/firebase/firebaseConfig.js"  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

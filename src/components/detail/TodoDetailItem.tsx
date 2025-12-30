@@ -41,13 +41,28 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
 
   // 削除
   const handleDeleteTodo = async () => {
-    if(!listId) return;
+    if (!listId) return;
     const taskId = task.id;
+
+    // 削除後のタスクを取得
+    const remainingTasks = tasks.filter((t) => t.id !== taskId);
+
+    // orderの振り直し
+    const normalizedTasks = remainingTasks
+      .sort((a, b) => a.order - b.order)
+      .map((task, index) => ({
+        ...task,
+        order: index + 1
+      }));
+
+
     if (!user) {
       dispatch({ type: "todo/delete", payload: { listId, taskId } });
+      dispatch({ type: "todo/update", payload: { listId, updatedTasks: normalizedTasks}})
     } else {
       try {
         await deleteTask(user.uid, listId, taskId);
+        await updateTasks(user.uid, listId, normalizedTasks);
       } catch (error) {
         console.error("タスク更新エラー:", error);
       }
@@ -56,7 +71,7 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
 
   // タスク更新
   const handleUpdateContent = async (newContent: string) => {
-    if(!listId) return;
+    if (!listId) return;
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, content: newContent } : _todo
     );
@@ -73,7 +88,7 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
 
   // チェックボックス更新
   const handleToggleCheckBox = async () => {
-    if(!listId) return;
+    if (!listId) return;
     const updatedTasks = tasks.map((_todo) =>
       _todo.id === task.id ? { ..._todo, complete: !task.complete } : _todo
     );
@@ -113,7 +128,7 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
 
   // onChangeイベントでリアルタイム更新
   const handleContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    if(!listId) return;
+    if (!listId) return;
     const newContent = e.target.value;
     setEditContent(newContent);
 

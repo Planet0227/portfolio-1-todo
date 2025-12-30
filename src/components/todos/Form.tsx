@@ -19,13 +19,13 @@ interface FormProps {
   isTouchDevice: boolean;
 }
 
-const Form: React.FC<FormProps> = ({
+const Form = ({
   categories,
   formVisible,
   formExpanded,
   dragItem,
   isTouchDevice,
-}) => {
+}: FormProps) => {
   const [inputValue, setInputValue] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("notStarted");
   const [showCategorySelector, setShowCategorySelector] = useState(false);
@@ -40,7 +40,7 @@ const Form: React.FC<FormProps> = ({
 
   // クリックが外部で行われたらオプションを閉じる
   useEffect(() => {
-    const handleClickOutside = (e: globalThis.MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
 
       if (!(e.target instanceof Element)) return;
       // ポップアップかトグルボタン以外がクリックされた場合にオプションを閉じる
@@ -73,9 +73,9 @@ const Form: React.FC<FormProps> = ({
   }, [formVisible, formExpanded]);
 
   // 新しいTodoリスト
-  const handleAddTodoList = async (e: FormEvent) => {
+  const handleAddTodoList = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (inputValue === "") return;
+    if (inputValue.trim() === "") return;
 
 
     const now = new Date();

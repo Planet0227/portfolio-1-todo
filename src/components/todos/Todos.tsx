@@ -61,10 +61,10 @@ export default function Todos() {
 
   // ソート反映
   useEffect(() => {
-    if (Array.isArray(todos)) {
-      const sorted = [...todos].sort((a, b) => a.order - b.order);
-      setTodosList(sorted);
-    }
+    if (!todos) return;
+    const sorted = [...todos].sort((a, b) => a.order - b.order);
+    setTodosList(sorted);
+
   }, [todos]);
 
   // デスクトップ: マウス位置でフォーム表示
@@ -165,7 +165,7 @@ export default function Todos() {
 
           {todosList.length === 0 && (
 
-            
+
             <div className="flex absolute right-0 left-0 top-60 justify-center">
               <div className="p-20 text-center bg-white rounded-lg border-4 border-gray-500 shadow-lg">
                 <div className="mb-4 text-4xl text-gray-300 md:text-6xl">
@@ -203,12 +203,12 @@ export default function Todos() {
         <div
           id="todo-form"
           className={`fixed left-0 right-0 bottom-0 transition-transform duration-300 pointer-events-none ${!isTouch
-              ? formVisible && !dragItem
-                ? "translate-y-0 pointer-events-auto"
-                : "translate-y-24"
-              : formExpanded
-                ? "translate-y-0 pointer-events-auto"
-                : "translate-y-24"
+            ? formVisible && !dragItem
+              ? "translate-y-0 pointer-events-auto"
+              : "translate-y-24"
+            : formExpanded
+              ? "translate-y-0 pointer-events-auto"
+              : "translate-y-24"
             }`}
         >
           <Form

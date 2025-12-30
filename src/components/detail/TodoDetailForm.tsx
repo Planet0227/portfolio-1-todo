@@ -67,13 +67,15 @@ const TodoDetailForm: React.FC<TodoDetailItemProps> = ({ listId }) => {
   return (
     <div className="flex p-1 w-full bg-gradient-to-r from-green-100 via-blue-100 to-purple-100 rounded-lg shadow-sm">
       <form
-        onSubmit={handleAddTask}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleAddTask();
+        }}
         className="flex items-center space-x-2 w-full"
       >
         {/* 追加ボタン */}
         <div className="relative">
           <button
-            onClick={handleAddTask}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             className="flex justify-center items-center w-8 h-8 text-2xl text-white bg-cyan-400 rounded-full transition hover:bg-cyan-500 active:scale-95"

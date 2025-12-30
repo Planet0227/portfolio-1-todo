@@ -44,26 +44,26 @@ interface TodoContextType {
   isTodosLoading: boolean;
 }
 
-export type TodoAction = 
-  | {type: "todo/init"; payload: TodoListType[] }
-  | {type: "todo/addList"; payload: TodoListType}
-  | {type: "todo/add"; payload: {id:string; newTask: TaskType}}
-  | {type: "todo/updateListTitle"; payload: {listId: string; updatedTitle: string}}
-  | {type: "todo/update"; payload: {listId: string; updatedTasks: TaskType[]}}
-  | {type: "todo/updateList"; payload: {listId: string; updatedCategory: string; updatedOrder: number}}
-  | {type: "todo/updateLock"; payload: {listId: string; lock: boolean}}
-  | {type: "todo/updateResetDays"; payload: {listId: string; updatedResetDays: ResetDaysType}}
-  | {type: "todo/resetComplete"; payload: {listId: string}}
-  | {type: "todo/deleteList"; payload: {listId: string}}
-  | {type: "todo/delete"; payload: { listId: string; taskId: string }}
-  | {type: "todo/sort"; payload: {updatedTodos: TodoListType[]}};
+export type TodoAction =
+  | { type: "todo/init"; payload: TodoListType[] }
+  | { type: "todo/addList"; payload: TodoListType }
+  | { type: "todo/add"; payload: { id: string; newTask: TaskType } }
+  | { type: "todo/updateListTitle"; payload: { listId: string; updatedTitle: string } }
+  | { type: "todo/update"; payload: { listId: string; updatedTasks: TaskType[] } }
+  | { type: "todo/updateList"; payload: { listId: string; updatedCategory: string; updatedOrder: number } }
+  | { type: "todo/updateLock"; payload: { listId: string; lock: boolean } }
+  | { type: "todo/updateResetDays"; payload: { listId: string; updatedResetDays: ResetDaysType } }
+  | { type: "todo/resetComplete"; payload: { listId: string } }
+  | { type: "todo/deleteList"; payload: { listId: string } }
+  | { type: "todo/delete"; payload: { listId: string; taskId: string } }
+  | { type: "todo/sort"; payload: { updatedTodos: TodoListType[] } };
 
 type TodoDispatch = React.Dispatch<TodoAction>;
 
 const TodoContext = createContext<TodoContextType | undefined>(undefined);
 const TodoContextDispatch = createContext<TodoDispatch | undefined>(undefined);
 
-const todoReducer = (state: TodoListType[], action: TodoAction):TodoListType[] => {
+const todoReducer = (state: TodoListType[], action: TodoAction) => {
   const { type, payload } = action;
   switch (type) {
     case "todo/init":
@@ -92,10 +92,10 @@ const todoReducer = (state: TodoListType[], action: TodoAction):TodoListType[] =
       return state.map((todoList) =>
         todoList.id === payload.listId
           ? {
-              ...todoList,
-              category: payload.updatedCategory,
-              order: payload.updatedOrder,
-            }
+            ...todoList,
+            category: payload.updatedCategory,
+            order: payload.updatedOrder,
+          }
           : todoList
       );
     case "todo/updateLock":
@@ -114,11 +114,11 @@ const todoReducer = (state: TodoListType[], action: TodoAction):TodoListType[] =
       return state.map((todoList) =>
         todoList.id === payload.listId
           ? {
-              ...todoList,
-              tasks: todoList.tasks.map((task) => {
-                return { ...task, complete: false };
-              }),
-            }
+            ...todoList,
+            tasks: todoList.tasks.map((task) => {
+              return { ...task, complete: false };
+            }),
+          }
           : todoList
       );
     case "todo/deleteList":
@@ -128,11 +128,16 @@ const todoReducer = (state: TodoListType[], action: TodoAction):TodoListType[] =
     case "todo/delete":
       return state.map((todoList) => {
         if (todoList.id === payload.listId) {
+          const remainingTasks = todoList.tasks
+            .filter((task) => task.id !== payload.taskId)
+            .sort((a, b) => a.order - b.order)
+            .map((task, index) => ({ ...task, order: index + 1 }));
+
+
+
           return {
             ...todoList,
-            tasks: todoList.tasks
-              .filter((task) => task.id !== payload.taskId)
-              .sort((a, b) => a.order - b.order),
+            tasks: remainingTasks,
           };
         }
         return todoList;
@@ -145,7 +150,7 @@ const todoReducer = (state: TodoListType[], action: TodoAction):TodoListType[] =
   }
 };
 
-const TodoProvider = ({ children } : { children: ReactNode }) => {
+const TodoProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(todoReducer, []);
   const [isTodosLoading, setIsTodosLoading] = useState(true);
   const { user, isAuthLoading } = useAuth();
@@ -166,7 +171,7 @@ const TodoProvider = ({ children } : { children: ReactNode }) => {
       dispatch,
       setIsTodosLoading
     );
-  
+
     return () => unsubscribe();
   }, [user, isAuthLoading]);
 
@@ -180,25 +185,25 @@ const TodoProvider = ({ children } : { children: ReactNode }) => {
 };
 
 const useTodos = (): TodoListType[] => {
- const ctx =  useContext(TodoContext);
- if(!ctx) {
-  throw new Error("useTodos は TodoProviderの中で使ってください")
- }
- return ctx.todos;
+  const ctx = useContext(TodoContext);
+  if (!ctx) {
+    throw new Error("useTodos は TodoProviderの中で使ってください")
+  }
+  return ctx.todos;
 };
 const useTodosLoading = (): boolean => {
-  const ctx =  useContext(TodoContext);
- if(!ctx) {
-  throw new Error("useTodosLoading は TodoProviderの中で使ってください")
- }
- return ctx.isTodosLoading;
+  const ctx = useContext(TodoContext);
+  if (!ctx) {
+    throw new Error("useTodosLoading は TodoProviderの中で使ってください")
+  }
+  return ctx.isTodosLoading;
 };
 const useTodosDispatch = (): TodoDispatch => {
-  const ctx =  useContext(TodoContextDispatch);
- if(!ctx) {
-  throw new Error("useTodosDispatch は TodoProviderの中で使ってください")
- }
- return ctx;
+  const ctx = useContext(TodoContextDispatch);
+  if (!ctx) {
+    throw new Error("useTodosDispatch は TodoProviderの中で使ってください")
+  }
+  return ctx;
 };
 
 export { TodoProvider, useTodos, useTodosDispatch, useTodosLoading };

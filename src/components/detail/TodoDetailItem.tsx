@@ -44,11 +44,8 @@ const TodoDetailItem: React.FC<TodoDetailItemProps> = ({ tasks, task, id, listId
     if (!listId) return;
     const taskId = task.id;
 
-    // 削除後のタスクを取得
-    const remainingTasks = tasks.filter((t) => t.id !== taskId);
-
     // orderの振り直し
-    const normalizedTasks = remainingTasks
+    const normalizedTasks = tasks.filter((t) => t.id !== taskId)
       .sort((a, b) => a.order - b.order)
       .map((task, index) => ({
         ...task,

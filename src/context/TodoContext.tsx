@@ -128,7 +128,7 @@ const todoReducer = (state: TodoListType[], action: TodoAction) => {
     case "todo/delete":
       return state.map((todoList) => {
         if (todoList.id === payload.listId) {
-          const remainingTasks = todoList.tasks
+          const normalizedTasks = todoList.tasks
             .filter((task) => task.id !== payload.taskId)
             .sort((a, b) => a.order - b.order)
             .map((task, index) => ({ ...task, order: index + 1 }));
@@ -137,7 +137,7 @@ const todoReducer = (state: TodoListType[], action: TodoAction) => {
 
           return {
             ...todoList,
-            tasks: remainingTasks,
+            tasks: normalizedTasks,
           };
         }
         return todoList;

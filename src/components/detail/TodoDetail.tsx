@@ -39,6 +39,7 @@ import { useAuth } from "@/context/AuthContext";
 import {
   changeCategory,
   deleteTodoList,
+  sortTodoList,
   updateLock,
   updateTasks,
   updateTitle,
@@ -174,10 +175,34 @@ const TodoDetail: React.FC<TodoDetailProps> = ({
 
   const handleDeleteList = async () => {
     if (!listId) return;
+    if (!cachedList) return;
+
+    const deletedCategory = cachedList.category;
+
+    const normalizedLists = todos
+      .filter((todo) => todo.category === deletedCategory && todo.id !== listId)
+      .sort((a, b) => a.order - b.order)
+      .map((todo, index) => ({ ...todo, order: index + 1 }));
+
     if (!user) {
       dispatch({ type: "todo/deleteList", payload: { listId } });
+      if (normalizedLists.length > 0) {
+        dispatch({ type: "todo/sort", payload: { updatedTodos: normalizedLists } });
+      }
     } else {
-      await deleteTodoList(user.uid, listId);
+      try {
+        //Firebaseからリストを削除
+        await deleteTodoList(user.uid, listId);
+
+
+        if (normalizedLists.length > 0) {
+          await sortTodoList(user.uid, normalizedLists);
+        }
+
+
+      } catch (error) {
+        console.error("リスト削除エラー:", error);
+      }
     }
     setCachedList(null);
     onClose();

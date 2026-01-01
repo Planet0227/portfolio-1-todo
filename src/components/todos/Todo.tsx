@@ -41,7 +41,9 @@ const Todo: React.FC<TodoProps> = ({ openModal, selectedTodoId, todo, isOverlay 
     transform: isSorting ? CSS.Translate.toString(transform) : undefined,
     opacity: isDragging ? "0" : isOverlay ? "0.6" : "1",
     touchAction: isDragging ? "none" : "pan-y",
-    transition,
+    transition: isSorting 
+      ? transition 
+      : "undefined",
   };
 
   const category = getCategoryInfo(todo.category);
@@ -67,7 +69,7 @@ const Todo: React.FC<TodoProps> = ({ openModal, selectedTodoId, todo, isOverlay 
     px-4 py-2
     rounded-2xl
     shadow-sm
-    transition-all duration-200
+    transition-all 
     cursor-pointer
     min-h-16  max-h-16 md:min-h-16 md:max-h-48
     overflow-hidden

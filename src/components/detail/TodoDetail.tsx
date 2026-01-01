@@ -419,7 +419,7 @@ const TodoDetail: React.FC<TodoDetailProps> = ({
               <button
                 className="text-xl md:text-3xl"
                 onClick={handleUpdateLock}
-                title={cachedList?.lock ? "ロック解除" : "ロックする"}
+                title={cachedList?.lock ? "ロックを解除" : "リストをロック"}
               >
                 {cachedList.lock ? (
                   <FontAwesomeIcon

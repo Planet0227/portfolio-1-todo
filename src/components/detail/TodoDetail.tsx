@@ -184,6 +184,8 @@ const TodoDetail: React.FC<TodoDetailProps> = ({
       .sort((a, b) => a.order - b.order)
       .map((todo, index) => ({ ...todo, order: index + 1 }));
 
+      onClose();
+
     if (!user) {
       dispatch({ type: "todo/deleteList", payload: { listId } });
       if (normalizedLists.length > 0) {
@@ -205,7 +207,7 @@ const TodoDetail: React.FC<TodoDetailProps> = ({
       }
     }
     setCachedList(null);
-    onClose();
+    
   };
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

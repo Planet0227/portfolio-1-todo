@@ -14,7 +14,7 @@
     "noImplicitReturns": true, // すべてのコードパスで値を返す（または返さない）ことを保証
     "noFallthroughCasesInSwitch": true, // switch の case フォールスルーを禁止
     "forceConsistentCasingInFileNames": true, // ファイル名の大文字・小文字の不一致を検出
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "module": "esnext",
     "esModuleInterop": true,
     "moduleResolution": "node",
@@ -39,7 +39,8 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/firebase/firebaseConfig.js"
+    "src/firebase/firebaseConfig.js",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
